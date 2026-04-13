@@ -551,6 +551,7 @@ public class ArticleServiceImpl implements ArticleService {
                         .username(author.getUsername())
                         .nickname(author.getNickname())
                         .avatar(author.getAvatar())
+                        .bio(author.getBio())
                         .build();
             }
         }
