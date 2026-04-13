@@ -246,7 +246,16 @@ public class IndexController {
         // 获取归档数据（按年份-月份分组）
         Map<Integer, Map<Integer, List<ArticleListVO>>> archive = articleService.getArchiveArticles();
 
+        // 计算文章总数
+        long totalArticles = 0;
+        for (Map<Integer, List<ArticleListVO>> monthMap : archive.values()) {
+            for (List<ArticleListVO> articleList : monthMap.values()) {
+                totalArticles += articleList.size();
+            }
+        }
+
         model.addAttribute("archive", archive);
+        model.addAttribute("totalArticles", totalArticles);
 
         return "front/archive";
     }

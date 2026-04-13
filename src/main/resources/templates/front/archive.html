@@ -69,7 +69,7 @@
                 </div>
                 <div class="card-body">
                     <p class="small">
-                        共计 <strong th:text="${archive.values().stream().flatMap(m -> m.values().stream()).flatMap(list -> list.stream()).count()}">0</strong> 篇文章
+                        共计 <strong th:text="${totalArticles}">0</strong> 篇文章
                     </p>
                 </div>
             </div>
