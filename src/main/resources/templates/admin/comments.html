@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>评论管理 - puber-blog后台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .navbar-brand { font-weight: bold; }
+        .card { box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); }
+        .table tbody tr:hover { background-color: #f1f3f5; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/dashboard"><i class="bi bi-house-fill"></i> puber-blog后台</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/admin/dashboard"><i class="bi bi-speedometer2"></i> 仪表盘</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/articles"><i class="bi bi-file-text-fill"></i> 文章管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/categories"><i class="bi bi-folder-fill"></i> 分类管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/tags"><i class="bi bi-tags-fill"></i> 标签管理</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/admin/comments"><i class="bi bi-chat-fill"></i> 评论管理</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> admin</a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/perform_logout"><i class="bi bi-box-arrow-right"></i> 退出登录</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-chat-fill"></i> 评论管理</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary active" onclick="loadComments('all')">全部评论</button>
+                            <button type="button" class="btn btn-outline-warning" onclick="loadComments('pending')">待审核 (<span id="pendingCount">0</span>)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="loadingSpinner" class="text-center py-4">
+                    <div class="spinner-border text-primary"><span class="visually-hidden">加载中...</span></div>
+                </div>
+
+                <table class="table table-hover" id="commentTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th width="50">ID</th>
+                            <th width="100">昵称</th>
+                            <th width="120">邮箱</th>
+                            <th>评论内容</th>
+                            <th width="80">状态</th>
+                            <th width="150">提交时间</th>
+                            <th width="100">IP地址</th>
+                            <th width="150">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="commentTableBody"></tbody>
+                </table>
+
+                <div id="emptyMessage" class="text-center py-4" style="display:none;">
+                    <i class="bi bi-inbox" style="font-size:3rem;color:#ccc;"></i>
+                    <p class="text-muted mt-2">暂无评论数据</p>
+                </div>
+
+                <nav id="pagination" style="display:none;">
+                    <ul class="pagination justify-content-center" id="paginationList"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="viewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-eye"></i> 评论详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewModalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentFilter = 'all';
+        let currentPage = 0;
+
+        document.addEventListener('DOMContentLoaded', function() { loadComments(); loadPendingCount(); });
+
+        function loadComments(filter = currentFilter, page = currentPage) {
+            currentFilter = filter;
+            currentPage = page;
+            const url = filter === 'pending' ? `/api/admin/comments/pending?page=${page}&size=10` : `/api/admin/comments?page=${page}&size=10`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) { renderCommentTable(data.data.content); renderPagination(data.data); }
+                });
+        }
+
+        function loadPendingCount() {
+            fetch('/api/admin/comments/count/pending')
+                .then(response => response.json())
+                .then(data => { if (data.code === 200) document.getElementById('pendingCount').textContent = data.data; });
+        }
+
+        function renderCommentTable(comments) {
+            const tbody = document.getElementById('commentTableBody');
+            const spinner = document.getElementById('loadingSpinner');
+            const table = document.getElementById('commentTable');
+            const emptyMsg = document.getElementById('emptyMessage');
+            const pagination = document.getElementById('pagination');
+
+            spinner.style.display = 'none';
+            if (comments.length === 0) { table.style.display = 'none'; pagination.style.display = 'none'; emptyMsg.style.display = 'block'; return; }
+            table.style.display = 'table'; pagination.style.display = 'block'; emptyMsg.style.display = 'none';
+
+            tbody.innerHTML = comments.map(comment => `
+                <tr>
+                    <td>${comment.id}</td>
+                    <td>${comment.nickname}</td>
+                    <td>${comment.email}</td>
+                    <td>${comment.content.length > 50 ? comment.content.substring(0,50)+'...' : comment.content}</td>
+                    <td><span class="badge ${getStatusBadge(comment.status)}">${getStatusText(comment.status)}</span></td>
+                    <td>${formatDate(comment.createdAt)}</td>
+                    <td>${comment.ipAddress || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="viewComment(${comment.id})"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-sm btn-success" onclick="approveComment(${comment.id})"><i class="bi bi-check"></i></button>
+                        <button class="btn btn-sm btn-warning" onclick="rejectComment(${comment.id})"><i class="bi bi-x"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteComment(${comment.id})"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'APPROVED': return 'bg-success';
+                case 'PENDING': return 'bg-warning';
+                case 'REJECTED': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'APPROVED': return '已批准';
+                case 'PENDING': return '待审核';
+                case 'REJECTED': return '已拒绝';
+                default: return status;
+            }
+        }
+
+        function renderPagination(pageData) {
+            const paginationList = document.getElementById('paginationList');
+            paginationList.innerHTML = '';
+            for (let i = 0; i < pageData.totalPages; i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" onclick="loadComments(currentFilter, ${i})">${i+1}</a>`;
+                paginationList.appendChild(li);
+            }
+        }
+
+        function viewComment(id) {
+            fetch(`/api/admin/comments?page=0&size=100`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        const comment = data.data.content.find(c => c.id === id);
+                        if (comment) {
+                            document.getElementById('viewModalBody').innerHTML = `
+                                <p><strong>昵称：</strong>${comment.nickname}</p>
+                                <p><strong>邮箱：</strong>${comment.email}</p>
+                                <p><strong>网站：</strong>${comment.website || '-'}</p>
+                                <p><strong>内容：</strong>${comment.content}</p>
+                                <p><strong>状态：</strong>${getStatusText(comment.status)}</p>
+                                <p><strong>提交时间：</strong>${formatDate(comment.createdAt)}</p>
+                                <p><strong>IP地址：</strong>${comment.ipAddress || '-'}</p>
+                                <p><strong>UserAgent：</strong>${comment.userAgent || '-'}</p>
+                            `;
+                            new bootstrap.Modal(document.getElementById('viewModal')).show();
+                        }
+                    }
+                });
+        }
+
+        function approveComment(id) {
+            fetch(`/api/admin/comments/${id}/approve`, {method: 'PUT'})
+                .then(response => response.json())
+                .then(result => { if (result.code === 200) { loadComments(); loadPendingCount(); alert('评论已批准'); } });
+        }
+
+        function rejectComment(id) {
+            fetch(`/api/admin/comments/${id}/reject`, {method: 'PUT'})
+                .then(response => response.json())
+                .then(result => { if (result.code === 200) { loadComments(); loadPendingCount(); alert('评论已拒绝'); } });
+        }
+
+        function deleteComment(id) {
+            if (confirm('确定要删除这条评论吗？删除后将无法恢复！')) {
+                fetch(`/api/admin/comments/${id}`, {method: 'DELETE'})
+                    .then(response => response.json())
+                    .then(result => { if (result.code === 200) { loadComments(); alert('评论已删除'); } });
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

@@ -73,4 +73,14 @@ public class AdminController {
     public String editArticle() {
         return "admin/article-form";
     }
+
+    /**
+     * 评论管理页面
+     *
+     * @return String 视图名称
+     */
+    @GetMapping("/admin/comments")
+    public String comments() {
+        return "admin/comments";
+    }
 }
