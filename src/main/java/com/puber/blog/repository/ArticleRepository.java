@@ -112,4 +112,12 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
      * @return Long 文章数量
      */
     Long countByCategoryIdAndStatus(Long categoryId, String status);
+
+    /**
+     * 查询指定状态的文章列表（按发布时间倒序）
+     *
+     * @param status 文章状态
+     * @return List<Article> 文章列表
+     */
+    List<Article> findByStatusOrderByPublishedAtDesc(String status);
 }

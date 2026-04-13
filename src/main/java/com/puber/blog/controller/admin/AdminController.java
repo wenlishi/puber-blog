@@ -43,4 +43,34 @@ public class AdminController {
     public String tags() {
         return "admin/tags";
     }
+
+    /**
+     * 文章管理页面
+     *
+     * @return String 视图名称
+     */
+    @GetMapping("/admin/articles")
+    public String articles() {
+        return "admin/articles";
+    }
+
+    /**
+     * 新增文章页面
+     *
+     * @return String 视图名称
+     */
+    @GetMapping("/admin/articles/new")
+    public String newArticle() {
+        return "admin/article-form";
+    }
+
+    /**
+     * 编辑文章页面
+     *
+     * @return String 视图名称
+     */
+    @GetMapping("/admin/articles/{id}/edit")
+    public String editArticle() {
+        return "admin/article-form";
+    }
 }
