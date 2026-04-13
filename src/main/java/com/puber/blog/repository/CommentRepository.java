@@ -64,4 +64,22 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
      * @return Long 评论数量
      */
     Long countByArticleIdAndStatus(Long articleId, String status);
+
+    /**
+     * 根据文章ID和状态查询评论列表（不分页）
+     *
+     * @param articleId 文章ID
+     * @param status 评论状态
+     * @return List<Comment> 评论列表
+     */
+    List<Comment> findByArticleIdAndStatus(Long articleId, String status);
+
+    /**
+     * 根据状态查询评论列表并按创建时间倒序排序
+     *
+     * @param status 评论状态
+     * @param pageable 分页参数
+     * @return List<Comment> 评论列表
+     */
+    List<Comment> findByStatusOrderByCreatedAtDesc(String status, Pageable pageable);
 }
