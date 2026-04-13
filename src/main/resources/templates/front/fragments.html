@@ -70,6 +70,27 @@
                         <i class="bi bi-calendar3"></i> 归档
                     </a>
                 </li>
+
+                <!-- 友情链接下拉菜单 -->
+                <li class="nav-item dropdown" th:if="${friendLinks != null and !#lists.isEmpty(friendLinks)}">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <i class="bi bi-link-45deg"></i> 友链
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li th:each="link : ${friendLinks}">
+                            <a class="dropdown-item" th:href="${link.url}" target="_blank" rel="noopener noreferrer">
+                                <img th:if="${link.logo != null and link.logo != ''}"
+                                     th:src="${link.logo}"
+                                     alt="Logo"
+                                     style="width: 16px; height: 16px; border-radius: 2px; margin-right: 8px; vertical-align: middle;">
+                                <span th:text="${link.name}">友链名称</span>
+                            </a>
+                        </li>
+                        <li th:if="${friendLinks == null or #lists.isEmpty(friendLinks)}">
+                            <a class="dropdown-item text-muted" href="#">暂无友链</a>
+                        </li>
+                    </ul>
+                </li>
             </ul>
 
             <!-- 右侧：搜索框和登录 -->
