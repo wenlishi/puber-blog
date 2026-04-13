@@ -63,6 +63,7 @@ public class SlugUtils {
 
     /**
      * 将中文字符转换为拼音
+     * 每个汉字的拼音之间自动添加短横分隔符
      * 非中文字符保持不变
      *
      * @param input 输入字符串
@@ -71,7 +72,9 @@ public class SlugUtils {
     private static String convertChineseToPinyin(String input) {
         StringBuilder result = new StringBuilder();
 
-        for (char c : input.toCharArray()) {
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+
             // 判断是否为中文字符
             if (isChinese(c)) {
                 try {
@@ -79,6 +82,11 @@ public class SlugUtils {
                     String[] pinyinArray = PinyinHelper.toHanyuPinyinStringArray(c, PINYIN_FORMAT);
 
                     if (pinyinArray != null && pinyinArray.length > 0) {
+                        // 如果不是第一个字符，且前面不是短横，添加短横分隔符
+                        if (result.length() > 0 && result.charAt(result.length() - 1) != '-') {
+                            result.append('-');
+                        }
+
                         // 取第一个拼音（最常用的读音）
                         result.append(pinyinArray[0]);
                     } else {
@@ -91,7 +99,9 @@ public class SlugUtils {
                 }
             } else if (Character.isWhitespace(c)) {
                 // 空格替换为连字符
-                result.append('-');
+                if (result.length() > 0 && result.charAt(result.length() - 1) != '-') {
+                    result.append('-');
+                }
             } else {
                 // 非中文字符直接保留
                 result.append(c);
