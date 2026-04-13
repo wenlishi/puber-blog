@@ -76,7 +76,7 @@
                        th:href="@{/category/{slug}(slug=${article.category.slug})}"
                        th:text="${article.category.name}">分类</a>
                 </span>
-                <span th:if="${article.tags != null and !article.tags.isEmpty()}">
+                <span th:if="${article.tags != null and !#lists.isEmpty(article.tags)}">
                     <a th:each="tag : ${article.tags}"
                        class="badge bg-secondary text-decoration-none me-1"
                        th:href="@{/tag/{slug}(slug=${tag.slug})}"
@@ -120,7 +120,7 @@
             </div>
 
             <!-- 分类列表 -->
-            <div class="card sidebar-card" th:if="${categories != null and !categories.isEmpty()}">
+            <div class="card sidebar-card" th:if="${categories != null and !#lists.isEmpty(categories)}">
                 <div class="card-header">
                     <i class="bi bi-folder"></i> 分类
                 </div>
@@ -137,7 +137,7 @@
             </div>
 
             <!-- 标签云 -->
-            <div class="card sidebar-card" th:if="${tags != null and !tags.isEmpty()}">
+            <div class="card sidebar-card" th:if="${tags != null and !#lists.isEmpty(tags)}">
                 <div class="card-header">
                     <i class="bi bi-tags"></i> 标签
                 </div>
