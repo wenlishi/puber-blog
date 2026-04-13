@@ -82,4 +82,12 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
      * @return List<Comment> 评论列表
      */
     List<Comment> findByStatusOrderByCreatedAtDesc(String status, Pageable pageable);
+
+    /**
+     * 查询最新评论列表（按创建时间倒序）
+     *
+     * @param pageable 分页参数
+     * @return List<Comment> 评论列表
+     */
+    List<Comment> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }

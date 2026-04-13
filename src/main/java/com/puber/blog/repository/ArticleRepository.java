@@ -120,4 +120,28 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
      * @return List<Article> 文章列表
      */
     List<Article> findByStatusOrderByPublishedAtDesc(String status);
+
+    /**
+     * 查询最新文章列表（按创建时间倒序）
+     *
+     * @param pageable 分页参数
+     * @return List<Article> 文章列表
+     */
+    List<Article> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    /**
+     * 查询热门文章列表（按浏览量倒序）
+     *
+     * @param pageable 分页参数
+     * @return List<Article> 文章列表
+     */
+    List<Article> findAllByOrderByViewCountDesc(Pageable pageable);
+
+    /**
+     * 统计所有文章的总浏览量
+     *
+     * @return Long 总浏览量
+     */
+    @Query("SELECT SUM(a.viewCount) FROM Article a")
+    Long sumViewCount();
 }

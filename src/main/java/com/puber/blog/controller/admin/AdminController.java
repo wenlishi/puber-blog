@@ -1,6 +1,11 @@
 package com.puber.blog.controller.admin;
 
+import com.puber.blog.service.DashboardService;
+import com.puber.blog.vo.DashboardVO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
@@ -11,16 +16,29 @@ import org.springframework.web.bind.annotation.GetMapping;
  * @version 1.0.0
  * @since 2026-04-13
  */
+@Slf4j
 @Controller
+@RequiredArgsConstructor
 public class AdminController {
+
+    private final DashboardService dashboardService;
 
     /**
      * 后台仪表盘
      *
+     * @param model Spring MVC 模型
      * @return String 视图名称
      */
     @GetMapping("/admin/dashboard")
-    public String dashboard() {
+    public String dashboard(Model model) {
+        log.info("访问后台仪表盘");
+
+        // 获取仪表盘统计数据
+        DashboardVO dashboardData = dashboardService.getDashboardData();
+
+        // 将数据添加到模型
+        model.addAttribute("dashboard", dashboardData);
+
         return "admin/dashboard";
     }
 
