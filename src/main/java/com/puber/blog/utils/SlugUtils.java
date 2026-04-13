@@ -1,12 +1,18 @@
 package com.puber.blog.utils;
 
-import java.text.Normalizer;
+import net.sourceforge.pinyin4j.PinyinHelper;
+import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType;
+import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
+import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
+import net.sourceforge.pinyin4j.format.HanyuPinyinVCharType;
+import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
+
 import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
  * Slug 工具类
- * 用于生成 URL 友好的字符串别名
+ * 用于生成 URL 友好的字符串别名（支持中文转拼音）
  *
  * @author puber
  * @version 1.0.0
@@ -15,23 +21,25 @@ import java.util.regex.Pattern;
 public class SlugUtils {
 
     /**
-     * 非拉丁字符正则表达式
-     */
-    private static final Pattern NON_LATIN = Pattern.compile("[^\\w-]");
-
-    /**
-     * 连续空白字符正则表达式
-     */
-    private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
-
-    /**
      * 连续连字符正则表达式
      */
     private static final Pattern MULTIPLE_HYPHENS = Pattern.compile("-{2,}");
 
     /**
+     * 拼音输出格式
+     */
+    private static final HanyuPinyinOutputFormat PINYIN_FORMAT;
+
+    static {
+        PINYIN_FORMAT = new HanyuPinyinOutputFormat();
+        PINYIN_FORMAT.setCaseType(HanyuPinyinCaseType.LOWERCASE);
+        PINYIN_FORMAT.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
+        PINYIN_FORMAT.setVCharType(HanyuPinyinVCharType.WITH_V);
+    }
+
+    /**
      * 生成 Slug
-     * 将输入字符串转换为 URL 友好的格式
+     * 将输入字符串转换为 URL 友好的格式（中文自动转拼音）
      *
      * @param input 输入字符串
      * @return String Slug 字符串
@@ -41,13 +49,70 @@ public class SlugUtils {
             return "";
         }
 
-        String slug = input.toLowerCase(Locale.CHINESE)
-                .replace(" ", "-")  // 替换空格为连字符
-                .replaceAll("[^a-z0-9\\u4e00-\\u9fa5-]", "")  // 移除特殊字符，保留中文、字母、数字和连字符
+        // 中文转拼音
+        String slug = convertChineseToPinyin(input.toLowerCase(Locale.CHINESE).trim());
+
+        // 清理和格式化
+        slug = slug
+                .replaceAll("[^a-z0-9-]", "")  // 移除特殊字符，只保留字母、数字和连字符
                 .replaceAll("-{2,}", "-")  // 替换连续连字符为单个连字符
                 .replaceAll("^-|-$", "");  // 移除开头和结尾的连字符
 
         return slug;
+    }
+
+    /**
+     * 将中文字符转换为拼音
+     * 非中文字符保持不变
+     *
+     * @param input 输入字符串
+     * @return String 拼音字符串
+     */
+    private static String convertChineseToPinyin(String input) {
+        StringBuilder result = new StringBuilder();
+
+        for (char c : input.toCharArray()) {
+            // 判断是否为中文字符
+            if (isChinese(c)) {
+                try {
+                    // 获取拼音数组（一个汉字可能有多音字）
+                    String[] pinyinArray = PinyinHelper.toHanyuPinyinStringArray(c, PINYIN_FORMAT);
+
+                    if (pinyinArray != null && pinyinArray.length > 0) {
+                        // 取第一个拼音（最常用的读音）
+                        result.append(pinyinArray[0]);
+                    } else {
+                        // 如果无法获取拼音，保留原字符
+                        result.append(c);
+                    }
+                } catch (BadHanyuPinyinOutputFormatCombination e) {
+                    // 转换失败时保留原字符
+                    result.append(c);
+                }
+            } else if (Character.isWhitespace(c)) {
+                // 空格替换为连字符
+                result.append('-');
+            } else {
+                // 非中文字符直接保留
+                result.append(c);
+            }
+        }
+
+        return result.toString();
+    }
+
+    /**
+     * 判断字符是否为中文
+     *
+     * @param c 字符
+     * @return boolean 是否为中文
+     */
+    private static boolean isChinese(char c) {
+        // 中文Unicode范围：基本汉字 + 扩展A区
+        // 基本汉字：\u4e00-\u9fa5
+        // 扩展A区：\u3400-\u4dbf
+        return (c >= '\u4e00' && c <= '\u9fa5') ||
+               (c >= '\u3400' && c <= '\u4dbf');
     }
 
     /**
