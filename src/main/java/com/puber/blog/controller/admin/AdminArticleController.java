@@ -4,7 +4,9 @@ import com.puber.blog.dto.ArticleDTO;
 import com.puber.blog.dto.ArticleListVO;
 import com.puber.blog.dto.ArticleVO;
 import com.puber.blog.entity.Article;
+import com.puber.blog.entity.User;
 import com.puber.blog.service.ArticleService;
+import com.puber.blog.service.UserService;
 import com.puber.blog.utils.FileUploadUtils;
 import com.puber.blog.vo.Result;
 import lombok.RequiredArgsConstructor;
@@ -13,10 +15,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.security.Principal;
 
 /**
  * 后台文章管理控制器
@@ -33,6 +35,7 @@ import java.security.Principal;
 public class AdminArticleController {
 
     private final ArticleService articleService;
+    private final UserService userService;
 
     /**
      * 获取文章列表（分页）
@@ -72,18 +75,18 @@ public class AdminArticleController {
      * 创建文章
      *
      * @param dto 文章DTO
-     * @param principal 当前登录用户
      * @return Result<Article> 创建的文章
      */
     @PostMapping
-    public Result<Article> createArticle(@RequestBody ArticleDTO dto, Principal principal) {
+    public Result<Article> createArticle(@RequestBody ArticleDTO dto) {
         log.info("创建文章：{}", dto.getTitle());
 
-        // 获取当前登录用户的ID（这里简化处理，实际应该从UserDetailsService获取）
-        // TODO: 从SecurityContext获取用户ID
-        Long authorId = 1L; // 暂时固定为admin用户
+        // 获取当前登录用户
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User currentUser = userService.getUserByUsername(username);
 
-        Article article = articleService.createArticle(dto, authorId);
+        Article article = articleService.createArticle(dto, currentUser.getId());
         return Result.success(article);
     }
 
