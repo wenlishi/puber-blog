@@ -9,6 +9,7 @@ import com.puber.blog.entity.User;
 import com.puber.blog.exception.BusinessException;
 import com.puber.blog.repository.*;
 import com.puber.blog.service.ArticleService;
+import com.puber.blog.service.CommentService;
 import com.puber.blog.utils.MarkdownUtils;
 import com.puber.blog.utils.SlugUtils;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class ArticleServiceImpl implements ArticleService {
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
+    private final CommentService commentService;
 
     /**
      * 获取已发布文章列表（分页）
@@ -137,7 +139,10 @@ public class ArticleServiceImpl implements ArticleService {
         // 增加浏览量
         incrementViewCount(article.getId());
 
-        return convertToVO(article);
+        // 查询评论数量
+        Long commentCount = commentService.countByArticleId(article.getId());
+
+        return convertToVO(article, commentCount);
     }
 
     /**
@@ -153,7 +158,10 @@ public class ArticleServiceImpl implements ArticleService {
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(404, "文章不存在：" + id));
 
-        return convertToVO(article);
+        // 查询评论数量
+        Long commentCount = commentService.countByArticleId(article.getId());
+
+        return convertToVO(article, commentCount);
     }
 
     /**
@@ -499,9 +507,10 @@ public class ArticleServiceImpl implements ArticleService {
      * 将Article实体转换为ArticleVO
      *
      * @param article 文章实体
+     * @param commentCount 评论数量
      * @return ArticleVO 文章视图对象
      */
-    private ArticleVO convertToVO(Article article) {
+    private ArticleVO convertToVO(Article article, Long commentCount) {
         // 获取分类信息
         CategoryVO categoryVO = null;
         if (article.getCategoryId() != null) {
@@ -571,6 +580,7 @@ public class ArticleServiceImpl implements ArticleService {
                 .isTop(article.getIsTop())
                 .viewCount(article.getViewCount())
                 .isCommentEnabled(article.getIsCommentEnabled())
+                .commentCount(commentCount)
                 .category(categoryVO)
                 .tags(tagVOs)
                 .tagNames(tagNames)

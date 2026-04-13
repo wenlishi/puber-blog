@@ -78,6 +78,11 @@ public class ArticleVO {
     private Boolean isCommentEnabled;
 
     /**
+     * 评论数量（已批准）
+     */
+    private Long commentCount;
+
+    /**
      * 分类信息
      */
     private CategoryVO category;

@@ -224,6 +224,260 @@ body {
     margin-right: 0.3rem;
 }
 
+/* ==================== 评论区域样式 ==================== */
+
+/* 评论区域容器 */
+.comments-section {
+    padding: 2rem 0;
+}
+
+/* 评论标题 */
+.comments-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.comments-title .bi {
+    font-size: 1.5rem;
+    vertical-align: middle;
+    margin-right: 0.5rem;
+}
+
+.comments-title .badge {
+    font-size: 0.9rem;
+    padding: 0.3rem 0.6rem;
+}
+
+/* 评论列表容器 */
+.comments-list {
+    margin-bottom: 2rem;
+}
+
+/* 单条评论卡片 */
+.comment-item {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+}
+
+.comment-item:hover {
+    background-color: #fff;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* 评论者信息 */
+.comment-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.comment-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #0d6efd;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-right: 0.75rem;
+}
+
+.comment-author {
+    font-weight: 600;
+    color: #212529;
+    margin-right: 0.5rem;
+}
+
+.comment-author-link {
+    color: #212529;
+    text-decoration: none;
+}
+
+.comment-author-link:hover {
+    color: #0d6efd;
+    text-decoration: underline;
+}
+
+.comment-date {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* 评论内容 */
+.comment-content {
+    color: #343a40;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+    padding-left: 3.25rem; /* 与头像对齐 */
+}
+
+/* 评论操作区 */
+.comment-actions {
+    padding-left: 3.25rem;
+}
+
+.comment-reply-btn {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+    border: none;
+    background-color: transparent;
+    color: #6c757d;
+    transition: color 0.2s ease;
+}
+
+.comment-reply-btn:hover {
+    color: #0d6efd;
+}
+
+.comment-reply-btn .bi {
+    font-size: 0.85rem;
+    margin-right: 0.25rem;
+}
+
+/* 子评论列表（回复） */
+.comment-replies {
+    margin-left: 3.25rem;
+    margin-top: 1rem;
+    padding-left: 1rem;
+    border-left: 2px solid #dee2e6;
+}
+
+.comment-replies .comment-item {
+    background-color: #fff;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.comment-replies .comment-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
+}
+
+.comment-replies .comment-content {
+    padding-left: 2.75rem;
+    font-size: 0.95rem;
+}
+
+.comment-replies .comment-actions {
+    padding-left: 2.75rem;
+}
+
+/* 回复提示 */
+.reply-to {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-right: 0.25rem;
+}
+
+.reply-to-nickname {
+    color: #0d6efd;
+    font-weight: 500;
+}
+
+/* 评论表单容器 */
+.comment-form-container {
+    padding: 2rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+}
+
+/* 评论表单标题 */
+.comment-form-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 1rem;
+}
+
+.comment-form-title .bi {
+    font-size: 1.2rem;
+    vertical-align: middle;
+    margin-right: 0.5rem;
+}
+
+/* 评论表单 */
+.comment-form .form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.comment-form .form-control {
+    border-radius: 0.25rem;
+}
+
+.comment-form .form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* 评论提交按钮 */
+.comment-form .btn-primary {
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+}
+
+.comment-form .btn-primary .bi {
+    margin-right: 0.25rem;
+}
+
+/* 回复信息提示 */
+#reply-info {
+    padding: 0.5rem 1rem;
+    background-color: #e7f1ff;
+    border-radius: 0.25rem;
+    border-left: 3px solid #0d6efd;
+}
+
+#cancel-reply-btn {
+    font-size: 0.8rem;
+}
+
+/* 评论提交成功提示 */
+.comment-success-alert {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 空评论提示 */
+.comments-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+}
+
+.comments-empty .bi {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.comments-empty p {
+    font-size: 0.95rem;
+}
+
 /* 文章内容区 */
 .article-content {
     line-height: 1.8;
