@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人信息管理 - puber-blog后台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .navbar-brand { font-weight: bold; }
+        .card { box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); }
+        .avatar-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #dee2e6;
+        }
+        .avatar-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/dashboard"><i class="bi bi-house-fill"></i> puber-blog后台</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/admin/dashboard"><i class="bi bi-speedometer2"></i> 仪表盘</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/articles"><i class="bi bi-file-text-fill"></i> 文章管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/categories"><i class="bi bi-folder-fill"></i> 分类管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/tags"><i class="bi bi-tags-fill"></i> 标签管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/comments"><i class="bi bi-chat-fill"></i> 评论管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/settings"><i class="bi bi-gear-fill"></i> 系统设置</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> admin</a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item active" href="/admin/user/profile"><i class="bi bi-person"></i> 个人信息</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/perform_logout"><i class="bi bi-box-arrow-right"></i> 退出登录</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="container mt-4">
+        <div class="row">
+            <!-- 个人信息卡片 -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-person-circle"></i> 个人信息管理</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- 头像预览 -->
+                        <div class="avatar-container">
+                            <img src="https://via.placeholder.com/150" alt="头像" class="avatar-preview" id="avatarPreview">
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="changeAvatar()">
+                                    <i class="bi bi-image"></i> 更换头像
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 个人信息表单 -->
+                        <form id="profileForm">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>用户名</strong>（登录名，不可修改）</label>
+                                <input type="text" class="form-control" name="username" id="username" readonly disabled>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label"><strong>昵称</strong></label>
+                                <input type="text" class="form-control" name="nickname" id="nickname" placeholder="请输入昵称">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label"><strong>邮箱</strong></label>
+                                <input type="email" class="form-control" name="email" id="email" placeholder="请输入邮箱">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label"><strong>个人简介</strong></label>
+                                <textarea class="form-control" name="bio" id="bio" rows="3" placeholder="请输入个人简介"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label"><strong>头像URL</strong></label>
+                                <input type="text" class="form-control" name="avatar" id="avatar" placeholder="请输入头像图片URL">
+                                <small class="text-muted">支持外部图片链接，建议使用正方形图片</small>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> 保存个人信息
+                                </button>
+                                <button type="button" class="btn btn-secondary ms-2" onclick="loadProfile()">
+                                    <i class="bi bi-arrow-counterclockwise"></i> 重置
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 修改密码卡片 -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-key"></i> 修改密码</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="passwordForm">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>旧密码</strong></label>
+                                <input type="password" class="form-control" name="oldPassword" id="oldPassword" placeholder="请输入旧密码" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label"><strong>新密码</strong></label>
+                                <input type="password" class="form-control" name="newPassword" id="newPassword" placeholder="请输入新密码（至少6位）" required minlength="6">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label"><strong>确认新密码</strong></label>
+                                <input type="password" class="form-control" name="confirmPassword" id="confirmPassword" placeholder="请再次输入新密码" required minlength="6">
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-key"></i> 修改密码
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="alert alert-info mt-3">
+                            <small><i class="bi bi-exclamation-triangle"></i> 提示：修改密码后需要重新登录</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧提示卡片 -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-lightbulb"></i> 使用说明</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-3">
+                                <i class="bi bi-info-circle text-info"></i>
+                                <strong>用户名</strong>：登录账号，不可修改。如需更改请联系管理员
+                            </li>
+                            <li class="mb-3">
+                                <i class="bi bi-info-circle text-info"></i>
+                                <strong>昵称</strong>：显示在文章作者和评论中，可以随意修改
+                            </li>
+                            <li class="mb-3">
+                                <i class="bi bi-info-circle text-info"></i>
+                                <strong>邮箱</strong>：用于接收评论通知，请确保邮箱有效
+                            </li>
+                            <li class="mb-3">
+                                <i class="bi bi-info-circle text-info"></i>
+                                <strong>头像</strong>：支持外部图片链接，建议使用150x150正方形图片
+                            </li>
+                            <li class="mb-3">
+                                <i class="bi bi-info-circle text-info"></i>
+                                <strong>个人简介</strong>：显示在前台"关于我"页面
+                            </li>
+                        </ul>
+                        <hr>
+                        <div class="alert alert-warning">
+                            <small><i class="bi bi-shield-exclamation"></i> 安全提示：请使用强密码，包含字母、数字和特殊字符</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 加载个人信息
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProfile();
+        });
+
+        // 加载个人信息
+        function loadProfile() {
+            fetch('/admin/user/api/profile')
+                .then(response => response.json())
+                .then(result => {
+                    if (result.code === 200) {
+                        const user = result.data;
+
+                        // 填充表单
+                        document.getElementById('username').value = user.username || '';
+                        document.getElementById('nickname').value = user.nickname || '';
+                        document.getElementById('email').value = user.email || '';
+                        document.getElementById('bio').value = user.bio || '';
+                        document.getElementById('avatar').value = user.avatar || '';
+
+                        // 更新头像预览
+                        updateAvatarPreview(user.avatar);
+                    }
+                })
+                .catch(error => {
+                    console.error('加载个人信息失败:', error);
+                    alert('加载个人信息失败，请刷新页面重试');
+                });
+        }
+
+        // 更新头像预览
+        function updateAvatarPreview(avatarUrl) {
+            const preview = document.getElementById('avatarPreview');
+            if (avatarUrl && avatarUrl.trim() !== '') {
+                preview.src = avatarUrl;
+            } else {
+                preview.src = 'https://via.placeholder.com/150';
+            }
+        }
+
+        // 头像URL输入框变化时更新预览
+        document.getElementById('avatar').addEventListener('input', function() {
+            updateAvatarPreview(this.value);
+        });
+
+        // 更换头像按钮
+        function changeAvatar() {
+            const avatarInput = document.getElementById('avatar');
+            avatarInput.focus();
+            alert('请在头像URL输入框中输入新的头像图片链接');
+        }
+
+        // 提交个人信息表单
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // 收集表单数据
+            const formData = {
+                nickname: document.getElementById('nickname').value,
+                email: document.getElementById('email').value,
+                bio: document.getElementById('bio').value,
+                avatar: document.getElementById('avatar').value
+            };
+
+            // 更新个人信息
+            fetch('/admin/user/api/profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.code === 200) {
+                    alert('个人信息保存成功！');
+                    loadProfile(); // 重新加载信息
+                } else {
+                    alert('保存失败：' + result.message);
+                }
+            })
+            .catch(error => {
+                console.error('保存个人信息失败:', error);
+                alert('保存失败，请重试');
+            });
+        });
+
+        // 提交修改密码表单
+        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // 验证新密码和确认密码是否一致
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                alert('新密码和确认密码不一致！');
+                return;
+            }
+
+            // 验证密码长度
+            if (newPassword.length < 6) {
+                alert('新密码长度至少6位！');
+                return;
+            }
+
+            // 收集表单数据
+            const formData = {
+                oldPassword: document.getElementById('oldPassword').value,
+                newPassword: newPassword,
+                confirmPassword: confirmPassword
+            };
+
+            // 修改密码
+            fetch('/admin/user/api/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.code === 200) {
+                    alert('密码修改成功！请重新登录');
+
+                    // 清空表单
+                    document.getElementById('passwordForm').reset();
+
+                    // 跳转到登录页
+                    setTimeout(function() {
+                        window.location.href = '/login';
+                    }, 1500);
+                } else {
+                    alert('修改失败：' + result.message);
+                }
+            })
+            .catch(error => {
+                console.error('修改密码失败:', error);
+                alert('修改失败，请重试');
+            });
+        });
+    </script>
+</body>
+</html>
