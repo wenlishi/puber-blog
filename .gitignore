@@ -91,6 +91,9 @@ coverage/
 # Documentation
 docs/_build/
 
+# Project specific files
+开发需求.txt
+
 # Backup files
 *.backup
 *.old
