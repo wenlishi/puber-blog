@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>公共组件</title>
+</head>
+<body>
+
+<!-- 导航栏 Fragment -->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+        <!-- Logo -->
+        <a class="navbar-brand" th:href="@{/}" th:text="${siteName}">博客名称</a>
+
+        <!-- 移动端折叠按钮 -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- 导航菜单 -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <!-- 左侧菜单 -->
+            <ul class="navbar-nav me-auto">
+                <!-- 首页 -->
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${#httpServletRequest.requestURI == '/'} ? 'active'" th:href="@{/}">
+                        <i class="bi bi-house-door"></i> 首页
+                    </a>
+                </li>
+
+                <!-- 分类下拉菜单 -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <i class="bi bi-folder"></i> 分类
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li th:each="category : ${categories}">
+                            <a class="dropdown-item" th:href="@{/category/{slug}(slug=${category.slug})}"
+                               th:text="${category.name} + (${category.articleCount > 0} ? ' (' + ${category.articleCount} + ')' : '')">
+                                分类名称
+                            </a>
+                        </li>
+                        <li th:if="${categories == null or categories.isEmpty()}">
+                            <a class="dropdown-item text-muted" href="#">暂无分类</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- 标签下拉菜单 -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <i class="bi bi-tags"></i> 标签
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li th:each="tag : ${tags}">
+                            <a class="dropdown-item" th:href="@{/tag/{slug}(slug=${tag.slug})}"
+                               th:text="${tag.name} + (${tag.articleCount > 0} ? ' (' + ${tag.articleCount} + ')' : '')">
+                                标签名称
+                            </a>
+                        </li>
+                        <li th:if="${tags == null or tags.isEmpty()}">
+                            <a class="dropdown-item text-muted" href="#">暂无标签</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- 归档 -->
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${#httpServletRequest.requestURI == '/archive'} ? 'active'" th:href="@{/archive}">
+                        <i class="bi bi-calendar3"></i> 归档
+                    </a>
+                </li>
+            </ul>
+
+            <!-- 右侧：搜索框和登录 -->
+            <form class="d-flex me-3" th:action="@{/search}" method="get">
+                <div class="input-group">
+                    <input class="form-control" type="search" name="keyword" placeholder="搜索文章..." th:value="${keyword}">
+                    <button class="btn btn-outline-light" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/login}">
+                        <i class="bi bi-box-arrow-in-right"></i> 登录
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- 文章卡片 Fragment -->
+<div th:fragment="article-card(article)" class="card article-card shadow-sm">
+    <!-- 封面图 -->
+    <img th:if="${article.coverImage != null and article.coverImage != ''}"
+         class="card-img-top"
+         th:src="${article.coverImage}"
+         alt="文章封面"
+         style="height: 200px; object-fit: cover;">
+
+    <div class="card-body">
+        <!-- 标题 -->
+        <h5 class="card-title">
+            <!-- 置顶标识 -->
+            <span th:if="${article.isTop}" class="badge bg-warning text-dark me-2">
+                <i class="bi bi-pin-angle-fill"></i> 置顶
+            </span>
+            <a th:href="@{/article/{slug}(slug=${article.slug})}"
+               th:text="${article.title}"
+               class="text-decoration-none text-dark">
+                文章标题
+            </a>
+        </h5>
+
+        <!-- 摘要 -->
+        <p class="card-text text-muted" th:text="${article.summary}">
+            文章摘要...
+        </p>
+
+        <!-- 分类badge -->
+        <div th:if="${article.categoryName != null}" class="mb-2">
+            <a class="badge bg-primary text-decoration-none"
+               th:href="@{/category/{slug}(slug=${article.categorySlug})}"
+               th:text="${article.categoryName}">
+                分类名称
+            </a>
+        </div>
+
+        <!-- 元信息 -->
+        <div class="article-meta d-flex justify-content-between align-items-center text-muted small">
+            <div>
+                <span th:if="${article.authorName != null}">
+                    <i class="bi bi-person-circle"></i>
+                    <span th:text="${article.authorName}">作者</span>
+                </span>
+                <span class="ms-2" th:if="${article.publishedAt != null}">
+                    <i class="bi bi-calendar"></i>
+                    <span th:text="${#temporals.format(article.publishedAt, 'yyyy-MM-dd')}">发布时间</span>
+                </span>
+            </div>
+            <div>
+                <span th:if="${article.viewCount != null}">
+                    <i class="bi bi-eye"></i>
+                    <span th:text="${article.viewCount}">0</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 标签 -->
+    <div class="card-footer bg-white border-top-0" th:if="${article.tagNames != null and article.tagNames != ''}">
+        <div class="article-tags">
+            <span th:each="tag, stat : ${article.tagNames.split(',')}"
+                  class="badge bg-secondary me-1"
+                  th:text="${tag.trim()}">标签</span>
+        </div>
+    </div>
+</div>
+
+<!-- 页脚 Fragment -->
+<footer th:fragment="footer" class="bg-dark text-white text-center py-4 mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h5 th:text="${siteName}">博客名称</h5>
+                <p class="small" th:text="${siteDescription}">网站描述</p>
+            </div>
+            <div class="col-md-6">
+                <p class="small">
+                    Powered by <strong>Spring Boot</strong> + <strong>Thymeleaf</strong>
+                </p>
+                <p class="small text-muted">
+                    Copyright © 2026 puber-blog. All Rights Reserved.
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- 分页导航 Fragment -->
+<nav th:fragment="pagination(currentPage, totalPages, baseUrl)" aria-label="分页导航" th:if="${totalPages > 1}">
+    <ul class="pagination justify-content-center">
+        <!-- 首页 -->
+        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+            <a class="page-link" th:href="@{${baseUrl}(page=0)}">首页</a>
+        </li>
+
+        <!-- 上一页 -->
+        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+            <a class="page-link" th:href="@{${baseUrl}(page=${currentPage - 1})}"
+               th:if="${currentPage > 0}">上一页</a>
+            <span class="page-link" th:if="${currentPage == 0}">上一页</span>
+        </li>
+
+        <!-- 页码 -->
+        <li class="page-item"
+            th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+            th:classappend="${i == currentPage} ? 'active'">
+            <a class="page-link" th:href="@{${baseUrl}(page=${i})}" th:text="${i + 1}">1</a>
+        </li>
+
+        <!-- 下一页 -->
+        <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+            <a class="page-link" th:href="@{${baseUrl}(page=${currentPage + 1})}"
+               th:if="${currentPage < totalPages - 1}">下一页</a>
+            <span class="page-link" th:if="${currentPage == totalPages - 1}">下一页</span>
+        </li>
+
+        <!-- 尾页 -->
+        <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+            <a class="page-link" th:href="@{${baseUrl}(page=${totalPages - 1})}">尾页</a>
+        </li>
+    </ul>
+
+    <!-- 分页信息 -->
+    <p class="text-center text-muted small mt-2">
+        当前第 <strong th:text="${currentPage + 1}">1</strong> 页，
+        共 <strong th:text="${totalPages}">10</strong> 页
+    </p>
+</nav>
+
+<!-- 空数据提示 Fragment -->
+<div th:fragment="empty-state(message)" class="text-center py-5">
+    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+    <p class="text-muted mt-3" th:text="${message}">暂无数据</p>
+</div>
+
+</body>
+</html>

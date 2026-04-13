@@ -447,12 +447,14 @@ public class ArticleServiceImpl implements ArticleService {
      * @return ArticleListVO 文章列表视图对象
      */
     private ArticleListVO convertToListVO(Article article) {
-        // 获取分类名称
+        // 获取分类信息
         String categoryName = null;
+        String categorySlug = null;
         if (article.getCategoryId() != null) {
             Category category = categoryRepository.findById(article.getCategoryId()).orElse(null);
             if (category != null) {
                 categoryName = category.getName();
+                categorySlug = category.getSlug();
             }
         }
 
@@ -485,6 +487,7 @@ public class ArticleServiceImpl implements ArticleService {
                 .isTop(article.getIsTop())
                 .viewCount(article.getViewCount())
                 .categoryName(categoryName)
+                .categorySlug(categorySlug)
                 .tagNames(tagNames)
                 .authorName(authorName)
                 .publishedAt(article.getPublishedAt())
@@ -530,6 +533,14 @@ public class ArticleServiceImpl implements ArticleService {
                     .collect(Collectors.toList());
         }
 
+        // 获取标签名称列表（逗号分隔，用于SEO）
+        String tagNames = null;
+        if (!tagVOs.isEmpty()) {
+            tagNames = tagVOs.stream()
+                    .map(TagVO::getName)
+                    .collect(Collectors.joining(", "));
+        }
+
         // 获取作者信息
         ArticleVO.AuthorVO authorVO = null;
         if (article.getAuthorId() != null) {
@@ -561,6 +572,7 @@ public class ArticleServiceImpl implements ArticleService {
                 .isCommentEnabled(article.getIsCommentEnabled())
                 .category(categoryVO)
                 .tags(tagVOs)
+                .tagNames(tagNames)
                 .author(authorVO)
                 .publishedAt(article.getPublishedAt())
                 .createdAt(article.getCreatedAt())

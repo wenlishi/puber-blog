@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${siteName + ' - 首页'}">博客首页</title>
+    <title th:text="${tag.name + ' - ' + siteName}">标签文章</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,8 +15,7 @@
     <link href="/css/front.css" rel="stylesheet">
 
     <!-- SEO Meta -->
-    <meta name="description" th:content="${siteDescription}">
-    <meta name="keywords" content="博客,技术,分享">
+    <meta name="description" th:content="'查看标签 ' + ${tag.name} + ' 下的所有文章'">
 </head>
 <body>
 
@@ -25,6 +24,16 @@
 
 <!-- 主内容区 -->
 <div class="container mt-4">
+    <!-- 标签信息 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">
+                <i class="bi bi-tags"></i>
+                <span th:text="${tag.name}">标签名称</span>
+            </h2>
+        </div>
+    </div>
+
     <div class="row">
         <!-- 文章列表 -->
         <div class="col-lg-8">
@@ -36,26 +45,16 @@
             </div>
 
             <!-- 空数据提示 -->
-            <div th:if="${articles.totalElements == 0}" th:replace="~{front/fragments :: empty-state('暂无文章，敬请期待...')}"></div>
+            <div th:if="${articles.totalElements == 0}" th:replace="~{front/fragments :: empty-state('该标签下暂无文章')}"></div>
 
             <!-- 分页导航 -->
             <div th:if="${articles.totalPages > 1}" class="mt-4">
-                <div th:replace="~{front/fragments :: pagination(${currentPage}, ${totalPages}, '/')}"></div>
+                <div th:replace="~{front/fragments :: pagination(${currentPage}, ${totalPages}, '/tag/{slug}(slug=${tag.slug})')}"></div>
             </div>
         </div>
 
         <!-- 侧边栏 -->
         <div class="col-lg-4">
-            <!-- 关于本站 -->
-            <div class="card sidebar-card">
-                <div class="card-header">
-                    <i class="bi bi-info-circle"></i> 关于本站
-                </div>
-                <div class="card-body">
-                    <p class="small" th:text="${siteDescription}">博客描述</p>
-                </div>
-            </div>
-
             <!-- 分类列表 -->
             <div class="card sidebar-card" th:if="${categories != null and !categories.isEmpty()}">
                 <div class="card-header">
@@ -73,17 +72,17 @@
                 </div>
             </div>
 
-            <!-- 标签云 -->
+            <!-- 其他标签 -->
             <div class="card sidebar-card" th:if="${tags != null and !tags.isEmpty()}">
                 <div class="card-header">
-                    <i class="bi bi-tags"></i> 标签
+                    <i class="bi bi-tags"></i> 其他标签
                 </div>
                 <div class="card-body">
                     <div class="tag-cloud">
-                        <a th:each="tag : ${tags}"
+                        <a th:each="t : ${tags}" th:if="${t.id != tag.id}"
                            class="tag-cloud-item"
-                           th:href="@{/tag/{slug}(slug=${tag.slug})}"
-                           th:text="${tag.name}">标签名</a>
+                           th:href="@{/tag/{slug}(slug=${t.slug})}"
+                           th:text="${t.name}">标签名</a>
                     </div>
                 </div>
             </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${siteName + ' - 首页'}">博客首页</title>
+    <title th:text="'文章归档 - ' + ${siteName}">文章归档</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,8 +15,7 @@
     <link href="/css/front.css" rel="stylesheet">
 
     <!-- SEO Meta -->
-    <meta name="description" th:content="${siteDescription}">
-    <meta name="keywords" content="博客,技术,分享">
+    <meta name="description" th:content="'查看所有已发布文章的归档 - ' + ${siteName}">
 </head>
 <body>
 
@@ -26,33 +25,52 @@
 <!-- 主内容区 -->
 <div class="container mt-4">
     <div class="row">
-        <!-- 文章列表 -->
+        <!-- 归档内容 -->
         <div class="col-lg-8">
-            <div class="row">
-                <!-- 文章卡片列表 -->
-                <div th:each="article : ${articles.content}" class="col-md-6 mb-4">
-                    <div th:replace="~{front/fragments :: article-card(${article})}"></div>
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-calendar3"></i> 文章归档</h4>
                 </div>
-            </div>
+                <div class="card-body archive-container">
+                    <!-- 按年份分组 -->
+                    <div th:each="year : ${archive.keySet()}">
+                        <div class="archive-year" th:text="${year + '年'}">2026年</div>
 
-            <!-- 空数据提示 -->
-            <div th:if="${articles.totalElements == 0}" th:replace="~{front/fragments :: empty-state('暂无文章，敬请期待...')}"></div>
+                        <!-- 按月份分组 -->
+                        <div th:each="month : ${archive.get(year).keySet()}">
+                            <div class="archive-month">
+                                <div class="archive-month-title" th:text="${month + '月'}">4月</div>
 
-            <!-- 分页导航 -->
-            <div th:if="${articles.totalPages > 1}" class="mt-4">
-                <div th:replace="~{front/fragments :: pagination(${currentPage}, ${totalPages}, '/')}"></div>
+                                <!-- 文章列表 -->
+                                <ul class="archive-article-list">
+                                    <li th:each="article : ${archive.get(year).get(month)}">
+                                        <a th:href="@{/article/{slug}(slug=${article.slug})}"
+                                           th:text="${article.title}">文章标题</a>
+                                        <small class="text-muted ms-2"
+                                               th:text="${#temporals.format(article.publishedAt, 'MM-dd')}">04-13</small>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 空数据提示 -->
+                    <div th:if="${archive.isEmpty()}" th:replace="~{front/fragments :: empty-state('暂无文章')}"></div>
+                </div>
             </div>
         </div>
 
         <!-- 侧边栏 -->
         <div class="col-lg-4">
-            <!-- 关于本站 -->
+            <!-- 归档统计 -->
             <div class="card sidebar-card">
                 <div class="card-header">
-                    <i class="bi bi-info-circle"></i> 关于本站
+                    <i class="bi bi-bar-chart"></i> 统计
                 </div>
                 <div class="card-body">
-                    <p class="small" th:text="${siteDescription}">博客描述</p>
+                    <p class="small">
+                        共计 <strong th:text="${archive.values().stream().flatMap(m -> m.values().stream()).flatMap(list -> list.stream()).count()}">0</strong> 篇文章
+                    </p>
                 </div>
             </div>
 

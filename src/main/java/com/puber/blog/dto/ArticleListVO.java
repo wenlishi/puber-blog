@@ -67,6 +67,11 @@ public class ArticleListVO {
     private String categoryName;
 
     /**
+     * 分类别名（用于URL）
+     */
+    private String categorySlug;
+
+    /**
      * 标签名称列表（逗号分隔）
      */
     private String tagNames;

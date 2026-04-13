@@ -88,6 +88,11 @@ public class ArticleVO {
     private List<TagVO> tags;
 
     /**
+     * 标签名称列表（逗号分隔，用于SEO）
+     */
+    private String tagNames;
+
+    /**
      * 作者信息
      */
     private AuthorVO author;
