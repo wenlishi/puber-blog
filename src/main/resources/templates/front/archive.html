@@ -55,7 +55,7 @@
                     </div>
 
                     <!-- 空数据提示 -->
-                    <div th:if="${archive.isEmpty()}" th:replace="~{front/fragments :: empty-state('暂无文章')}"></div>
+                    <div th:if="${#lists.isEmpty(archive.keySet())}" th:replace="~{front/fragments :: empty-state('暂无文章')}"></div>
                 </div>
             </div>
         </div>
@@ -75,7 +75,7 @@
             </div>
 
             <!-- 分类列表 -->
-            <div class="card sidebar-card" th:if="${categories != null and !categories.isEmpty()}">
+            <div class="card sidebar-card" th:if="${categories != null and !#lists.isEmpty(categories)}">
                 <div class="card-header">
                     <i class="bi bi-folder"></i> 分类
                 </div>
@@ -92,7 +92,7 @@
             </div>
 
             <!-- 标签云 -->
-            <div class="card sidebar-card" th:if="${tags != null and !tags.isEmpty()}">
+            <div class="card sidebar-card" th:if="${tags != null and !#lists.isEmpty(tags)}">
                 <div class="card-header">
                     <i class="bi bi-tags"></i> 标签
                 </div>

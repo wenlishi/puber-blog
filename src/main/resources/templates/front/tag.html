@@ -56,7 +56,7 @@
         <!-- 侧边栏 -->
         <div class="col-lg-4">
             <!-- 分类列表 -->
-            <div class="card sidebar-card" th:if="${categories != null and !categories.isEmpty()}">
+            <div class="card sidebar-card" th:if="${categories != null and !#lists.isEmpty(categories)}">
                 <div class="card-header">
                     <i class="bi bi-folder"></i> 分类
                 </div>
@@ -73,7 +73,7 @@
             </div>
 
             <!-- 其他标签 -->
-            <div class="card sidebar-card" th:if="${tags != null and !tags.isEmpty()}">
+            <div class="card sidebar-card" th:if="${tags != null and !#lists.isEmpty(tags)}">
                 <div class="card-header">
                     <i class="bi bi-tags"></i> 其他标签
                 </div>
