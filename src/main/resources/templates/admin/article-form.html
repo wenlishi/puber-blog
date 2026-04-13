@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章编辑 - puber-blog后台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- EasyMDE Markdown Editor -->
+    <link href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .EasyMDEContainer { max-width: 100%; }
+        .editor-toolbar { border-color: #dee2e6; }
+        .cover-preview { max-width: 300px; margin-top: 10px; }
+        .tag-checkbox { margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/dashboard"><i class="bi bi-house-fill"></i> puber-blog后台</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/admin/dashboard"><i class="bi bi-speedometer2"></i> 仪表盘</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/admin/articles"><i class="bi bi-file-text-fill"></i> 文章管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/categories"><i class="bi bi-folder-fill"></i> 分类管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/tags"><i class="bi bi-tags-fill"></i> 标签管理</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> admin</a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/perform_logout"><i class="bi bi-box-arrow-right"></i> 退出登录</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0" id="pageTitle"><i class="bi bi-file-text"></i> 新增文章</h5>
+            </div>
+            <div class="card-body">
+                <form id="articleForm">
+                    <input type="hidden" id="articleId">
+
+                    <!-- 文章标题 -->
+                    <div class="mb-3">
+                        <label for="title" class="form-label">文章标题 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" required>
+                    </div>
+
+                    <!-- 文章别名（slug） -->
+                    <div class="mb-3">
+                        <label for="slug" class="form-label">别名（Slug）</label>
+                        <input type="text" class="form-control" id="slug">
+                        <div class="form-text">如果不填写，系统会自动根据标题生成</div>
+                    </div>
+
+                    <!-- 封面图片 -->
+                    <div class="mb-3">
+                        <label for="coverImage" class="form-label">封面图片</label>
+                        <input type="file" class="form-control" id="coverImageFile" accept="image/*" onchange="uploadCoverImage()">
+                        <input type="hidden" id="coverImage">
+                        <img id="coverImagePreview" class="cover-preview" style="display:none;">
+                    </div>
+
+                    <!-- 文章摘要 -->
+                    <div class="mb-3">
+                        <label for="summary" class="form-label">文章摘要</label>
+                        <textarea class="form-control" id="summary" rows="2"></textarea>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="generateSummary()">自动生成摘要</button>
+                    </div>
+
+                    <!-- Markdown编辑器 -->
+                    <div class="mb-3">
+                        <label for="content" class="form-label">文章内容（Markdown） <span class="text-danger">*</span></label>
+                        <textarea id="content"></textarea>
+                    </div>
+
+                    <!-- 分类选择 -->
+                    <div class="mb-3">
+                        <label for="categoryId" class="form-label">分类</label>
+                        <select class="form-select" id="categoryId">
+                            <option value="">无分类</option>
+                        </select>
+                    </div>
+
+                    <!-- 标签选择 -->
+                    <div class="mb-3">
+                        <label class="form-label">标签</label>
+                        <div id="tagContainer"></div>
+                    </div>
+
+                    <!-- 文章状态 -->
+                    <div class="mb-3">
+                        <label class="form-label">文章状态</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="status" id="statusDraft" value="DRAFT">
+                            <label class="form-check-label" for="statusDraft">草稿</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="status" id="statusPublished" value="PUBLISHED" checked>
+                            <label class="form-check-label" for="statusPublished">发布</label>
+                        </div>
+                    </div>
+
+                    <!-- 置顶设置 -->
+                    <div class="mb-3 form-check">
+                        <input class="form-check-input" type="checkbox" id="isTop">
+                        <label class="form-check-label" for="isTop">置顶文章</label>
+                    </div>
+
+                    <!-- 评论设置 -->
+                    <div class="mb-3 form-check">
+                        <input class="form-check-input" type="checkbox" id="isCommentEnabled" checked>
+                        <label class="form-check-label" for="isCommentEnabled">允许评论</label>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-secondary" onclick="saveDraft()"><i class="bi bi-save"></i> 保存草稿</button>
+                        <button type="button" class="btn btn-primary" onclick="publishArticle()"><i class="bi bi-send"></i> 发布文章</button>
+                        <a class="btn btn-outline-secondary" href="/admin/articles"><i class="bi bi-arrow-left"></i> 返回列表</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- EasyMDE Markdown Editor -->
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+    <script>
+        let articleId = null;
+        let easyMDE;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化Markdown编辑器
+            easyMDE = new EasyMDE({
+                element: document.getElementById('content'),
+                spellChecker: false,
+                autosave: { enabled: false },
+                placeholder: "在此编写文章内容（支持Markdown格式）...",
+                toolbar: [
+                    "bold", "italic", "heading", "|",
+                    "quote", "unordered-list", "ordered-list", "|",
+                    "link", "image", "code", "|",
+                    "preview", "side-by-side", "fullscreen", "|",
+                    "guide"
+                ]
+            });
+
+            // 加载分类和标签列表
+            loadCategories();
+            loadTags();
+
+            // 检查URL中的文章ID（编辑模式）
+            const urlPath = window.location.pathname;
+            const match = urlPath.match(/\/admin\/articles\/(\d+)\/edit/);
+            if (match) {
+                articleId = match[1];
+                document.getElementById('pageTitle').innerHTML = '<i class="bi bi-pencil"></i> 编辑文章';
+                loadArticleData(articleId);
+            }
+        });
+
+        // 加载分类列表
+        function loadCategories() {
+            fetch('/api/admin/categories')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200 && data.data) {
+                        const select = document.getElementById('categoryId');
+                        data.data.forEach(category => {
+                            const option = document.createElement('option');
+                            option.value = category.id;
+                            option.textContent = category.name;
+                            select.appendChild(option);
+                        });
+                    }
+                });
+        }
+
+        // 加载标签列表
+        function loadTags() {
+            fetch('/api/admin/tags')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200 && data.data) {
+                        const container = document.getElementById('tagContainer');
+                        container.innerHTML = data.data.map(tag => `
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input tag-checkbox" type="checkbox" id="tag_${tag.id}" value="${tag.id}">
+                                <label class="form-check-label" for="tag_${tag.id}">${tag.name}</label>
+                            </div>
+                        `).join('');
+                    }
+                });
+        }
+
+        // 加载文章数据（编辑模式）
+        function loadArticleData(id) {
+            fetch(`/api/admin/articles/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200 && data.data) {
+                        const article = data.data;
+                        document.getElementById('articleId').value = article.id;
+                        document.getElementById('title').value = article.title;
+                        document.getElementById('slug').value = article.slug;
+                        document.getElementById('summary').value = article.summary || '';
+                        document.getElementById('coverImage').value = article.coverImage || '';
+
+                        // 设置封面图片预览
+                        if (article.coverImage) {
+                            document.getElementById('coverImagePreview').src = article.coverImage;
+                            document.getElementById('coverImagePreview').style.display = 'block';
+                        }
+
+                        // 设置Markdown内容
+                        easyMDE.value(article.contentMarkdown);
+
+                        // 设置分类
+                        if (article.category) {
+                            document.getElementById('categoryId').value = article.category.id;
+                        }
+
+                        // 设置标签
+                        if (article.tags) {
+                            article.tags.forEach(tag => {
+                                const checkbox = document.getElementById(`tag_${tag.id}`);
+                                if (checkbox) checkbox.checked = true;
+                            });
+                        }
+
+                        // 设置状态
+                        document.getElementById('statusPublished').checked = article.status === 'PUBLISHED';
+                        document.getElementById('statusDraft').checked = article.status === 'DRAFT';
+
+                        // 设置置顶和评论
+                        document.getElementById('isTop').checked = article.isTop;
+                        document.getElementById('isCommentEnabled').checked = article.isCommentEnabled;
+                    } else {
+                        showError(data.message || '加载文章数据失败');
+                    }
+                });
+        }
+
+        // 上传封面图片
+        function uploadCoverImage() {
+            const fileInput = document.getElementById('coverImageFile');
+            if (!fileInput.files[0]) return;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            fetch('/api/admin/articles/upload-cover', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        document.getElementById('coverImage').value = data.data;
+                        document.getElementById('coverImagePreview').src = data.data;
+                        document.getElementById('coverImagePreview').style.display = 'block';
+                        showSuccess('封面图片上传成功');
+                    } else {
+                        showError(data.message || '上传失败');
+                    }
+                });
+        }
+
+        // 自动生成摘要
+        function generateSummary() {
+            const content = easyMDE.value();
+            if (!content) { showError('请先填写文章内容'); return; }
+
+            // 提取前200个字符作为摘要
+            const summary = content.substring(0, 200).replace(/[#*`_\[\]]/g, '').trim();
+            document.getElementById('summary').value = summary;
+            showSuccess('摘要已生成');
+        }
+
+        // 收集表单数据
+        function collectFormData() {
+            const title = document.getElementById('title').value.trim();
+            if (!title) { showError('标题不能为空'); return null; }
+
+            const tagIds = [];
+            document.querySelectorAll('.tag-checkbox:checked').forEach(cb => {
+                tagIds.push(parseInt(cb.value));
+            });
+
+            return {
+                title: title,
+                slug: document.getElementById('slug').value.trim(),
+                summary: document.getElementById('summary').value.trim(),
+                content: easyMDE.value(),
+                coverImage: document.getElementById('coverImage').value,
+                status: document.querySelector('input[name="status"]:checked').value,
+                isTop: document.getElementById('isTop').checked,
+                isCommentEnabled: document.getElementById('isCommentEnabled').checked,
+                categoryId: document.getElementById('categoryId').value ? parseInt(document.getElementById('categoryId').value) : null,
+                tagIds: tagIds
+            };
+        }
+
+        // 保存草稿
+        function saveDraft() {
+            const data = collectFormData();
+            if (!data) return;
+            data.status = 'DRAFT';
+            saveArticle(data);
+        }
+
+        // 发布文章
+        function publishArticle() {
+            const data = collectFormData();
+            if (!data) return;
+            data.status = 'PUBLISHED';
+            saveArticle(data);
+        }
+
+        // 保存文章
+        function saveArticle(data) {
+            const url = articleId ? `/api/admin/articles/${articleId}` : '/api/admin/articles';
+            const method = articleId ? 'PUT' : 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.code === 200) {
+                        showSuccess(articleId ? '文章已更新' : '文章已创建');
+                        window.location.href = '/admin/articles';
+                    } else {
+                        showError(result.message || '保存失败');
+                    }
+                });
+        }
+
+        function showSuccess(message) { alert(message); }
+        function showError(message) { alert('错误：' + message); }
+    </script>
+</body>
+</html>
