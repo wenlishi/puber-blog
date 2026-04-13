@@ -110,3 +110,7 @@ pnpm-lock.yaml
 # Node modules (if using frontend build tools)
 node_modules/
 dist/
+
+# Claude Code configuration
+CLAUDE.md
+.claude/
