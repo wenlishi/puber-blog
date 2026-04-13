@@ -229,5 +229,25 @@
     <p class="text-muted mt-3" th:text="${message}">暂无数据</p>
 </div>
 
+<!-- 友链展示 Fragment -->
+<div th:fragment="friend-links" class="card sidebar-card" th:if="${friendLinks != null and !#lists.isEmpty(friendLinks)}">
+    <div class="card-header">
+        <i class="bi bi-link-45deg"></i> 友情链接
+    </div>
+    <div class="card-body">
+        <ul class="list-unstyled friend-links-list">
+            <li th:each="link : ${friendLinks}" class="friend-link-item">
+                <a th:href="${link.url}" target="_blank" rel="noopener noreferrer" class="friend-link-a">
+                    <img th:if="${link.logo != null and link.logo != ''}"
+                         th:src="${link.logo}"
+                         alt="Logo"
+                         class="friend-link-logo">
+                    <span th:text="${link.name}">友链名称</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
 </body>
 </html>

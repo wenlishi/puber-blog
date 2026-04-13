@@ -660,6 +660,51 @@ body {
     padding: 1rem;
 }
 
+/* ==================== 友链样式 ==================== */
+
+/* 友链列表 */
+.friend-links-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+/* 友链项 */
+.friend-link-item {
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px dashed #dee2e6;
+}
+
+.friend-link-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* 友链链接 */
+.friend-link-a {
+    display: flex;
+    align-items: center;
+    color: #212529;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+}
+
+.friend-link-a:hover {
+    color: #0d6efd;
+}
+
+/* 友链Logo */
+.friend-link-logo {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 0.5rem;
+    object-fit: cover;
+}
+
 /* ==================== 文章目录导航样式 ==================== */
 
 /* 目录容器 - 固定定位 */

@@ -5,10 +5,12 @@ import com.puber.blog.dto.ArticleVO;
 import com.puber.blog.dto.CategoryVO;
 import com.puber.blog.dto.TagVO;
 import com.puber.blog.entity.Category;
+import com.puber.blog.entity.FriendLink;
 import com.puber.blog.entity.Tag;
 import com.puber.blog.exception.BusinessException;
 import com.puber.blog.service.ArticleService;
 import com.puber.blog.service.CategoryService;
+import com.puber.blog.service.FriendLinkService;
 import com.puber.blog.service.SiteSettingService;
 import com.puber.blog.service.TagService;
 import lombok.RequiredArgsConstructor;
@@ -43,10 +45,11 @@ public class IndexController {
     private final CategoryService categoryService;
     private final TagService tagService;
     private final SiteSettingService siteSettingService;
+    private final FriendLinkService friendLinkService;
 
     /**
      * 为所有页面添加通用数据
-     * 包括网站配置、分类列表、标签列表
+     * 包括网站配置、分类列表、标签列表、友链列表
      *
      * @param model Spring MVC 模型
      */
@@ -64,6 +67,10 @@ public class IndexController {
         // 获取所有标签（用于导航栏）
         List<TagVO> tags = tagService.getAllTags();
         model.addAttribute("tags", tags);
+
+        // 获取所有启用的友链（用于侧边栏）
+        List<FriendLink> friendLinks = friendLinkService.getActiveFriendLinks();
+        model.addAttribute("friendLinks", friendLinks);
     }
 
     /**

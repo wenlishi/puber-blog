@@ -182,6 +182,30 @@ COMMENT ON COLUMN site_setting.description IS '配置描述';
 COMMENT ON COLUMN site_setting.created_at IS '创建时间';
 COMMENT ON COLUMN site_setting.updated_at IS '更新时间';
 
+-- 创建友链表
+CREATE TABLE IF NOT EXISTS friend_link (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    url VARCHAR(255) NOT NULL,
+    description TEXT,
+    logo VARCHAR(255),
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE friend_link IS '友链表';
+COMMENT ON COLUMN friend_link.id IS '友链ID';
+COMMENT ON COLUMN friend_link.name IS '友链名称';
+COMMENT ON COLUMN friend_link.url IS '友链URL';
+COMMENT ON COLUMN friend_link.description IS '友链描述';
+COMMENT ON COLUMN friend_link.logo IS '友链Logo/头像URL';
+COMMENT ON COLUMN friend_link.sort_order IS '排序顺序（数字越小越靠前）';
+COMMENT ON COLUMN friend_link.status IS '状态（ACTIVE=启用/INACTIVE=禁用）';
+COMMENT ON COLUMN friend_link.created_at IS '创建时间';
+COMMENT ON COLUMN friend_link.updated_at IS '更新时间';
+
 -- 创建索引
 CREATE INDEX IF NOT EXISTS idx_article_status ON article(status);
 CREATE INDEX IF NOT EXISTS idx_article_created_at ON article(created_at DESC);
@@ -204,6 +228,9 @@ CREATE INDEX IF NOT EXISTS idx_article_tag_article_id ON article_tag(article_id)
 CREATE INDEX IF NOT EXISTS idx_article_tag_tag_id ON article_tag(tag_id);
 
 CREATE INDEX IF NOT EXISTS idx_site_setting_key ON site_setting(setting_key);
+
+CREATE INDEX IF NOT EXISTS idx_friend_link_status ON friend_link(status);
+CREATE INDEX IF NOT EXISTS idx_friend_link_sort_order ON friend_link(sort_order);
 
 -- 插入默认管理员账号
 -- 密码：admin123（使用 BCrypt 加密）

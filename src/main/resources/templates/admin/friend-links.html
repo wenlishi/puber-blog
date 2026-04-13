@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>友链管理 - puber-blog后台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .navbar-brand { font-weight: bold; }
+        .card { box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); }
+        .table tbody tr:hover { background-color: #f1f3f5; }
+        .friend-link-logo { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <div th:replace="~{admin/fragments :: navbar('friend-links')}"></div>
+
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-link-45deg"></i> 友链管理</h5>
+                <button type="button" class="btn btn-primary" onclick="showAddModal()">
+                    <i class="bi bi-plus-circle-fill"></i> 新增友链
+                </button>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th width="50">ID</th>
+                            <th width="80">Logo</th>
+                            <th width="150">名称</th>
+                            <th>URL</th>
+                            <th width="200">描述</th>
+                            <th width="80">排序</th>
+                            <th width="80">状态</th>
+                            <th width="150">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="friendLinksTableBody">
+                        <tr th:each="link : ${friendLinks}">
+                            <td th:text="${link.id}">1</td>
+                            <td>
+                                <img th:if="${link.logo != null and link.logo != ''}"
+                                     th:src="${link.logo}"
+                                     class="friend-link-logo"
+                                     alt="Logo">
+                                <span th:unless="${link.logo != null and link.logo != ''}"
+                                      class="text-muted">无Logo</span>
+                            </td>
+                            <td th:text="${link.name}">友链名称</td>
+                            <td>
+                                <a th:href="${link.url}" target="_blank" th:text="${link.url}">URL</a>
+                            </td>
+                            <td th:text="${link.description}">描述</td>
+                            <td th:text="${link.sortOrder}">0</td>
+                            <td>
+                                <span th:if="${link.status == 'ACTIVE'}" class="badge bg-success">启用</span>
+                                <span th:if="${link.status == 'INACTIVE'}" class="badge bg-secondary">禁用</span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                        th:onclick="'editFriendLink(' + ${link.id} + ')'"
+                                        title="编辑">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-success me-1"
+                                        th:if="${link.status == 'INACTIVE'}"
+                                        th:onclick="'activateFriendLink(' + ${link.id} + ')'"
+                                        title="启用">
+                                    <i class="bi bi-check-circle"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-warning me-1"
+                                        th:if="${link.status == 'ACTIVE'}"
+                                        th:onclick="'deactivateFriendLink(' + ${link.id} + ')'"
+                                        title="禁用">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        th:onclick="'deleteFriendLink(' + ${link.id} + ')'"
+                                        title="删除">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(friendLinks)}">
+                            <td colspan="8" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox" style="font-size: 2rem;"></i><br>
+                                暂无友链数据
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/编辑模态框 -->
+    <div class="modal fade" id="friendLinkModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="bi bi-plus-circle"></i> 新增友链
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="friendLinkForm">
+                        <input type="hidden" id="friendLinkId">
+
+                        <div class="mb-3">
+                            <label for="name" class="form-label">名称 *</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="url" class="form-label">URL *</label>
+                            <input type="url" class="form-control" id="url" name="url" required placeholder="https://example.com">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">描述</label>
+                            <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="logo" class="form-label">Logo URL</label>
+                            <input type="url" class="form-control" id="logo" name="logo" placeholder="https://example.com/logo.png">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="sortOrder" class="form-label">排序</label>
+                            <input type="number" class="form-control" id="sortOrder" name="sortOrder" value="0">
+                            <div class="form-text">数字越小越靠前</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">状态</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="status" id="statusActive" value="ACTIVE" checked>
+                                <label class="form-check-label" for="statusActive">启用</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="status" id="statusInactive" value="INACTIVE">
+                                <label class="form-check-label" for="statusInactive">禁用</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveFriendLink()">
+                        <i class="bi bi-check-circle-fill"></i> 保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let friendLinkModal;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            friendLinkModal = new bootstrap.Modal(document.getElementById('friendLinkModal'));
+        });
+
+        function showAddModal() {
+            document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> 新增友链';
+            document.getElementById('friendLinkId').value = '';
+            document.getElementById('friendLinkForm').reset();
+            document.getElementById('statusActive').checked = true;
+            friendLinkModal.show();
+        }
+
+        function editFriendLink(id) {
+            fetch(`/admin/friend-links/api/${id}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.code === 200) {
+                        const link = result.data;
+                        document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil"></i> 编辑友链';
+                        document.getElementById('friendLinkId').value = link.id;
+                        document.getElementById('name').value = link.name;
+                        document.getElementById('url').value = link.url;
+                        document.getElementById('description').value = link.description || '';
+                        document.getElementById('logo').value = link.logo || '';
+                        document.getElementById('sortOrder').value = link.sortOrder;
+                        document.getElementById('statusActive').checked = link.status === 'ACTIVE';
+                        document.getElementById('statusInactive').checked = link.status === 'INACTIVE';
+                        friendLinkModal.show();
+                    }
+                });
+        }
+
+        function saveFriendLink() {
+            const id = document.getElementById('friendLinkId').value;
+            const friendLink = {
+                name: document.getElementById('name').value,
+                url: document.getElementById('url').value,
+                description: document.getElementById('description').value,
+                logo: document.getElementById('logo').value,
+                sortOrder: parseInt(document.getElementById('sortOrder').value),
+                status: document.getElementById('statusActive').checked ? 'ACTIVE' : 'INACTIVE'
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/admin/friend-links/api/${id}` : '/admin/friend-links/api';
+
+            fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(friendLink)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.code === 200) {
+                        friendLinkModal.hide();
+                        location.reload();
+                    } else {
+                        alert('保存失败：' + result.message);
+                    }
+                });
+        }
+
+        function activateFriendLink(id) {
+            if (confirm('确定要启用这个友链吗？')) {
+                fetch(`/admin/friend-links/api/${id}/activate`, { method: 'PUT' })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.code === 200) {
+                            location.reload();
+                        }
+                    });
+            }
+        }
+
+        function deactivateFriendLink(id) {
+            if (confirm('确定要禁用这个友链吗？')) {
+                fetch(`/admin/friend-links/api/${id}/deactivate`, { method: 'PUT' })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.code === 200) {
+                            location.reload();
+                        }
+                    });
+            }
+        }
+
+        function deleteFriendLink(id) {
+            if (confirm('确定要删除这个友链吗？')) {
+                fetch(`/admin/friend-links/api/${id}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.code === 200) {
+                            location.reload();
+                        }
+                    });
+            }
+        }
+    </script>
+</body>
+</html>
