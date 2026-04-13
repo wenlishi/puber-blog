@@ -42,11 +42,11 @@
             return;
         }
 
-        // 生成目录
-        generateTOC(headings);
-
-        // 为标题添加ID
+        // 先为标题添加ID（必须在生成目录之前）
         addHeadingIds(headings);
+
+        // 然后生成目录（此时heading.id已经设置）
+        generateTOC(headings);
 
         // 绑定事件
         bindEvents(headings);
