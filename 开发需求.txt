@@ -1,0 +1,231 @@
+# 博客系统开发需求
+
+## 项目概述
+使用 Spring Boot + Thymeleaf + PostgreSQL 开发一个个人博客系统，项目名称为 puber-blog。
+本项目会在两个环境中交替开发，通过 GitHub 仓库同步代码。
+
+## 技术栈
+- 后端：Spring Boot 3.x
+- 模板引擎：Thymeleaf
+- 数据库：PostgreSQL 15.x
+- ORM：Spring Data JPA
+- 安全：Spring Security
+- 构建工具：Maven
+- 前端样式：Bootstrap 5
+
+## 功能模块
+
+### 1. 用户模块
+- 管理员登录 / 退出
+- 个人信息修改（头像、昵称、简介）
+- 修改密码
+
+### 2. 文章模块
+- 文章列表（分页展示）
+- 文章发布（支持 Markdown 编辑器）
+- 文章编辑 / 删除
+- 文章详情页
+- 文章置顶功能
+- 草稿保存
+
+### 3. 分类模块
+- 分类的增删改查
+- 按分类筛选文章
+
+### 4. 标签模块
+- 标签的增删改查
+- 按标签筛选文章
+
+### 5. 评论模块
+- 游客评论（昵称 + 邮箱）
+- 评论审核（后台管理）
+- 评论回复
+
+### 6. 前台展示
+- 首页（最新文章列表 + 侧边栏）
+- 文章详情页
+- 分类页 / 标签页
+- 归档页（按时间归档）
+- 关于我页面
+- 搜索功能
+
+### 7. 后台管理
+- 仪表盘（文章数、评论数、访问量统计）
+- 文章管理
+- 分类 / 标签管理
+- 评论管理
+- 系统设置（博客名称、个人信息等）
+
+## 数据库设计
+使用 PostgreSQL，设计以下数据表：
+- blog_user（用户表，注意 user 是 PostgreSQL 保留字）
+- article（文章表）
+- category（分类表）
+- tag（标签表）
+- article_tag（文章标签中间表）
+- comment（评论表）
+- site_setting（网站配置表）
+
+注意事项：
+- 主键使用 BIGSERIAL 自增类型
+- 时间字段使用 TIMESTAMP WITH TIME ZONE
+- 字符串字段使用 VARCHAR 或 TEXT
+- 所有建表语句使用 CREATE TABLE IF NOT EXISTS，保证脚本幂等可重复执行
+- init.sql 顶部注明版本号和变更记录，便于两端同步表结构
+
+## 项目结构
+src/main/java/com/puber/blog/
+├── controller/       # 控制器（前台 + 后台分包）
+├── service/          # 业务逻辑接口及实现
+├── repository/       # JPA Repository 数据访问层
+├── entity/           # 实体类
+├── dto/              # 数据传输对象
+├── vo/               # 视图对象
+├── config/           # 配置类（Security、Web 等）
+├── utils/            # 工具类
+└── exception/        # 统一异常处理
+
+src/main/resources/
+├── templates/
+│   ├── front/        # 前台页面
+│   └── admin/        # 后台页面
+├── static/
+│   ├── css/
+│   ├── js/
+│   └── images/
+├── application.yml
+├── application-dev.yml     # 不提交 Git
+└── application-prod.yml    # 不提交 Git
+
+## 多环境配置
+
+application.yml（提交 Git，只写公共配置）：
+spring:
+  profiles:
+    active: dev
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+  thymeleaf:
+    cache: false
+
+application-dev.yml（不提交 Git，两端各自手动创建）：
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/puber_blog
+    username: postgres
+    password: your_password
+    driver-class-name: org.postgresql.Driver
+
+application-prod.yml（不提交 Git，生产环境手动创建）：
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/puber_blog
+    username: postgres
+    password: your_password
+    driver-class-name: org.postgresql.Driver
+
+## .gitignore 要求
+.gitignore 中必须包含：
+- application-dev.yml
+- application-prod.yml
+- *.log
+- target/
+- .idea/
+- *.iml
+- .DS_Store
+- *.class
+
+## .gitattributes 要求
+请生成 .gitattributes 文件，统一两端换行符为 LF，
+避免 Windows 和 Linux 交替开发时产生大量无意义的换行符差异提交：
+* text=auto
+*.java text eol=lf
+*.yml text eol=lf
+*.xml text eol=lf
+*.html text eol=lf
+*.sql text eol=lf
+*.md text eol=lf
+*.properties text eol=lf
+
+## 开发环境说明
+
+### 环境 A：Windows 本地开发机
+- 使用 Claude Code 辅助开发
+- JDK 17（两端必须保持版本一致）
+- Maven 3.8+
+- PostgreSQL 本地安装（端口 5432）
+- IDE：IntelliJ IDEA 或 VS Code
+
+### 环境 B：VPS Linux 服务器
+- 通过飞书 + OpenClaw 远程开发
+- JDK 17（两端必须保持版本一致）
+- Maven 3.8+
+- PostgreSQL 本地安装或 Docker 部署
+- 建议使用 screen 或 tmux 保持会话，防止手机断连后开发中断
+  screen -S puber-blog 或 tmux new -s puber-blog
+
+### 跨平台注意事项
+- 代码中不得使用硬编码的 \ 路径分隔符，统一使用 / 或 File.separator
+- 两端 JDK 版本必须一致，否则编译可能报错
+- 两端数据库数据不同步，仅通过 init.sql 保持表结构一致
+- 表结构变更时必须同步更新 init.sql，并在两端重新执行
+
+## Git 工作流规范
+
+### 日常开发流程
+每次开始开发前执行：
+  git pull origin main
+
+每次结束开发后执行：
+  git add .
+  git commit -m "提交信息"
+  git push origin main
+
+### commit 信息规范
+feat: 新增文章发布功能
+fix: 修复评论审核 bug
+style: 调整首页样式
+refactor: 重构用户 Service
+docs: 更新 README
+chore: 更新依赖版本
+
+### 安全注意事项
+- application-dev.yml 和 application-prod.yml 绝对不能提交到 GitHub
+- 建议将 GitHub 仓库设为 Private，防止敏感信息泄露
+- 如果数据库密码不慎泄露，立即修改
+
+## 其他开发要求
+- 统一异常处理（GlobalExceptionHandler）
+- 统一返回结果封装（Result<T>）
+- 登录状态拦截器（后台所有页面需登录才能访问）
+- 文章支持浏览量统计（每次访问详情页 +1）
+- 响应式页面设计，适配移动端
+- 代码注释规范，关键方法必须有注释
+
+## README.md 要求
+请生成详细的 README.md，包含：
+1. 项目介绍与功能概览
+2. 技术栈说明
+3. Windows 本地环境搭建步骤（含 JDK、PostgreSQL 安装）
+4. Linux VPS 环境搭建步骤（含 JDK、PostgreSQL 安装）
+5. 数据库初始化方法（执行 init.sql）
+6. application-dev.yml 配置说明
+7. 项目启动方式
+8. Git 日常同步工作流说明
+9. 常见问题排查（端口占用、换行符问题、JDK 版本不一致等）
+
+## 开始任务
+请按以下顺序逐步完成：
+1. 生成 pom.xml（包含所有依赖：Spring Boot、Thymeleaf、
+   Spring Security、Spring Data JPA、PostgreSQL 驱动、
+   Lombok、Markdown 解析器等）
+2. 生成 application.yml 和 application-dev.yml 模板
+3. 生成 init.sql（PostgreSQL 建表语句 + 初始管理员账号）
+4. 生成 .gitignore
+5. 生成 .gitattributes
+6. 生成 README.md
+7. 搭建项目基础骨架（主类、包结构、统一返回封装、全局异常处理）
+8. 按模块逐步实现功能，每完成一个模块告知我，等我确认后继续下一个

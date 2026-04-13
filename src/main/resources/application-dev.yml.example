@@ -1,0 +1,20 @@
+# 本地开发环境配置 - 此文件不会提交到 Git
+# 请复制此文件为 application-dev.yml 并修改配置
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/puber_blog
+    username: postgres
+    password: your_password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+# 文件上传路径配置（根据实际环境修改）
+file:
+  upload:
+    path: /uploads

@@ -1,0 +1,109 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Spring Boot
+application-dev.yml
+application-prod.yml
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Compiled
+*.class
+*.jar
+*.war
+*.ear
+
+# Package Files
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# Virtual machine crash logs
+hs_err_pid*
+replay_pid*
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+*.pid
+
+# Upload directory (if local uploads)
+uploads/
+
+# Database
+*.db
+*.h2.db
+*.mv.db
+*.trace.db
+data/
+db/
+
+# Spring Boot additional configs
+application-local.yml
+application-local.properties
+application-secret.yml
+application-secret.properties
+application-*.yml
+!application.yml
+!application-dev.yml.example
+
+# Test and coverage
+target/site/
+coverage/
+.nyc_output/
+*.exec
+
+# Documentation
+docs/_build/
+
+# Backup files
+*.backup
+*.old
+*.orig
+
+# Package locks (if using frontend tools)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Docker volumes (if using Docker)
+.docker/
+
+# Node modules (if using frontend build tools)
+node_modules/
+dist/

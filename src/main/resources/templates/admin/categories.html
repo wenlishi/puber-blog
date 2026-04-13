@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分类管理 - puber-blog后台</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .table tbody tr:hover {
+            background-color: #f1f3f5;
+        }
+        .action-buttons .btn {
+            margin-right: 0.25rem;
+        }
+        .sort-order-input {
+            width: 60px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/dashboard">
+                <i class="bi bi-house-fill"></i> puber-blog后台
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/dashboard">
+                            <i class="bi bi-speedometer2"></i> 仪表盘
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin/categories">
+                            <i class="bi bi-folder-fill"></i> 分类管理
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> admin
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/perform_logout">
+                                <i class="bi bi-box-arrow-right"></i> 退出登录
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-folder-fill"></i> 分类列表
+                        </h5>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="openCreateModal()">
+                            <i class="bi bi-plus-circle-fill"></i> 新增分类
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <!-- 加载提示 -->
+                        <div id="loadingSpinner" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">加载中...</span>
+                            </div>
+                        </div>
+
+                        <!-- 分类表格 -->
+                        <table class="table table-hover" id="categoryTable" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th width="50">ID</th>
+                                    <th width="150">分类名称</th>
+                                    <th width="150">别名（Slug）</th>
+                                    <th>描述</th>
+                                    <th width="80">排序</th>
+                                    <th width="100">文章数</th>
+                                    <th width="150">创建时间</th>
+                                    <th width="150">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryTableBody">
+                                <!-- 动态填充 -->
+                            </tbody>
+                        </table>
+
+                        <!-- 空数据提示 -->
+                        <div id="emptyMessage" class="text-center py-4" style="display: none;">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                            <p class="text-muted mt-2">暂无分类数据</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/编辑分类模态框 -->
+    <div class="modal fade" id="categoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">新增分类</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="categoryForm">
+                        <input type="hidden" id="categoryId">
+
+                        <div class="mb-3">
+                            <label for="categoryName" class="form-label">分类名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="categoryName" required>
+                            <div class="form-text">分类名称不能重复</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="categorySlug" class="form-label">别名（Slug）</label>
+                            <input type="text" class="form-control" id="categorySlug">
+                            <div class="form-text">如果不填写，系统会自动根据名称生成</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="categoryDescription" class="form-label">描述</label>
+                            <textarea class="form-control" id="categoryDescription" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="categorySortOrder" class="form-label">排序顺序</label>
+                            <input type="number" class="form-control sort-order-input" id="categorySortOrder" value="0">
+                            <div class="form-text">数值越小，排名越靠前</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCategory()">
+                        <i class="bi bi-check-circle-fill"></i> 保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认对话框 -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle-fill"></i> 删除确认
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除分类 <strong id="deleteCategoryName"></strong> 吗？</p>
+                    <p class="text-danger"><small>注意：如果该分类下有文章，将无法删除</small></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="bi bi-trash-fill"></i> 确认删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- 自定义脚本 -->
+    <script>
+        let currentCategoryId = null;
+        let deleteCategoryId = null;
+
+        // 页面加载完成后获取分类列表
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCategories();
+        });
+
+        // 加载分类列表
+        function loadCategories() {
+            fetch('/api/admin/categories')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200 && data.data) {
+                        renderCategoryTable(data.data);
+                    } else {
+                        showError(data.message || '加载分类列表失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError('网络请求失败');
+                });
+        }
+
+        // 渲染分类表格
+        function renderCategoryTable(categories) {
+            const tbody = document.getElementById('categoryTableBody');
+            const spinner = document.getElementById('loadingSpinner');
+            const table = document.getElementById('categoryTable');
+            const emptyMsg = document.getElementById('emptyMessage');
+
+            spinner.style.display = 'none';
+
+            if (categories.length === 0) {
+                table.style.display = 'none';
+                emptyMsg.style.display = 'block';
+                return;
+            }
+
+            table.style.display = 'table';
+            emptyMsg.style.display = 'none';
+
+            tbody.innerHTML = categories.map(category => `
+                <tr>
+                    <td>${category.id}</td>
+                    <td>${category.name}</td>
+                    <td><code>${category.slug}</code></td>
+                    <td>${category.description || '-'}</td>
+                    <td>${category.sortOrder}</td>
+                    <td>
+                        <span class="badge bg-info">${category.articleCount}</span>
+                    </td>
+                    <td>${formatDate(category.createdAt)}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-warning" onclick="openEditModal(${category.id})">
+                            <i class="bi bi-pencil-fill"></i> 编辑
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${category.id}, '${category.name}', ${category.articleCount})">
+                            <i class="bi bi-trash-fill"></i> 删除
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 打开新增分类模态框
+        function openCreateModal() {
+            currentCategoryId = null;
+            document.getElementById('modalTitle').textContent = '新增分类';
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryId').value = '';
+            document.getElementById('categorySortOrder').value = '0';
+        }
+
+        // 打开编辑分类模态框
+        function openEditModal(id) {
+            currentCategoryId = id;
+            document.getElementById('modalTitle').textContent = '编辑分类';
+
+            // 获取分类详情
+            fetch(`/api/admin/categories/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200 && data.data) {
+                        const category = data.data;
+                        document.getElementById('categoryId').value = category.id;
+                        document.getElementById('categoryName').value = category.name;
+                        document.getElementById('categorySlug').value = category.slug;
+                        document.getElementById('categoryDescription').value = category.description || '';
+                        document.getElementById('categorySortOrder').value = category.sortOrder;
+
+                        // 显示模态框
+                        const modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+                        modal.show();
+                    } else {
+                        showError(data.message || '获取分类详情失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError('网络请求失败');
+                });
+        }
+
+        // 保存分类（新增或编辑）
+        function saveCategory() {
+            const name = document.getElementById('categoryName').value.trim();
+            const slug = document.getElementById('categorySlug').value.trim();
+            const description = document.getElementById('categoryDescription').value.trim();
+            const sortOrder = parseInt(document.getElementById('categorySortOrder').value) || 0;
+
+            if (!name) {
+                showError('分类名称不能为空');
+                return;
+            }
+
+            const data = {
+                name: name,
+                slug: slug,
+                description: description,
+                sortOrder: sortOrder
+            };
+
+            const url = currentCategoryId
+                ? `/api/admin/categories/${currentCategoryId}`
+                : '/api/admin/categories';
+            const method = currentCategoryId ? 'PUT' : 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.code === 200) {
+                        // 关闭模态框
+                        bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
+                        // 重新加载列表
+                        loadCategories();
+                        showSuccess(currentCategoryId ? '分类更新成功' : '分类创建成功');
+                    } else {
+                        showError(result.message || '保存失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError('网络请求失败');
+                });
+        }
+
+        // 打开删除确认对话框
+        function openDeleteModal(id, name, articleCount) {
+            if (articleCount > 0) {
+                showError(`该分类下有${articleCount}篇文章，无法删除`);
+                return;
+            }
+
+            deleteCategoryId = id;
+            document.getElementById('deleteCategoryName').textContent = name;
+
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        }
+
+        // 确认删除
+        function confirmDelete() {
+            fetch(`/api/admin/categories/${deleteCategoryId}`, {
+                method: 'DELETE'
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.code === 200) {
+                        // 关闭模态框
+                        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                        // 重新加载列表
+                        loadCategories();
+                        showSuccess('分类删除成功');
+                    } else {
+                        showError(result.message || '删除失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError('网络请求失败');
+                });
+        }
+
+        // 格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // 显示成功提示
+        function showSuccess(message) {
+            alert(message); // 后续可替换为更优雅的Toast提示
+        }
+
+        // 显示错误提示
+        function showError(message) {
+            alert('错误：' + message); // 后续可替换为更优雅的Toast提示
+        }
+    </script>
+</body>
+</html>
