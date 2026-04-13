@@ -662,7 +662,21 @@ body {
 
 /* ==================== 文章目录导航样式 ==================== */
 
-/* 目录容器 */
+/* 目录容器 - 固定定位 */
+#toc-container {
+    position: sticky;
+    top: 80px; /* 为固定导航栏留出空间 */
+    z-index: 100; /* 确保在其他内容之上 */
+    max-height: calc(100vh - 100px); /* 最大高度为视口高度减去导航栏和底部空间 */
+    overflow: hidden;
+}
+
+/* 目录容器添加过渡效果（固定时的阴影） */
+#toc-container.sticky-active {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.15);
+}
+
+/* 目录导航容器 */
 .toc-nav {
     position: relative;
 }
@@ -744,7 +758,7 @@ body {
 
 /* 目录滚动容器（防止目录过长超出屏幕） */
 #toc-container .card-body {
-    max-height: 400px;
+    max-height: calc(100vh - 180px); /* 视口高度减去导航栏(80px)和卡片头部(60px)及底部间距(40px) */
     overflow-y: auto;
 }
 
