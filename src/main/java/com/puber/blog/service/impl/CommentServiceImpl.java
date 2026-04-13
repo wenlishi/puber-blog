@@ -2,10 +2,13 @@ package com.puber.blog.service.impl;
 
 import com.puber.blog.dto.CommentDTO;
 import com.puber.blog.dto.CommentVO;
+import com.puber.blog.entity.Article;
 import com.puber.blog.entity.Comment;
 import com.puber.blog.exception.BusinessException;
+import com.puber.blog.repository.ArticleRepository;
 import com.puber.blog.repository.CommentRepository;
 import com.puber.blog.service.CommentService;
+import com.puber.blog.service.MailService;
 import com.puber.blog.utils.IpUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +37,8 @@ import java.util.stream.Collectors;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
+    private final ArticleRepository articleRepository;
+    private final MailService mailService;
 
     /**
      * 创建评论（游客提交）
@@ -79,7 +84,23 @@ public class CommentServiceImpl implements CommentService {
                 .userAgent(userAgent)
                 .build();
 
-        return commentRepository.save(comment);
+        // 保存评论
+        Comment savedComment = commentRepository.save(comment);
+
+        // 发送新评论通知邮件给站长
+        try {
+            // 获取文章标题
+            Article article = articleRepository.findById(dto.getArticleId()).orElse(null);
+            if (article != null) {
+                String articleTitle = article.getTitle();
+                mailService.sendNewCommentNotification(dto, articleTitle);
+            }
+        } catch (Exception e) {
+            // 邮件发送失败不影响评论提交
+            log.warn("发送评论通知邮件失败：{}", e.getMessage());
+        }
+
+        return savedComment;
     }
 
     /**
