@@ -192,16 +192,31 @@
                     });
                 },
                 previewRender: function(plainText, preview) {
-                    // 使用 EasyMDE 内置的 marked.js 渲染 Markdown
-                    const renderedHtml = marked.parse(plainText);
-                    preview.innerHTML = renderedHtml;
+                    // 使用 EasyMDE 内置的渲染器（如果 marked 不可用则使用默认）
+                    let renderedHtml;
+                    try {
+                        // EasyMDE 内置了 marked，尝试使用
+                        if (typeof marked !== 'undefined') {
+                            renderedHtml = marked.parse(plainText);
+                        } else {
+                            // 使用 EasyMDE 默认渲染器
+                            renderedHtml = this.editor ? this.editor.markdown(plainText) : plainText;
+                        }
+                    } catch (e) {
+                        // 如果出错，返回原始文本
+                        renderedHtml = '<pre>' + plainText + '</pre>';
+                    }
 
                     // 应用代码高亮
                     setTimeout(() => {
                         preview.querySelectorAll('pre code').forEach((block) => {
-                            hljs.highlightElement(block);
+                            try {
+                                hljs.highlightElement(block);
+                            } catch (e) {
+                                console.error('代码高亮失败:', e);
+                            }
                         });
-                    }, 0);
+                    }, 10);
 
                     return renderedHtml;
                 },
