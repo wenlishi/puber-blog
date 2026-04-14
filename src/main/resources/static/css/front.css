@@ -516,6 +516,7 @@ body {
     padding-left: 2rem;
 }
 
+/* 行内代码样式（浅灰背景） */
 .article-content code {
     background-color: #f8f9fa;
     padding: 0.2rem 0.4rem;
@@ -523,6 +524,7 @@ body {
     font-size: 0.9em;
 }
 
+/* 代码块容器样式 */
 .article-content pre {
     padding: 1rem;
     border-radius: 0.5rem;
@@ -530,9 +532,17 @@ body {
     margin-bottom: 1rem;
 }
 
+/* 代码块内容样式 - 让highlight.js主题生效 */
 .article-content pre code {
     display: block;
     overflow-x: auto;
+    background-color: transparent;
+    padding: 0;
+}
+
+/* 确保highlight.js的深色背景不被覆盖 */
+.article-content pre code.hljs {
+    background-color: #282c34 !important;
 }
 
 .article-content blockquote {
