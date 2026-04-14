@@ -114,3 +114,7 @@ dist/
 # Claude Code configuration
 CLAUDE.md
 .claude/
+
+# Learning notes and documentation (local only)
+邮件发送阻塞问题修复学习笔记.md
+日志系统技术详解学习笔记.md
