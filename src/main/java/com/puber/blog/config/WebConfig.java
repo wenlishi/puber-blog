@@ -25,8 +25,8 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 映射上传文件路径
         // 访问路径：/uploads/**
-        // 实际路径：配置文件中指定的 file.upload.path
+        // 实际路径：E:/Desktop/puber-blog/uploads/
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:/uploads/");
+                .addResourceLocations("file:E:/Desktop/puber-blog/uploads/");
     }
 }

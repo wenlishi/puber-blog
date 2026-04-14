@@ -524,7 +524,6 @@ body {
 }
 
 .article-content pre {
-    background-color: #f8f9fa;
     padding: 1rem;
     border-radius: 0.5rem;
     overflow-x: auto;
@@ -532,8 +531,8 @@ body {
 }
 
 .article-content pre code {
-    background-color: transparent;
-    padding: 0;
+    display: block;
+    overflow-x: auto;
 }
 
 .article-content blockquote {
