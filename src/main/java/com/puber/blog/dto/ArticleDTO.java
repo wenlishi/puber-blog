@@ -22,6 +22,11 @@ import java.util.List;
 public class ArticleDTO {
 
     /**
+     * 文章ID（用于更新文章）
+     */
+    private Long id;
+
+    /**
      * 文章标题
      */
     private String title;

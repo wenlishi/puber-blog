@@ -191,7 +191,7 @@ public class AdminArticleController {
     /**
      * 自动保存草稿
      *
-     * @param dto 文章DTO
+     * @param dto 文章DTO（包含id字段用于判断是更新还是创建）
      * @return Result<Map<String, Object>> 保存结果（包含文章ID和保存时间）
      */
     @PostMapping("/auto-save")
@@ -206,7 +206,18 @@ public class AdminArticleController {
         String username = auth.getName();
         User currentUser = userService.getUserByUsername(username);
 
-        article = articleService.createArticle(dto, currentUser.getId());
+        // 检查前端是否传递了文章ID
+        Long articleId = dto.getId();
+
+        if (articleId != null && articleId > 0) {
+            // 更新现有文章
+            log.info("更新现有文章: {}", articleId);
+            article = articleService.updateArticle(articleId, dto);
+        } else {
+            // 创建新文章
+            log.info("创建新文章");
+            article = articleService.createArticle(dto, currentUser.getId());
+        }
 
         Map<String, Object> result = new HashMap<>();
         result.put("id", article.getId());

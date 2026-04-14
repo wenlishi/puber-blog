@@ -477,9 +477,9 @@
             const data = collectFormData();
             if (!data) return;
 
-            // 如果是新文章，不设置ID
-            if (!articleId) {
-                data.id = null;
+            // 传递文章ID给后端（用于判断是更新还是创建）
+            if (articleId) {
+                data.id = parseInt(articleId);
             }
 
             const url = '/api/admin/articles/auto-save';
