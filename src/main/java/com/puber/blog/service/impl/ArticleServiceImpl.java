@@ -258,6 +258,7 @@ public class ArticleServiceImpl implements ArticleService {
      */
     @Override
     @Transactional
+    @LogRecord(operation = "编辑文章", level = LogLevel.INFO, recordParams = true, recordTime = true)
     public Article updateArticle(Long id, ArticleDTO dto) {
         log.info("更新文章：{}", id);
 

@@ -1,5 +1,7 @@
 package com.puber.blog.service.impl;
 
+import com.puber.blog.annotation.LogRecord;
+import com.puber.blog.annotation.LogRecord.LogLevel;
 import com.puber.blog.entity.FriendLink;
 import com.puber.blog.exception.BusinessException;
 import com.puber.blog.repository.FriendLinkRepository;
@@ -68,6 +70,7 @@ public class FriendLinkServiceImpl implements FriendLinkService {
      */
     @Override
     @Transactional
+    @LogRecord(operation = "添加友链", level = LogLevel.INFO, recordParams = true, recordTime = true)
     public FriendLink createFriendLink(FriendLink friendLink) {
         log.info("创建友链：name={}, url={}", friendLink.getName(), friendLink.getUrl());
 
@@ -91,6 +94,7 @@ public class FriendLinkServiceImpl implements FriendLinkService {
      */
     @Override
     @Transactional
+    @LogRecord(operation = "编辑友链", level = LogLevel.INFO, recordParams = true, recordTime = true)
     public FriendLink updateFriendLink(Long id, FriendLink friendLink) {
         log.info("更新友链：id={}", id);
 
@@ -114,6 +118,7 @@ public class FriendLinkServiceImpl implements FriendLinkService {
      */
     @Override
     @Transactional
+    @LogRecord(operation = "删除友链", level = LogLevel.WARN, recordParams = true, recordTime = true)
     public void deleteFriendLink(Long id) {
         log.info("删除友链：id={}", id);
 

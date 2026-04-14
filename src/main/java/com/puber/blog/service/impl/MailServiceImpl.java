@@ -1,5 +1,7 @@
 package com.puber.blog.service.impl;
 
+import com.puber.blog.annotation.LogRecord;
+import com.puber.blog.annotation.LogRecord.LogLevel;
 import com.puber.blog.dto.CommentDTO;
 import com.puber.blog.service.MailService;
 import com.puber.blog.service.SiteSettingService;
@@ -37,6 +39,7 @@ public class MailServiceImpl implements MailService {
      */
     @Override
     @Async("mailTaskExecutor")
+    @LogRecord(operation = "发送新评论通知邮件", level = LogLevel.DEBUG, recordParams = false, recordTime = true)
     public void sendNewCommentNotification(CommentDTO commentDTO, String articleTitle) {
         log.info("异步发送新评论通知邮件：articleTitle={}, nickname={}", articleTitle, commentDTO.getNickname());
 
@@ -83,6 +86,7 @@ public class MailServiceImpl implements MailService {
      * @return boolean 发送是否成功
      */
     @Override
+    @LogRecord(operation = "发送测试邮件", level = LogLevel.DEBUG, recordParams = true, recordTime = true, recordResult = true)
     public boolean sendTestEmail(String toEmail) {
         log.info("发送测试邮件：toEmail={}", toEmail);
 
