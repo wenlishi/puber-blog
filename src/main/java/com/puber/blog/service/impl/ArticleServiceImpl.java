@@ -1,5 +1,7 @@
 package com.puber.blog.service.impl;
 
+import com.puber.blog.annotation.LogRecord;
+import com.puber.blog.annotation.LogRecord.LogLevel;
 import com.puber.blog.dto.*;
 import com.puber.blog.entity.Article;
 import com.puber.blog.entity.ArticleTag;
@@ -172,9 +174,16 @@ public class ArticleServiceImpl implements ArticleService {
      * @return Article 创建的文章实体
      */
     @Override
+    /**
+     * 创建文章（发布/草稿）
+     *
+     * @param dto 文章DTO
+     * @param authorId 作者ID
+     * @return Article 创建的文章实体
+     */
     @Transactional
+    @LogRecord(operation = "创建文章", level = LogLevel.INFO, recordParams = true, recordTime = true)
     public Article createArticle(ArticleDTO dto, Long authorId) {
-        log.info("创建文章：{}", dto.getTitle());
 
         // 检查作者是否存在
         User author = userRepository.findById(authorId)
@@ -328,10 +337,10 @@ public class ArticleServiceImpl implements ArticleService {
      *
      * @param id 文章ID
      */
-    @Override
     @Transactional
+    @LogRecord(operation = "删除文章", level = LogLevel.WARN, recordParams = true, recordTime = true)
     public void deleteArticle(Long id) {
-        log.info("删除文章：{}", id);
+        log.warn("删除文章：id={}", id);
 
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(404, "文章不存在：" + id));

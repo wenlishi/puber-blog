@@ -1,5 +1,7 @@
 package com.puber.blog.service.impl;
 
+import com.puber.blog.annotation.LogRecord;
+import com.puber.blog.annotation.LogRecord.LogLevel;
 import com.puber.blog.dto.CommentDTO;
 import com.puber.blog.dto.CommentVO;
 import com.puber.blog.entity.Article;
@@ -49,8 +51,8 @@ public class CommentServiceImpl implements CommentService {
      */
     @Override
     @Transactional
+    @LogRecord(operation = "提交评论", level = LogLevel.INFO, recordParams = true, recordTime = true)
     public Comment createComment(CommentDTO dto, HttpServletRequest request) {
-        log.info("创建评论：articleId={}, nickname={}", dto.getArticleId(), dto.getNickname());
 
         // 验证必填字段
         if (dto.getNickname() == null || dto.getNickname().trim().isEmpty()) {
@@ -153,9 +155,8 @@ public class CommentServiceImpl implements CommentService {
      */
     @Override
     @Transactional
+    @LogRecord(operation = "批准评论", level = LogLevel.INFO, recordParams = true, recordTime = true)
     public void approveComment(Long id) {
-        log.info("批准评论：id={}", id);
-
         Comment comment = getCommentById(id);
         comment.setStatus("APPROVED");
         commentRepository.save(comment);
@@ -168,8 +169,8 @@ public class CommentServiceImpl implements CommentService {
      */
     @Override
     @Transactional
+    @LogRecord(operation = "拒绝评论", level = LogLevel.WARN, recordParams = true, recordTime = true)
     public void rejectComment(Long id) {
-        log.info("拒绝评论：id={}", id);
 
         Comment comment = getCommentById(id);
         comment.setStatus("REJECTED");
@@ -183,6 +184,7 @@ public class CommentServiceImpl implements CommentService {
      */
     @Override
     @Transactional
+    @LogRecord(operation = "删除评论", level = LogLevel.WARN, recordParams = true, recordTime = true)
     public void deleteComment(Long id) {
         log.info("删除评论：id={}", id);
 
