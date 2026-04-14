@@ -20,6 +20,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 后台文章管理控制器
  * 提供文章管理的REST API
@@ -148,6 +152,22 @@ public class AdminArticleController {
     }
 
     /**
+     * 上传文章内容图片（编辑器内图片）
+     *
+     * @param file 图片文件
+     * @return Result<String> 图片URL路径
+     */
+    @PostMapping("/upload-image")
+    public Result<String> uploadArticleImage(@RequestParam("file") MultipartFile file) {
+        log.info("上传文章内容图片");
+
+        String uploadPath = "E:/Desktop/puber-blog/uploads";
+        String imageUrl = FileUploadUtils.uploadImage(file, uploadPath);
+
+        return Result.success(imageUrl);
+    }
+
+    /**
      * 搜索文章
      *
      * @param keyword 搜索关键字
@@ -166,5 +186,32 @@ public class AdminArticleController {
         Page<ArticleListVO> articles = articleService.searchArticles(keyword, pageable);
 
         return Result.success(articles);
+    }
+
+    /**
+     * 自动保存草稿
+     *
+     * @param dto 文章DTO
+     * @return Result<Map<String, Object>> 保存结果（包含文章ID和保存时间）
+     */
+    @PostMapping("/auto-save")
+    public Result<Map<String, Object>> autoSaveDraft(@RequestBody ArticleDTO dto) {
+        log.info("自动保存草稿");
+
+        // 强制设置为草稿状态
+        dto.setStatus("DRAFT");
+
+        Article article;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        User currentUser = userService.getUserByUsername(username);
+
+        article = articleService.createArticle(dto, currentUser.getId());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", article.getId());
+        result.put("savedAt", LocalDateTime.now());
+
+        return Result.success(result);
     }
 }

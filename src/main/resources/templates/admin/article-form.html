@@ -8,12 +8,29 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <!-- EasyMDE Markdown Editor -->
     <link href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" rel="stylesheet">
+    <!-- Highlight.js for code syntax highlighting -->
+    <link href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; }
         .EasyMDEContainer { max-width: 100%; }
         .editor-toolbar { border-color: #dee2e6; }
         .cover-preview { max-width: 300px; margin-top: 10px; }
         .tag-checkbox { margin-right: 10px; }
+        /* 预览区样式优化 */
+        .EasyMDEContainer .editor-preview {
+            padding: 20px;
+            background: #fff;
+        }
+        .EasyMDEContainer .editor-preview pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .EasyMDEContainer .editor-preview code {
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
     </style>
 </head>
 <body>
@@ -22,6 +39,16 @@
 
     <!-- 主内容 -->
     <div class="container mt-4">
+        <!-- 上传进度提示 -->
+        <div id="upload-progress" class="alert alert-info" style="display:none; position:fixed; top:20px; right:20px; z-index:9999;">
+            <i class="bi bi-upload"></i> <span id="upload-status">上传中...</span>
+        </div>
+
+        <!-- 自动保存状态指示器 -->
+        <div id="auto-save-indicator" class="text-muted small mb-2" style="display:block;">
+            <i class="bi bi-cloud-check"></i> <span id="save-status">自动保存已开启</span>
+        </div>
+
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0" id="pageTitle"><i class="bi bi-file-text"></i> 新增文章</h5>
@@ -117,9 +144,14 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- EasyMDE Markdown Editor -->
     <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+    <!-- Highlight.js for code syntax highlighting -->
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
     <script>
         let articleId = null;
         let easyMDE;
+        let autoSaveTimer;
+        let lastContentHash = '';
+        let hasUnsavedChangesFlag = false;
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -129,6 +161,50 @@
                 spellChecker: false,
                 autosave: { enabled: false },
                 placeholder: "在此编写文章内容（支持Markdown格式）...",
+                uploadImage: true,
+                imageUploadFunction: function(file, onSuccess, onError) {
+                    // 显示上传提示
+                    showUploadProgress('上传中...');
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    fetch('/api/admin/articles/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 200) {
+                            onSuccess(data.data);
+                            showUploadProgress('上传成功');
+                            setTimeout(() => hideUploadProgress(), 2000);
+                        } else {
+                            onError(data.message || '上传失败');
+                            showUploadProgress('上传失败：' + (data.message || '未知错误'));
+                            setTimeout(() => hideUploadProgress(), 3000);
+                        }
+                    })
+                    .catch(error => {
+                        onError('网络错误');
+                        showUploadProgress('上传失败：网络错误');
+                        setTimeout(() => hideUploadProgress(), 3000);
+                    });
+                },
+                previewRender: function(plainText, preview) {
+                    // 使用 EasyMDE 内置的 marked.js 渲染 Markdown
+                    const renderedHtml = marked.parse(plainText);
+                    preview.innerHTML = renderedHtml;
+
+                    // 应用代码高亮
+                    setTimeout(() => {
+                        preview.querySelectorAll('pre code').forEach((block) => {
+                            hljs.highlightElement(block);
+                        });
+                    }, 0);
+
+                    return renderedHtml;
+                },
                 toolbar: [
                     "bold", "italic", "heading", "|",
                     "quote", "unordered-list", "ordered-list", "|",
@@ -150,6 +226,17 @@
                 document.getElementById('pageTitle').innerHTML = '<i class="bi bi-pencil"></i> 编辑文章';
                 loadArticleData(articleId);
             }
+
+            // 启动自动保存
+            startAutoSave();
+
+            // 监听页面离开事件
+            window.addEventListener('beforeunload', function(e) {
+                if (hasUnsavedChanges()) {
+                    e.preventDefault();
+                    e.returnValue = '有未保存的内容，确定离开吗？';
+                }
+            });
         });
 
         // 加载分类列表
@@ -324,6 +411,9 @@
                 .then(result => {
                     if (result.code === 200) {
                         showSuccess(articleId ? '文章已更新' : '文章已创建');
+                        // 标记内容已保存，避免离开提示
+                        lastContentHash = getContentHash();
+                        hasUnsavedChangesFlag = false;
                         window.location.href = '/admin/articles';
                     } else {
                         showError(result.message || '保存失败');
@@ -333,6 +423,96 @@
 
         function showSuccess(message) { alert(message); }
         function showError(message) { alert('错误：' + message); }
+
+        // 上传进度提示相关函数
+        function showUploadProgress(status) {
+            const progressDiv = document.getElementById('upload-progress');
+            const statusSpan = document.getElementById('upload-status');
+            statusSpan.textContent = status;
+            progressDiv.style.display = 'block';
+        }
+
+        function hideUploadProgress() {
+            const progressDiv = document.getElementById('upload-progress');
+            progressDiv.style.display = 'none';
+        }
+
+        // 自动保存相关函数
+        function startAutoSave() {
+            autoSaveTimer = setInterval(() => {
+                const currentHash = getContentHash();
+                if (currentHash !== lastContentHash) {
+                    autoSaveDraft();
+                    lastContentHash = currentHash;
+                }
+            }, 30000); // 30秒检查一次
+        }
+
+        function getContentHash() {
+            return JSON.stringify({
+                title: document.getElementById('title').value,
+                content: easyMDE.value(),
+                summary: document.getElementById('summary').value
+            });
+        }
+
+        function autoSaveDraft() {
+            const data = collectFormData();
+            if (!data) return;
+
+            // 如果是新文章，不设置ID
+            if (!articleId) {
+                data.id = null;
+            }
+
+            const url = '/api/admin/articles/auto-save';
+            const method = 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.code === 200) {
+                    const savedAt = result.data.savedAt;
+                    const savedId = result.data.id;
+
+                    // 更新文章ID（如果是新创建的）
+                    if (!articleId && savedId) {
+                        articleId = savedId;
+                        document.getElementById('articleId').value = savedId;
+                    }
+
+                    updateAutoSaveStatus('已自动保存 ' + formatTime(savedAt));
+                    hasUnsavedChangesFlag = false;
+                } else {
+                    updateAutoSaveStatus('自动保存失败');
+                }
+            })
+            .catch(error => {
+                updateAutoSaveStatus('自动保存失败：网络错误');
+            });
+        }
+
+        function updateAutoSaveStatus(status) {
+            const statusSpan = document.getElementById('save-status');
+            statusSpan.textContent = status;
+        }
+
+        function formatTime(dateTime) {
+            // 简单的时间格式化
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            return `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
+        }
+
+        function hasUnsavedChanges() {
+            const currentHash = getContentHash();
+            return currentHash !== lastContentHash && currentHash !== '{}';
+        }
     </script>
 </body>
 </html>
