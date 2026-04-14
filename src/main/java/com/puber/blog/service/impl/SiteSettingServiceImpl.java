@@ -111,7 +111,13 @@ public class SiteSettingServiceImpl implements SiteSettingService {
                 setting.setSettingValue(value);
                 siteSettingRepository.save(setting);
             } else {
-                log.warn("配置项不存在：{}", key);
+                log.info("创建新配置项：key={}", key);
+                SiteSetting newSetting = SiteSetting.builder()
+                        .settingKey(key)
+                        .settingValue(value)
+                        .settingType("STRING")
+                        .build();
+                siteSettingRepository.save(newSetting);
             }
         }
     }
@@ -134,6 +140,15 @@ public class SiteSettingServiceImpl implements SiteSettingService {
         siteInfo.put("site_keywords", getSettingValue("site_keywords", "blog, spring boot, java"));
         siteInfo.put("footer_text", getSettingValue("footer_text", "Powered by Spring Boot"));
         siteInfo.put("posts_per_page", getSettingValue("posts_per_page", "10"));
+
+        // 获取邮件配置项
+        siteInfo.put("mail_enabled", getSettingValue("mail_enabled", "false"));
+        siteInfo.put("mail_smtp_host", getSettingValue("mail_smtp_host", ""));
+        siteInfo.put("mail_smtp_port", getSettingValue("mail_smtp_port", "465"));
+        siteInfo.put("mail_smtp_username", getSettingValue("mail_smtp_username", ""));
+        siteInfo.put("mail_smtp_password", getSettingValue("mail_smtp_password", ""));
+        siteInfo.put("mail_admin_email", getSettingValue("mail_admin_email", ""));
+        siteInfo.put("site_url", getSettingValue("site_url", "http://localhost:8080"));
 
         return siteInfo;
     }

@@ -12,13 +12,12 @@ import com.puber.blog.dto.CommentDTO;
 public interface MailService {
 
     /**
-     * 发送新评论通知邮件给站长
+     * 发送新评论通知邮件给站长（异步方式）
      *
      * @param commentDTO 评论DTO
      * @param articleTitle 文章标题
-     * @return boolean 发送是否成功
      */
-    boolean sendNewCommentNotification(CommentDTO commentDTO, String articleTitle);
+    void sendNewCommentNotification(CommentDTO commentDTO, String articleTitle);
 
     /**
      * 发送测试邮件（用于验证配置）

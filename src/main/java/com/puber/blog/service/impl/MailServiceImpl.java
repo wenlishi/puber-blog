@@ -5,9 +5,11 @@ import com.puber.blog.service.MailService;
 import com.puber.blog.service.SiteSettingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Properties;
@@ -27,19 +29,20 @@ public class MailServiceImpl implements MailService {
     private final SiteSettingService siteSettingService;
 
     /**
-     * 发送新评论通知邮件给站长
+     * 发送新评论通知邮件给站长（异步方式）
+     * 使用独立线程池执行，不阻塞评论提交流程
      *
      * @param commentDTO 评论DTO
      * @param articleTitle 文章标题
-     * @return boolean 发送是否成功
      */
     @Override
-    public boolean sendNewCommentNotification(CommentDTO commentDTO, String articleTitle) {
-        log.info("发送新评论通知邮件：articleTitle={}, nickname={}", articleTitle, commentDTO.getNickname());
+    @Async("mailTaskExecutor")
+    public void sendNewCommentNotification(CommentDTO commentDTO, String articleTitle) {
+        log.info("异步发送新评论通知邮件：articleTitle={}, nickname={}", articleTitle, commentDTO.getNickname());
 
         if (!isMailConfigured()) {
             log.warn("邮件配置不完整，跳过发送");
-            return false;
+            return;
         }
 
         try {
@@ -50,11 +53,16 @@ public class MailServiceImpl implements MailService {
             String adminEmail = siteSettingService.getSettingValue("mail_admin_email");
             if (adminEmail == null || adminEmail.isEmpty()) {
                 log.warn("未配置站长邮箱，跳过发送");
-                return false;
+                return;
             }
 
             // 创建邮件消息
             SimpleMailMessage message = new SimpleMailMessage();
+
+            // QQ邮箱要求：发件人地址必须和授权用户一致
+            String smtpUsername = siteSettingService.getSettingValue("mail_smtp_username");
+            message.setFrom(smtpUsername);  // 设置发件人地址
+
             message.setTo(adminEmail);
             message.setSubject("【博客系统】新评论待审核 - " + articleTitle);
             message.setText(buildCommentNotificationText(commentDTO, articleTitle));
@@ -63,10 +71,8 @@ public class MailServiceImpl implements MailService {
             mailSender.send(message);
 
             log.info("新评论通知邮件发送成功：to={}", adminEmail);
-            return true;
         } catch (Exception e) {
             log.error("发送新评论通知邮件失败", e);
-            return false;
         }
     }
 
@@ -91,6 +97,11 @@ public class MailServiceImpl implements MailService {
 
             // 创建测试邮件
             SimpleMailMessage message = new SimpleMailMessage();
+
+            // QQ邮箱要求：发件人地址必须和授权用户一致
+            String smtpUsername = siteSettingService.getSettingValue("mail_smtp_username");
+            message.setFrom(smtpUsername);  // 设置发件人地址
+
             message.setTo(toEmail);
             message.setSubject("【博客系统】邮件配置测试");
             message.setText("这是一封测试邮件，用于验证SMTP邮件配置是否正确。\n\n如果您收到这封邮件，说明邮件配置成功！\n\n发送时间：" + java.time.LocalDateTime.now());
@@ -131,6 +142,7 @@ public class MailServiceImpl implements MailService {
 
     /**
      * 创建邮件发送器
+     * 根据端口自动选择SSL或STARTTLS加密方式
      *
      * @return JavaMailSender 邮件发送器
      */
@@ -138,18 +150,39 @@ public class MailServiceImpl implements MailService {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
 
         // 从系统配置获取SMTP参数
-        mailSender.setHost(siteSettingService.getSettingValue("mail_smtp_host"));
-        mailSender.setPort(Integer.parseInt(siteSettingService.getSettingValue("mail_smtp_port")));
-        mailSender.setUsername(siteSettingService.getSettingValue("mail_smtp_username"));
-        mailSender.setPassword(siteSettingService.getSettingValue("mail_smtp_password"));
+        String host = siteSettingService.getSettingValue("mail_smtp_host");
+        int port = Integer.parseInt(siteSettingService.getSettingValue("mail_smtp_port"));
+        String username = siteSettingService.getSettingValue("mail_smtp_username");
+        String password = siteSettingService.getSettingValue("mail_smtp_password");
 
-        // 配置邮件属性
+        mailSender.setHost(host);
+        mailSender.setPort(port);
+        mailSender.setUsername(username);
+        mailSender.setPassword(password);
+
+        // 配置邮件属性（根据端口自动选择加密方式）
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.starttls.required", "true");
         props.put("mail.debug", "false");
+
+        // 465端口使用SSL加密，587端口使用STARTTLS加密
+        if (port == 465 || port == 994) {
+            // SSL加密方式（适用于QQ邮箱465端口）
+            props.put("mail.smtp.ssl.enable", "true");
+            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            props.put("mail.smtp.socketFactory.port", String.valueOf(port));
+            log.debug("使用SSL加密方式连接SMTP服务器：port={}", port);
+        } else if (port == 587 || port == 25) {
+            // STARTTLS加密方式
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.starttls.required", "true");
+            log.debug("使用STARTTLS加密方式连接SMTP服务器：port={}", port);
+        } else {
+            // 其他端口默认尝试SSL
+            props.put("mail.smtp.ssl.enable", "true");
+            log.warn("非标准SMTP端口{}，默认使用SSL加密方式", port);
+        }
 
         return mailSender;
     }
