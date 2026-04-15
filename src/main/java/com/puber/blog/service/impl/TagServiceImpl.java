@@ -10,6 +10,8 @@ import com.puber.blog.service.TagService;
 import com.puber.blog.utils.SlugUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,10 +37,12 @@ public class TagServiceImpl implements TagService {
     /**
      * 获取所有标签列表
      * 包含文章数量统计
+     * 使用缓存减少数据库查询频率
      *
      * @return List<TagVO> 标签列表
      */
     @Override
+    @Cacheable(value = "tags", key = "'allTags'")
     public List<TagVO> getAllTags() {
         log.debug("获取所有标签列表");
 
@@ -80,12 +84,14 @@ public class TagServiceImpl implements TagService {
     /**
      * 创建标签
      * 如果slug为空，则根据name自动生成
+     * 创建后清除缓存，确保下次查询获取最新数据
      *
      * @param dto 标签DTO
      * @return Tag 创建的标签实体
      */
     @Override
     @Transactional
+    @CacheEvict(value = "tags", allEntries = true)
     public Tag createTag(TagDTO dto) {
         log.info("创建标签：{}", dto.getName());
 
@@ -117,6 +123,7 @@ public class TagServiceImpl implements TagService {
 
     /**
      * 更新标签
+     * 更新后清除缓存，确保下次查询获取最新数据
      *
      * @param id 标签ID
      * @param dto 标签DTO
@@ -124,6 +131,7 @@ public class TagServiceImpl implements TagService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "tags", allEntries = true)
     public Tag updateTag(Long id, TagDTO dto) {
         log.info("更新标签：{}", id);
 
@@ -157,11 +165,13 @@ public class TagServiceImpl implements TagService {
     /**
      * 删除标签
      * 如果标签下有文章，则抛出异常
+     * 删除后清除缓存，确保下次查询获取最新数据
      *
      * @param id 标签ID
      */
     @Override
     @Transactional
+    @CacheEvict(value = "tags", allEntries = true)
     public void deleteTag(Long id) {
         log.info("删除标签：{}", id);
 

@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
  * 对应数据库表：article_tag
  * 用于实现文章和标签的多对多关系
  * 注意：此表不需要updated_at字段，因此不继承BaseEntity的updatedAt
+ * 实现 Serializable 接口以支持缓存序列化
  *
  * @author puber
  * @version 1.0.0
@@ -24,7 +26,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @EntityListeners(AuditingEntityListener.class)
-public class ArticleTag {
+public class ArticleTag implements Serializable {
 
     /**
      * 主键ID
@@ -52,4 +54,10 @@ public class ArticleTag {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    /**
+     * 序列化版本号
+     * 用于确保序列化/反序列化的兼容性
+     */
+    private static final long serialVersionUID = 1L;
 }

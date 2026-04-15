@@ -6,12 +6,14 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
  * 实体基类
  * 包含所有实体共有的字段：ID、创建时间、更新时间
  * 使用 JPA 审计功能自动填充时间字段
+ * 实现 Serializable 接口以支持缓存序列化
  *
  * @author puber
  * @version 1.0.0
@@ -20,7 +22,7 @@ import java.time.LocalDateTime;
 @Data
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BaseEntity {
+public abstract class BaseEntity implements Serializable {
 
     /**
      * 主键 ID
@@ -45,4 +47,10 @@ public abstract class BaseEntity {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    /**
+     * 序列化版本号
+     * 用于确保序列化/反序列化的兼容性
+     */
+    private static final long serialVersionUID = 1L;
 }

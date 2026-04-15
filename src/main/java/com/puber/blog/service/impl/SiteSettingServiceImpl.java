@@ -6,6 +6,8 @@ import com.puber.blog.repository.SiteSettingRepository;
 import com.puber.blog.service.SiteSettingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,6 +75,7 @@ public class SiteSettingServiceImpl implements SiteSettingService {
 
     /**
      * 更新网站配置
+     * 更新后清除缓存，确保下次查询获取最新数据
      *
      * @param key 配置键
      * @param value 配置值
@@ -80,6 +83,7 @@ public class SiteSettingServiceImpl implements SiteSettingService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "siteInfo", allEntries = true)
     public SiteSetting updateSetting(String key, String value) {
         log.info("更新网站配置：key={}, value={}", key, value);
 
@@ -92,12 +96,14 @@ public class SiteSettingServiceImpl implements SiteSettingService {
 
     /**
      * 批量更新网站配置
+     * 更新后清除缓存，确保下次查询获取最新数据
      *
      * @param settings 配置Map（key-value）
      * @return void
      */
     @Override
     @Transactional
+    @CacheEvict(value = "siteInfo", allEntries = true)
     public void batchUpdateSettings(Map<String, String> settings) {
         log.info("批量更新网站配置：{}", settings);
 
@@ -125,10 +131,12 @@ public class SiteSettingServiceImpl implements SiteSettingService {
     /**
      * 获取网站基本信息（用于前端展示）
      * 包括：网站名称、描述、关键词、页脚文字等
+     * 使用缓存减少数据库查询频率
      *
      * @return Map<String, String> 网站基本信息Map
      */
     @Override
+    @Cacheable(value = "siteInfo", key = "'siteInfo'")
     public Map<String, String> getSiteInfo() {
         log.debug("获取网站基本信息");
 

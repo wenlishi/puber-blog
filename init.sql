@@ -206,13 +206,23 @@ COMMENT ON COLUMN friend_link.status IS '状态（ACTIVE=启用/INACTIVE=禁用�
 COMMENT ON COLUMN friend_link.created_at IS '创建时间';
 COMMENT ON COLUMN friend_link.updated_at IS '更新时间';
 
--- 创建索引
+-- 创建索引（单字段索引）
 CREATE INDEX IF NOT EXISTS idx_article_status ON article(status);
 CREATE INDEX IF NOT EXISTS idx_article_created_at ON article(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_article_category_id ON article(category_id);
 CREATE INDEX IF NOT EXISTS idx_article_author_id ON article(author_id);
 CREATE INDEX IF NOT EXISTS idx_article_is_top ON article(is_top DESC);
 CREATE INDEX IF NOT EXISTS idx_article_published_at ON article(published_at DESC);
+
+-- 创建高性能复合索引（优化高频查询）
+-- 1. 文章列表查询：按状态筛选 + 置顶排序 + 发布时间排序
+CREATE INDEX IF NOT EXISTS idx_article_status_top_published ON article(status, is_top DESC, published_at DESC);
+
+-- 2. 分类筛选查询：按分类筛选 + 状态筛选 + 发布时间排序
+CREATE INDEX IF NOT EXISTS idx_article_category_status_published ON article(category_id, status, published_at DESC);
+
+-- 3. 标签关联查询优化：标签查询文章时的JOIN性能提升
+CREATE INDEX IF NOT EXISTS idx_article_tag_tag_article ON article_tag(tag_id, article_id);
 
 CREATE INDEX IF NOT EXISTS idx_comment_status ON comment(status);
 CREATE INDEX IF NOT EXISTS idx_comment_article_id ON comment(article_id);

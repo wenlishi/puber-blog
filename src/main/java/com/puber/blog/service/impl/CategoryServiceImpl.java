@@ -10,6 +10,8 @@ import com.puber.blog.service.CategoryService;
 import com.puber.blog.utils.SlugUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,10 +37,12 @@ public class CategoryServiceImpl implements CategoryService {
     /**
      * 获取所有分类列表
      * 按sortOrder排序，并包含文章数量统计
+     * 使用缓存减少数据库查询频率
      *
      * @return List<CategoryVO> 分类列表
      */
     @Override
+    @Cacheable(value = "categories", key = "'allCategories'")
     public List<CategoryVO> getAllCategories() {
         log.debug("获取所有分类列表");
 
@@ -80,12 +84,14 @@ public class CategoryServiceImpl implements CategoryService {
     /**
      * 创建分类
      * 如果slug为空，则根据name自动生成
+     * 创建后清除缓存，确保下次查询获取最新数据
      *
      * @param dto 分类DTO
      * @return Category 创建的分类实体
      */
     @Override
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public Category createCategory(CategoryDTO dto) {
         log.info("创建分类：{}", dto.getName());
 
@@ -119,6 +125,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * 更新分类
+     * 更新后清除缓存，确保下次查询获取最新数据
      *
      * @param id 分类ID
      * @param dto 分类DTO
@@ -126,6 +133,7 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public Category updateCategory(Long id, CategoryDTO dto) {
         log.info("更新分类：{}", id);
 
@@ -161,11 +169,13 @@ public class CategoryServiceImpl implements CategoryService {
     /**
      * 删除分类
      * 如果分类下有文章，则抛出异常
+     * 删除后清除缓存，确保下次查询获取最新数据
      *
      * @param id 分类ID
      */
     @Override
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public void deleteCategory(Long id) {
         log.info("删除分类：{}", id);
 
