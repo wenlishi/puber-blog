@@ -96,7 +96,8 @@
      */
     function renderCommentItem(comment, isReply = false) {
         const nickname = escapeHtml(comment.nickname);
-        const content = escapeHtml(comment.content);
+        // 评论内容不需要转义：后台已经做了 XSS 过滤，移除了危险标签
+        const content = comment.content;
         const createdAt = formatDate(comment.createdAt);
         const website = comment.website ? escapeHtml(comment.website) : null;
         const initials = nickname.charAt(0).toUpperCase();

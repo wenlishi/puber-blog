@@ -4,6 +4,7 @@ import com.puber.blog.entity.User;
 import com.puber.blog.exception.BusinessException;
 import com.puber.blog.repository.UserRepository;
 import com.puber.blog.service.UserService;
+import com.puber.blog.utils.PasswordValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -96,6 +97,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * 修改密码
+     * 验证旧密码正确性和新密码强度
      *
      * @param id 用户ID
      * @param oldPassword 旧密码
@@ -113,6 +115,9 @@ public class UserServiceImpl implements UserService {
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new BusinessException("旧密码不正确");
         }
+
+        // 验证新密码强度
+        PasswordValidator.validate(newPassword);
 
         // 加密新密码并更新
         String encodedPassword = passwordEncoder.encode(newPassword);

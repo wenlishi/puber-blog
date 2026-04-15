@@ -7,8 +7,9 @@ import org.commonmark.renderer.html.HtmlRenderer;
 /**
  * Markdown 工具类
  * 用于将 Markdown 文本转换为 HTML
+ * 支持不同的 XSS 过滤策略
  *
- * @author puber
+ * @author wenlishi
  * @version 1.0.0
  * @since 2026-04-13
  */
@@ -25,17 +26,32 @@ public class MarkdownUtils {
     private static final HtmlRenderer renderer = HtmlRenderer.builder().build();
 
     /**
-     * 将 Markdown 文本转换为 HTML
+     * 将 Markdown 文本转换为 HTML（使用宽松策略）
+     * 适用于后台管理员发布的文章内容
      *
      * @param markdown Markdown 文本
-     * @return String HTML 文本
+     * @return String 安全的 HTML 文本
      */
     public static String toHtml(String markdown) {
+        return toHtml(markdown, XssPolicy.RELAXED);
+    }
+
+    /**
+     * 将 Markdown 文本转换为 HTML（根据策略过滤 XSS）
+     *
+     * @param markdown Markdown 文本
+     * @param policy   XSS 过滤策略
+     * @return String 安全的 HTML 文本
+     */
+    public static String toHtml(String markdown, XssPolicy policy) {
         if (markdown == null || markdown.trim().isEmpty()) {
             return "";
         }
         Node document = parser.parse(markdown);
-        return renderer.render(document);
+        String html = renderer.render(document);
+
+        // XSS过滤：根据策略过滤危险内容
+        return XssUtils.sanitize(html, policy);
     }
 
     /**

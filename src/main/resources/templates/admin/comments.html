@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>评论管理 - puber-blog后台</title>
+
+    <!-- CSRF Token Meta 标签（Thymeleaf 自动注入） -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -81,7 +86,48 @@
         let currentFilter = 'all';
         let currentPage = 0;
 
-        document.addEventListener('DOMContentLoaded', function() { loadComments(); loadPendingCount(); });
+        /**
+         * 从 meta 标签中获取 CSRF token
+         * Thymeleaf 自动注入 CSRF token 到 meta 标签中
+         */
+        function getCsrfToken() {
+            const csrfMeta = document.querySelector('meta[name="_csrf"]');
+            if (csrfMeta) {
+                const token = csrfMeta.getAttribute('content');
+                console.log('从 meta 标签获取 CSRF token:', token);
+                return token;
+            }
+            console.error('未找到 CSRF meta 标签');
+            return null;
+        }
+
+        /**
+         * 从 meta 标签中获取 CSRF header 名称
+         */
+        function getCsrfHeaderName() {
+            const headerMeta = document.querySelector('meta[name="_csrf_header"]');
+            if (headerMeta) {
+                const headerName = headerMeta.getAttribute('content');
+                console.log('CSRF header 名称:', headerName);
+                return headerName;
+            }
+            return 'X-XSRF-TOKEN'; // 默认值
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadComments();
+            loadPendingCount();
+
+            // 页面加载时检查 CSRF 配置
+            console.log('页面加载完成，检查 CSRF token...');
+            const token = getCsrfToken();
+            const headerName = getCsrfHeaderName();
+            if (!token) {
+                console.error('警告：无法获取 CSRF token，审核操作可能失败');
+            } else {
+                console.log('CSRF 配置正常：header=' + headerName + ', token=' + token);
+            }
+        });
 
         function loadComments(filter = currentFilter, page = currentPage) {
             currentFilter = filter;
@@ -183,22 +229,111 @@
         }
 
         function approveComment(id) {
-            fetch(`/api/admin/comments/${id}/approve`, {method: 'PUT'})
-                .then(response => response.json())
-                .then(result => { if (result.code === 200) { loadComments(); loadPendingCount(); alert('评论已批准'); } });
+            const csrfToken = getCsrfToken();
+            const csrfHeaderName = getCsrfHeaderName();
+            console.log('批准评论 - CSRF Token:', csrfToken, 'Header:', csrfHeaderName);
+
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            headers[csrfHeaderName] = csrfToken;
+
+            fetch(`/api/admin/comments/${id}/approve`, {
+                method: 'PUT',
+                headers: headers
+            })
+                .then(response => {
+                    console.log('批准评论响应状态:', response.status);
+                    if (response.status === 403) {
+                        throw new Error('CSRF验证失败，请刷新页面重试');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.code === 200) {
+                        loadComments();
+                        loadPendingCount();
+                        alert('评论已批准');
+                    } else {
+                        alert('批准失败：' + result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('批准评论失败：', error);
+                    alert(error.message || '操作失败，请刷新页面重试');
+                });
         }
 
         function rejectComment(id) {
-            fetch(`/api/admin/comments/${id}/reject`, {method: 'PUT'})
-                .then(response => response.json())
-                .then(result => { if (result.code === 200) { loadComments(); loadPendingCount(); alert('评论已拒绝'); } });
+            const csrfToken = getCsrfToken();
+            const csrfHeaderName = getCsrfHeaderName();
+            console.log('拒绝评论 - CSRF Token:', csrfToken, 'Header:', csrfHeaderName);
+
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            headers[csrfHeaderName] = csrfToken;
+
+            fetch(`/api/admin/comments/${id}/reject`, {
+                method: 'PUT',
+                headers: headers
+            })
+                .then(response => {
+                    console.log('拒绝评论响应状态:', response.status);
+                    if (response.status === 403) {
+                        throw new Error('CSRF验证失败，请刷新页面重试');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.code === 200) {
+                        loadComments();
+                        loadPendingCount();
+                        alert('评论已拒绝');
+                    } else {
+                        alert('拒绝失败：' + result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('拒绝评论失败：', error);
+                    alert(error.message || '操作失败，请刷新页面重试');
+                });
         }
 
         function deleteComment(id) {
             if (confirm('确定要删除这条评论吗？删除后将无法恢复！')) {
-                fetch(`/api/admin/comments/${id}`, {method: 'DELETE'})
-                    .then(response => response.json())
-                    .then(result => { if (result.code === 200) { loadComments(); alert('评论已删除'); } });
+                const csrfToken = getCsrfToken();
+                const csrfHeaderName = getCsrfHeaderName();
+                console.log('删除评论 - CSRF Token:', csrfToken, 'Header:', csrfHeaderName);
+
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                headers[csrfHeaderName] = csrfToken;
+
+                fetch(`/api/admin/comments/${id}`, {
+                    method: 'DELETE',
+                    headers: headers
+                })
+                    .then(response => {
+                        console.log('删除评论响应状态:', response.status);
+                        if (response.status === 403) {
+                            throw new Error('CSRF验证失败，请刷新页面重试');
+                        }
+                        return response.json();
+                    })
+                    .then(result => {
+                        if (result.code === 200) {
+                            loadComments();
+                            alert('评论已删除');
+                        } else {
+                            alert('删除失败：' + result.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('删除评论失败：', error);
+                        alert(error.message || '操作失败，请刷新页面重试');
+                    });
             }
         }
 

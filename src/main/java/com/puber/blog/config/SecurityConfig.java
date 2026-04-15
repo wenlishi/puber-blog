@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 /**
  * Spring Security 安全配置类
@@ -81,8 +82,12 @@ public class SecurityConfig {
                 .invalidateHttpSession(true)
                 .permitAll()
             )
-            // 禁用 CSRF（开发阶段，生产环境建议启用）
-            .csrf(csrf -> csrf.disable())
+            // 配置 CSRF 防护
+            // 对前台公开接口（游客评论）禁用 CSRF，其他接口启用 CSRF
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .ignoringRequestMatchers("/api/public/comments")
+            )
             // 配置 Session 管理
             .sessionManagement(session -> session
                 .maximumSessions(1)

@@ -12,6 +12,9 @@ import com.puber.blog.repository.CommentRepository;
 import com.puber.blog.service.CommentService;
 import com.puber.blog.service.MailService;
 import com.puber.blog.utils.IpUtils;
+import com.puber.blog.utils.MarkdownUtils;
+import com.puber.blog.utils.XssPolicy;
+import com.puber.blog.utils.XssUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -72,12 +75,16 @@ public class CommentServiceImpl implements CommentService {
         String ipAddress = IpUtils.getIpAddress(request);
         String userAgent = request.getHeader("User-Agent");
 
+        // XSS 过滤：使用严格策略过滤评论内容（移除危险标签，保留纯文本）
+        // 注意：评论内容是纯文本，不需要转换为 HTML
+        String safeContent = XssUtils.sanitizeStrict(dto.getContent().trim());
+
         // 创建评论实体
         Comment comment = Comment.builder()
                 .nickname(dto.getNickname().trim())
                 .email(dto.getEmail().trim())
                 .website(dto.getWebsite() != null ? dto.getWebsite().trim() : null)
-                .content(dto.getContent().trim())
+                .content(safeContent)
                 .articleId(dto.getArticleId())
                 .parentId(dto.getParentId())
                 .replyToId(dto.getReplyToId())
