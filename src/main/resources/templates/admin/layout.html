@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台布局模板</title>
+    
+    <!-- CSRF Token Meta 标签 -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    
+    <!-- 此文件是布局模板，不直接使用 -->
+</head>
+<body>
+
+<!-- 后台公共样式 Fragment -->
+<th:block th:fragment="adminStyles">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://fastly.jsdelivr.net/npm/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --bg-body: #FFFFFF;
+            --bg-surface: #FFFFFF;
+            --bg-sidebar: #1E1C1B;
+            --bg-sidebar-hover: #2A2827;
+            --bg-sidebar-active: rgba(166, 110, 84, 0.12);
+            --sidebar-border: rgba(255, 255, 255, 0.04);
+            --sidebar-text: #A09B96;
+            --sidebar-text-active: #FFFFFF;
+            --border-light: rgba(42, 40, 39, 0.06);
+            --border-strong: rgba(42, 40, 39, 0.12);
+            --text-main: #2A2827;
+            --text-regular: #4E4A48;
+            --text-muted: #8A8580;
+            --primary: #A66E54;
+            --primary-hover: #8F5B44;
+            --primary-light: #F4EBE7;
+            --shadow-sm: 0 2px 4px rgba(42, 40, 39, 0.02);
+            --shadow-card: 0 4px 20px rgba(42, 40, 39, 0.03), 0 1px 2px rgba(42, 40, 39, 0.02);
+            --shadow-hover: 0 12px 32px rgba(42, 40, 39, 0.05), 0 2px 4px rgba(42, 40, 39, 0.02);
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --radius-sm: 6px;
+            --sidebar-width: 240px;
+            --topbar-height: 60px;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Noto Serif SC', 'Songti SC', serif;
+            font-variant-numeric: tabular-nums;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            background-color: var(--bg-body); color: var(--text-regular);
+            display: flex; height: 100vh; overflow: hidden; font-size: 14px;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width); background: var(--bg-sidebar);
+            display: flex; flex-direction: column; z-index: 20; flex-shrink: 0;
+            border-right: 1px solid var(--sidebar-border);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px 16px; display: flex; align-items: center;
+        }
+
+        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo-icon {
+            width: 28px; height: 28px; border-radius: 4px;
+            background: var(--bg-surface); color: var(--primary);
+            display: flex; align-items: center; justify-content: center; font-size: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-title { font-size: 15px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.02em; font-family: 'Inter', sans-serif;}
+        .logo-sub { font-size: 9px; color: #96918D; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; }
+
+        .nav-body { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+        .nav-section-label {
+            font-size: 10px; color: #6E6A67; padding: 16px 12px 8px;
+            font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+        }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+            color: var(--sidebar-text); text-decoration: none; border-radius: var(--radius-sm);
+            transition: all 0.2s ease; font-weight: 500; font-size: 13.5px;
+        }
+        .nav-item .nav-icon { font-size: 18px; color: var(--sidebar-text); transition: color 0.2s ease; }
+
+        .nav-item:hover { background: var(--bg-sidebar-hover); color: #FFFFFF; }
+        .nav-item:hover .nav-icon { color: #FFFFFF; }
+
+        .nav-item.active { background: var(--bg-sidebar-active); color: var(--sidebar-text-active); font-weight: 600;}
+        .nav-item.active .nav-icon { color: var(--primary); }
+
+        .nav-badge {
+            margin-left: auto; background: var(--primary); color: #ffffff;
+            font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 12px;
+        }
+
+        .sidebar-footer { padding: 16px; }
+        .sidebar-user {
+            display: flex; align-items: center; justify-content: space-between; padding: 10px 12px;
+            cursor: pointer; transition: all 0.2s; border-radius: var(--radius-sm);
+        }
+        .sidebar-user:hover { background: var(--bg-sidebar-hover); }
+        .user-name { font-size: 13px; font-weight: 500; color: #B3AEAA; }
+
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; min-width: 0; }
+
+        .topbar {
+            height: var(--topbar-height); background: rgba(249, 248, 244, 0.85);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px; position: sticky; top: 0; z-index: 10;
+        }
+
+        .topbar-date {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 13.5px; color: var(--text-muted); letter-spacing: 0.05em;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .topbar-date i { font-size: 16px; color: var(--primary); opacity: 0.8; }
+
+        .topbar-right { display: flex; align-items: center; gap: 16px; }
+        .topbar-btn {
+            background: transparent; border: none; color: var(--text-muted); font-size: 20px;
+            cursor: pointer; transition: color 0.2s; position: relative; display: flex; align-items: center;
+        }
+        .topbar-btn:hover { color: var(--primary); }
+        .topbar-btn .notif-dot {
+            position: absolute; top: 0px; right: -2px; width: 6px; height: 6px;
+            border-radius: 50%; background: var(--primary);
+        }
+
+        .content { padding: 24px 40px; max-width: 1400px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 24px; }
+
+        .page-header { display: flex; flex-direction: column; gap: 6px; margin-bottom: 0; }
+        .page-header h1 { font-family: 'Noto Serif SC', serif; font-size: 26px; color: var(--text-main); font-weight: 700; letter-spacing: 0.02em; }
+        .page-header p { font-size: 14px; color: var(--text-muted); font-weight: 400; }
+
+        .card {
+            background: var(--bg-surface); border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light); box-shadow: var(--shadow-card);
+            display: flex; flex-direction: column; transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-hover); }
+        .card-header {
+            padding: 18px 24px; border-bottom: 1px solid var(--border-light);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .card-title-text { font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 700; color: var(--text-main); letter-spacing: 0.02em; }
+        .card-body { padding: 20px 24px; flex: 1; display: flex; flex-direction: column; }
+
+        .btn-primary-custom {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .btn-primary-custom:hover {
+            background: var(--primary-hover);
+            color: white;
+        }
+
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-custom thead th {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-light);
+        }
+        .table-custom tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 14px;
+            color: var(--text-regular);
+        }
+        .table-custom tbody tr:hover {
+            background-color: var(--primary-light);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-success {
+            background: #D4EDDA;
+            color: #155724;
+        }
+        .badge-secondary {
+            background: #E2E3E5;
+            color: #383D41;
+        }
+        .badge-warning {
+            background: #FFF3CD;
+            color: #856404;
+        }
+        .badge-danger {
+            background: #F8D7DA;
+            color: #721C24;
+        }
+        .badge-info {
+            background: #D1ECF1;
+            color: #0C5460;
+        }
+
+        .btn-sm-custom {
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 12.5px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .btn-outline-custom {
+            background: transparent;
+            border: 1px solid var(--border-strong);
+            color: var(--text-regular);
+        }
+        .btn-outline-custom:hover {
+            background: var(--bg-body);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        ::-webkit-scrollbar { width: 14px; height: 14px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(42, 40, 39, 0.15);
+            border-radius: 12px; border: 4px solid transparent; background-clip: padding-box;
+        }
+        ::-webkit-scrollbar-thumb:hover { background-color: rgba(42, 40, 39, 0.3); border-width: 3px; }
+        .nav-body::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.15); border-width: 4px; }
+        .nav-body::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.3); border-width: 3px; }
+    </style>
+</th:block>
+
+<!-- 后台侧边栏 Fragment -->
+<aside th:fragment="sidebar(activePage)" class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a class="logo" href="/admin/dashboard">
+            <div class="logo-icon"><i class="ph-bold ph-feather"></i></div>
+            <div class="logo-text">
+                <span class="logo-title">PUBER.</span>
+                <span class="logo-sub">Blog Admin</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="nav-body">
+        <div class="nav-section-label">Creation</div>
+        <a href="/admin/dashboard" class="nav-item" th:classappend="${activePage == 'dashboard'} ? 'active'">
+            <i class="ph ph-squares-four nav-icon"></i> 概览
+        </a>
+        <a href="/admin/articles/new" class="nav-item" th:classappend="${activePage == 'article-form'} ? 'active'">
+            <i class="ph ph-pencil-line nav-icon"></i> 写文章
+        </a>
+        <a href="/admin/articles" class="nav-item" th:classappend="${activePage == 'articles'} ? 'active'">
+            <i class="ph ph-folder-open nav-icon"></i> 文章管理
+        </a>
+        <a href="/admin/categories" class="nav-item" th:classappend="${activePage == 'categories' or activePage == 'tags'} ? 'active'">
+            <i class="ph ph-tag nav-icon"></i> 分类与标签
+        </a>
+
+        <div class="nav-section-label">Management</div>
+        <a href="/admin/comments" class="nav-item" th:classappend="${activePage == 'comments'} ? 'active'">
+            <i class="ph ph-chats-circle nav-icon"></i> 评论管理
+            <span class="nav-badge" th:if="${pendingComments > 0}" th:text="${pendingComments}">3</span>
+        </a>
+        <a href="/admin/friend-links" class="nav-item" th:classappend="${activePage == 'friend-links'} ? 'active'">
+            <i class="ph ph-link nav-icon"></i> 友情链接
+        </a>
+        <a href="/admin/demos" class="nav-item" th:classappend="${activePage == 'demos'} ? 'active'">
+            <i class="ph ph-rocket-launch nav-icon"></i> 演示管理
+        </a>
+
+        <div class="nav-section-label">Settings</div>
+        <a href="/admin/profile" class="nav-item" th:classappend="${activePage == 'profile'} ? 'active'">
+            <i class="ph ph-user nav-icon"></i> 个人资料
+        </a>
+        <a href="/admin/settings" class="nav-item" th:classappend="${activePage == 'settings'} ? 'active'">
+            <i class="ph ph-gear-six nav-icon"></i> 系统设置
+        </a>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="sidebar-user" onclick="document.getElementById('logoutForm').submit();">
+            <div class="user-name" th:text="${#authentication.name}">admin</div>
+            <i class="ph ph-sign-out" style="color: #6E6A67; font-size: 18px;" title="退出登录"></i>
+        </div>
+        <form id="logoutForm" action="/perform_logout" method="post" style="display: none;">
+            <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+        </form>
+    </div>
+</aside>
+
+<!-- 后台顶栏 Fragment -->
+<header th:fragment="topbar" class="topbar">
+    <div class="topbar-date">
+        <i class="ph-light ph-calendar-blank"></i>
+        <span id="currentDate">2026 年 4 月 16 日 · 星期四</span>
+    </div>
+
+    <div class="topbar-right">
+        <a href="/" class="topbar-btn" title="查看站点"><i class="ph ph-arrow-up-right"></i></a>
+        <a href="/admin/comments" class="topbar-btn" title="通知" th:if="${pendingComments > 0}">
+            <i class="ph ph-bell"></i><span class="notif-dot"></span>
+        </a>
+        <a href="/admin/comments" class="topbar-btn" title="通知" th:unless="${pendingComments > 0}">
+            <i class="ph ph-bell"></i>
+        </a>
+    </div>
+</header>
+
+<!-- 后台页面脚本 Fragment -->
+<th:block th:fragment="adminScripts">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+            document.getElementById('currentDate').innerText = dateStr.replace(/星期/, '· 星期');
+        });
+    </script>
+</th:block>
+
+</body>
+</html>

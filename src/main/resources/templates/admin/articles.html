@@ -3,235 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文章管理 - puber-blog后台</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body { background-color: #f8f9fa; }
-        .navbar-brand { font-weight: bold; }
-        .card { box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); }
-        .table tbody tr:hover { background-color: #f1f3f5; }
-        .top-badge { font-size: 0.75rem; }
-    </style>
+    <title>文章管理 - 知筑后台</title>
+    <th:block th:replace="~{admin/layout :: adminStyles}"/>
 </head>
 <body>
-    <!-- 导航栏 -->
-    <div th:replace="~{admin/fragments :: navbar('articles')}"></div>
+    <!-- 侧边栏 -->
+    <div th:replace="~{admin/layout :: sidebar('articles')}"></div>
 
-    <!-- 主内容 -->
-    <div class="container mt-4">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-file-text-fill"></i> 文章列表</h5>
-                <a class="btn btn-primary" href="/admin/articles/new"><i class="bi bi-plus-circle-fill"></i> 新增文章</a>
+    <!-- 主内容区 -->
+    <main class="main-wrapper">
+        <!-- 顶栏 -->
+        <div th:replace="~{admin/layout :: topbar}"></div>
+
+        <!-- 页面内容 -->
+        <div class="content">
+            <div class="page-header">
+                <h1>文章管理。</h1>
+                <p>管理所有文章，包括发布、编辑、删除等操作。</p>
             </div>
-            <div class="card-body">
-                <!-- 状态筛选和搜索 -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-text">文章列表</div>
+                    <a class="btn-primary-custom" href="/admin/articles/new">
+                        <i class="ph-bold ph-plus"></i> 新增文章
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- 状态筛选和搜索 -->
+                    <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: center;">
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-primary active" onclick="filterByStatus('ALL')">全部</button>
-                            <button type="button" class="btn btn-outline-success" onclick="filterByStatus('PUBLISHED')">已发布</button>
-                            <button type="button" class="btn btn-outline-secondary" onclick="filterByStatus('DRAFT')">草稿</button>
+                            <button type="button" class="btn-primary-custom" onclick="filterByStatus('ALL')">全部</button>
+                            <button type="button" class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('PUBLISHED')">已发布</button>
+                            <button type="button" class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('DRAFT')">草稿</button>
+                        </div>
+                        <div style="flex: 1; display: flex; gap: 8px;">
+                            <input type="text" class="form-control" id="searchKeyword" placeholder="搜索文章标题..." 
+                                   style="flex: 1; padding: 8px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); outline: none; font-size: 14px;">
+                            <button class="btn-outline-custom btn-sm-custom" onclick="searchArticles()">
+                                <i class="ph-bold ph-magnifying-glass"></i> 搜索
+                            </button>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="searchKeyword" placeholder="搜索文章标题...">
-                            <button class="btn btn-outline-secondary" onclick="searchArticles()"><i class="bi bi-search"></i></button>
-                        </div>
+
+                    <!-- 加载提示 -->
+                    <div id="loadingSpinner" class="text-center py-4" style="text-align: center; padding: 40px;">
+                        <div class="spinner-border" style="color: var(--primary); width: 40px; height: 40px; border-width: 3px;" role="status"></div>
+                        <p style="margin-top: 16px; color: var(--text-muted);">加载中...</p>
                     </div>
+
+                    <!-- 文章表格 -->
+                    <table class="table-custom" id="articleTable" style="display:none;">
+                        <thead>
+                            <tr>
+                                <th width="50">ID</th>
+                                <th>标题</th>
+                                <th width="80">状态</th>
+                                <th width="60">置顶</th>
+                                <th width="80">浏览量</th>
+                                <th width="120">分类</th>
+                                <th width="150">标签</th>
+                                <th width="120">发布时间</th>
+                                <th width="150">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="articleTableBody"></tbody>
+                    </table>
+
+                    <!-- 空数据提示 -->
+                    <div id="emptyMessage" class="text-center py-4" style="display:none; text-align: center; padding: 40px;">
+                        <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
+                        <p style="margin-top: 16px; color: var(--text-muted);">暂无文章数据</p>
+                    </div>
+
+                    <!-- 分页 -->
+                    <nav id="pagination" style="display:none; margin-top: 20px;">
+                        <ul class="pagination justify-content-center" id="paginationList" 
+                            style="display: flex; list-style: none; gap: 8px; justify-content: center; padding: 0; margin: 0;"></ul>
+                    </nav>
                 </div>
-
-                <!-- 加载提示 -->
-                <div id="loadingSpinner" class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">加载中...</span></div>
-                </div>
-
-                <!-- 文章表格 -->
-                <table class="table table-hover" id="articleTable" style="display:none;">
-                    <thead>
-                        <tr>
-                            <th width="50">ID</th>
-                            <th>标题</th>
-                            <th width="80">状态</th>
-                            <th width="60">置顶</th>
-                            <th width="80">浏览量</th>
-                            <th width="120">分类</th>
-                            <th width="150">标签</th>
-                            <th width="120">发布时间</th>
-                            <th width="150">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="articleTableBody"></tbody>
-                </table>
-
-                <!-- 空数据提示 -->
-                <div id="emptyMessage" class="text-center py-4" style="display:none;">
-                    <i class="bi bi-inbox" style="font-size:3rem;color:#ccc;"></i>
-                    <p class="text-muted mt-2">暂无文章数据</p>
-                </div>
-
-                <!-- 分页 -->
-                <nav id="pagination" style="display:none;">
-                    <ul class="pagination justify-content-center" id="paginationList"></ul>
-                </nav>
             </div>
         </div>
-    </div>
+    </main>
 
     <!-- 删除确认对话框 -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill"></i> 删除确认</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>确定要删除文章 <strong id="deleteArticleTitle"></strong> 吗？</p>
-                    <p class="text-danger"><small>删除后无法恢复</small></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-danger" onclick="confirmDelete()"><i class="bi bi-trash-fill"></i> 确认删除</button>
-                </div>
+    <div class="modal fade" id="deleteModal" tabindex="-1" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-dialog" style="background: white; border-radius: var(--radius-lg); padding: 24px; max-width: 400px; width: 90%;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);">
+                <h5 class="modal-title" style="color: var(--text-main); font-size: 16px; font-weight: 600;">
+                    <i class="ph-bold ph-warning" style="color: var(--primary);"></i> 删除确认
+                </h5>
+                <button type="button" class="btn-close" onclick="closeDeleteModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+            <div class="modal-body" style="margin-bottom: 20px;">
+                <p style="color: var(--text-regular); margin-bottom: 8px;">确定要删除文章 <strong id="deleteArticleTitle" style="color: var(--primary);"></strong> 吗？</p>
+                <p style="color: var(--text-muted); font-size: 13px; margin: 0;">删除后无法恢复</p>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-outline-custom btn-sm-custom" onclick="closeDeleteModal()">取消</button>
+                <button type="button" class="btn-primary-custom" onclick="confirmDelete()" style="background: #DC3545;">
+                    <i class="ph-bold ph-trash"></i> 确认删除
+                </button>
             </div>
         </div>
     </div>
 
+    <th:block th:replace="~{admin/layout :: adminScripts}"/>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let currentStatus = 'ALL';
-        let currentPage = 0;
-        let deleteArticleId = null;
+        // 文章管理相关 JavaScript
+        let currentFilter = 'ALL';
+        let currentPage = 1;
+        let totalPages = 1;
+        let articleToDelete = null;
 
-        document.addEventListener('DOMContentLoaded', function() { loadArticles(); });
-
-        function loadArticles(status = currentStatus, page = currentPage) {
-            currentStatus = status;
-            currentPage = page;
-            fetch(`/api/admin/articles?status=${status}&page=${page}&size=10`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.code === 200 && data.data) {
-                        renderArticleTable(data.data.content);
-                        renderPagination(data.data);
-                    } else { showError(data.message || '加载文章列表失败'); }
-                })
-                .catch(error => { console.error('Error:', error); showError('网络请求失败'); });
+        function filterByStatus(status) {
+            currentFilter = status;
+            currentPage = 1;
+            loadArticles();
+            
+            // 更新按钮状态
+            document.querySelectorAll('.btn-group button').forEach(btn => {
+                btn.classList.remove('btn-primary-custom');
+                btn.classList.add('btn-outline-custom', 'btn-sm-custom');
+            });
+            event.target.classList.remove('btn-outline-custom', 'btn-sm-custom');
+            event.target.classList.add('btn-primary-custom');
         }
 
-        function renderArticleTable(articles) {
+        function searchArticles() {
+            const keyword = document.getElementById('searchKeyword').value;
+            loadArticles(keyword);
+        }
+
+        function loadArticles(keyword = '') {
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('articleTable').style.display = 'none';
+            document.getElementById('emptyMessage').style.display = 'none';
+            document.getElementById('pagination').style.display = 'none';
+
+            const url = `/admin/articles/api?status=${currentFilter}&page=${currentPage}&keyword=${encodeURIComponent(keyword)}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    
+                    if (data.articles && data.articles.length > 0) {
+                        renderArticles(data.articles);
+                        document.getElementById('articleTable').style.display = 'table';
+                        if (data.totalPages > 1) {
+                            renderPagination(data.currentPage, data.totalPages);
+                            document.getElementById('pagination').style.display = 'block';
+                        }
+                    } else {
+                        document.getElementById('emptyMessage').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    document.getElementById('emptyMessage').style.display = 'block';
+                });
+        }
+
+        function renderArticles(articles) {
             const tbody = document.getElementById('articleTableBody');
-            const spinner = document.getElementById('loadingSpinner');
-            const table = document.getElementById('articleTable');
-            const emptyMsg = document.getElementById('emptyMessage');
-            const pagination = document.getElementById('pagination');
-
-            spinner.style.display = 'none';
-            if (articles.length === 0) {
-                table.style.display = 'none'; pagination.style.display = 'none'; emptyMsg.style.display = 'block'; return;
-            }
-            table.style.display = 'table'; pagination.style.display = 'block'; emptyMsg.style.display = 'none';
-
             tbody.innerHTML = articles.map(article => `
                 <tr>
-                    <td>${article.id}</td>
+                    <td style="color: var(--text-muted);">${article.id}</td>
                     <td>
-                        ${article.isTop ? '<span class="badge bg-warning top-badge">置顶</span> ' : ''}
-                        ${article.title}
+                        <a href="/admin/articles/${article.id}/edit" style="color: var(--text-main); font-weight: 500; text-decoration: none;">
+                            ${article.title}
+                        </a>
                     </td>
                     <td>
-                        <span class="badge ${article.status === 'PUBLISHED' ? 'bg-success' : 'bg-secondary'}">
-                            ${article.status === 'PUBLISHED' ? '已发布' : '草稿'}
-                        </span>
+                        ${article.status === 'PUBLISHED' 
+                            ? '<span class="badge badge-success"><i class="ph-bold ph-check"></i> 已发布</span>'
+                            : '<span class="badge badge-secondary"><i class="ph-bold ph-file"></i> 草稿</span>'
+                        }
                     </td>
-                    <td>${article.isTop ? '<i class="bi bi-check-circle-fill text-warning"></i>' : '-'}</td>
-                    <td>${article.viewCount}</td>
-                    <td>${article.categoryName || '-'}</td>
-                    <td>${article.tagNames || '-'}</td>
-                    <td>${article.publishedAt ? formatDate(article.publishedAt) : '-'}</td>
                     <td>
-                        <a class="btn btn-sm btn-info" href="/admin/articles/${article.id}/edit"><i class="bi bi-pencil-fill"></i> 编辑</a>
-                        <button class="btn btn-sm ${article.isTop ? 'btn-outline-warning' : 'btn-warning'}" onclick="toggleTop(${article.id})">
-                            <i class="bi bi-arrow-up-circle-fill"></i> ${article.isTop ? '取消置顶' : '置顶'}
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${article.id}, '${article.title}')">
-                            <i class="bi bi-trash-fill"></i> 删除
+                        ${article.pinned 
+                            ? '<span class="badge badge-info"><i class="ph-bold ph-push-pin"></i></span>'
+                            : '<span style="color: var(--text-muted);">-</span>'
+                        }
+                    </td>
+                    <td style="color: var(--text-muted);">${article.viewCount || 0}</td>
+                    <td style="color: var(--text-muted);">${article.categoryName || '-'}</td>
+                    <td style="color: var(--text-muted);">${article.tags ? article.tags.map(t => t.name).join(', ') : '-'}</td>
+                    <td style="color: var(--text-muted);">${article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('zh-CN') : '-'}</td>
+                    <td>
+                        <a href="/admin/articles/${article.id}/edit" class="btn-outline-custom btn-sm-custom" style="margin-right: 4px;">
+                            <i class="ph-bold ph-pencil"></i> 编辑
+                        </a>
+                        <button onclick="showDeleteModal(${article.id}, '${article.title}')" class="btn-outline-custom btn-sm-custom" style="border-color: #DC3545; color: #DC3545;">
+                            <i class="ph-bold ph-trash"></i> 删除
                         </button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        function renderPagination(pageData) {
+        function renderPagination(current, total) {
             const paginationList = document.getElementById('paginationList');
-            const totalPages = pageData.totalPages;
-            paginationList.innerHTML = '';
-
-            for (let i = 0; i < totalPages; i++) {
-                const li = document.createElement('li');
-                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-                li.innerHTML = `<a class="page-link" onclick="loadArticles(currentStatus, ${i})">${i + 1}</a>`;
-                paginationList.appendChild(li);
+            let html = '';
+            
+            if (current > 1) {
+                html += `<li><button class="btn-outline-custom btn-sm-custom" onclick="goToPage(${current - 1})">上一页</button></li>`;
             }
+            
+            for (let i = Math.max(1, current - 2); i <= Math.min(total, current + 2); i++) {
+                html += `<li><button class="btn-sm-custom ${i === current ? 'btn-primary-custom' : 'btn-outline-custom'}" onclick="goToPage(${i})">${i}</button></li>`;
+            }
+            
+            if (current < total) {
+                html += `<li><button class="btn-outline-custom btn-sm-custom" onclick="goToPage(${current + 1})">下一页</button></li>`;
+            }
+            
+            paginationList.innerHTML = html;
         }
 
-        function filterByStatus(status) {
-            document.querySelectorAll('.btn-group .btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            loadArticles(status, 0);
+        function goToPage(page) {
+            currentPage = page;
+            loadArticles(document.getElementById('searchKeyword').value);
         }
 
-        function searchArticles() {
-            const keyword = document.getElementById('searchKeyword').value.trim();
-            if (!keyword) { loadArticles(); return; }
-            fetch(`/api/admin/articles/search?keyword=${encodeURIComponent(keyword)}&page=0&size=10`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.code === 200 && data.data) { renderArticleTable(data.data.content); renderPagination(data.data); }
-                    else { showError(data.message || '搜索失败'); }
-                })
-                .catch(error => { console.error('Error:', error); showError('网络请求失败'); });
-        }
-
-        function toggleTop(id) {
-            fetch(`/api/admin/articles/${id}/top`, { method: 'PUT' })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.code === 200) { loadArticles(); showSuccess('置顶状态已切换'); }
-                    else { showError(result.message || '操作失败'); }
-                })
-                .catch(error => { console.error('Error:', error); showError('网络请求失败'); });
-        }
-
-        function openDeleteModal(id, title) {
-            deleteArticleId = id;
+        function showDeleteModal(id, title) {
+            articleToDelete = id;
             document.getElementById('deleteArticleTitle').textContent = title;
-            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        function closeDeleteModal() {
+            articleToDelete = null;
+            document.getElementById('deleteModal').style.display = 'none';
         }
 
         function confirmDelete() {
-            fetch(`/api/admin/articles/${deleteArticleId}`, { method: 'DELETE' })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.code === 200) {
-                        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-                        loadArticles(); showSuccess('文章已删除');
-                    } else { showError(result.message || '删除失败'); }
+            if (articleToDelete) {
+                fetch(`/admin/articles/${articleToDelete}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                    }
                 })
-                .catch(error => { console.error('Error:', error); showError('网络请求失败'); });
+                .then(response => {
+                    if (response.ok) {
+                        closeDeleteModal();
+                        loadArticles();
+                    } else {
+                        alert('删除失败，请重试');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('删除失败，请重试');
+                });
+            }
         }
 
-        function formatDate(dateString) {
-            if (!dateString) return '-';
-            const date = new Date(dateString);
-            return date.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-        }
+        // 页面加载时获取文章列表
+        document.addEventListener('DOMContentLoaded', function() {
+            loadArticles();
+        });
 
-        function showSuccess(message) { alert(message); }
-        function showError(message) { alert('错误：' + message); }
+        // 点击模态框外部关闭
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
+            }
+        });
     </script>
 </body>
 </html>

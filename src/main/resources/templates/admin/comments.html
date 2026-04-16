@@ -3,344 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>评论管理 - puber-blog后台</title>
-
-    <!-- CSRF Token Meta 标签（Thymeleaf 自动注入） -->
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body { background-color: #f8f9fa; }
-        .navbar-brand { font-weight: bold; }
-        .card { box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); }
-        .table tbody tr:hover { background-color: #f1f3f5; }
-    </style>
+    <title>评论管理 - 知筑后台</title>
+    <th:block th:replace="~{admin/layout :: adminStyles}"/>
 </head>
 <body>
-    <!-- 导航栏 -->
-    <div th:replace="~{admin/fragments :: navbar('comments')}"></div>
+    <!-- 侧边栏 -->
+    <div th:replace="~{admin/layout :: sidebar('comments')}"></div>
 
-    <div class="container mt-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-chat-fill"></i> 评论管理</h5>
+    <!-- 主内容区 -->
+    <main class="main-wrapper">
+        <!-- 顶栏 -->
+        <div th:replace="~{admin/layout :: topbar}"></div>
+
+        <!-- 页面内容 -->
+        <div class="content">
+            <div class="page-header">
+                <h1>评论管理。</h1>
+                <p>审核和管理用户评论，维护良好的互动环境。</p>
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-primary active" onclick="loadComments('all')">全部评论</button>
-                            <button type="button" class="btn btn-outline-warning" onclick="loadComments('pending')">待审核 (<span id="pendingCount">0</span>)</button>
-                        </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-text">评论列表</div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('ALL')">全部</button>
+                        <button class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('PENDING')">待审核</button>
+                        <button class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('APPROVED')">已通过</button>
+                        <button class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('REJECTED')">已拒绝</button>
                     </div>
                 </div>
-
-                <div id="loadingSpinner" class="text-center py-4">
-                    <div class="spinner-border text-primary"><span class="visually-hidden">加载中...</span></div>
+                <div class="card-body">
+                    <table class="table-custom" th:if="${comments != null and comments.size() > 0}">
+                        <thead>
+                            <tr>
+                                <th width="50">ID</th>
+                                <th>昵称</th>
+                                <th>内容</th>
+                                <th width="100">文章</th>
+                                <th width="80">状态</th>
+                                <th width="120">时间</th>
+                                <th width="180">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="comment : ${comments}">
+                                <td style="color: var(--text-muted);" th:text="${comment.id}">1</td>
+                                <td style="font-weight: 500; color: var(--text-main);" th:text="${comment.nickname}">用户</td>
+                                <td style="color: var(--text-regular);" th:text="${comment.content}">评论内容</td>
+                                <td>
+                                    <a th:href="@{/articles/{id}(id=${comment.articleId})}" 
+                                       style="color: var(--primary); text-decoration: none; font-size: 13px;"
+                                       th:text="${comment.articleTitle}">文章标题</a>
+                                </td>
+                                <td>
+                                    <span th:if="${comment.status == 'APPROVED'}" class="badge badge-success">已批准</span>
+                                    <span th:if="${comment.status == 'PENDING'}" class="badge badge-warning">待审核</span>
+                                    <span th:if="${comment.status == 'REJECTED'}" class="badge badge-danger">已拒绝</span>
+                                </td>
+                                <td style="color: var(--text-muted); font-size: 13px;" 
+                                    th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd')}">2024-01-01</td>
+                                <td>
+                                    <button th:if="${comment.status != 'APPROVED'}" 
+                                            th:onclick="'approveComment(' + ${comment.id} + ')'" 
+                                            class="btn-outline-custom btn-sm-custom" 
+                                            style="margin-right: 4px; border-color: #28A745; color: #28A745;">
+                                        <i class="ph-bold ph-check"></i> 通过
+                                    </button>
+                                    <button th:if="${comment.status != 'REJECTED'}" 
+                                            th:onclick="'rejectComment(' + ${comment.id} + ')'" 
+                                            class="btn-outline-custom btn-sm-custom"
+                                            style="margin-right: 4px; border-color: #DC3545; color: #DC3545;">
+                                        <i class="ph-bold ph-x"></i> 拒绝
+                                    </button>
+                                    <button th:onclick="'deleteComment(' + ${comment.id} + ')'" 
+                                            class="btn-outline-custom btn-sm-custom"
+                                            style="border-color: #DC3545; color: #DC3545;">
+                                        <i class="ph-bold ph-trash"></i> 删除
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div th:if="${comments == null or comments.size() == 0}" class="text-center py-4" style="text-align: center; padding: 40px;">
+                        <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
+                        <p style="margin-top: 16px; color: var(--text-muted);">暂无评论</p>
+                    </div>
                 </div>
-
-                <table class="table table-hover" id="commentTable" style="display:none;">
-                    <thead>
-                        <tr>
-                            <th width="50">ID</th>
-                            <th width="100">昵称</th>
-                            <th width="120">邮箱</th>
-                            <th>评论内容</th>
-                            <th width="80">状态</th>
-                            <th width="150">提交时间</th>
-                            <th width="100">IP地址</th>
-                            <th width="150">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="commentTableBody"></tbody>
-                </table>
-
-                <div id="emptyMessage" class="text-center py-4" style="display:none;">
-                    <i class="bi bi-inbox" style="font-size:3rem;color:#ccc;"></i>
-                    <p class="text-muted mt-2">暂无评论数据</p>
-                </div>
-
-                <nav id="pagination" style="display:none;">
-                    <ul class="pagination justify-content-center" id="paginationList"></ul>
-                </nav>
             </div>
         </div>
-    </div>
+    </main>
 
-    <div class="modal fade" id="viewModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-eye"></i> 评论详情</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="viewModalBody"></div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <th:block th:replace="~{admin/layout :: adminScripts}"/>
     <script>
-        let currentFilter = 'all';
-        let currentPage = 0;
-
-        /**
-         * 从 meta 标签中获取 CSRF token
-         * Thymeleaf 自动注入 CSRF token 到 meta 标签中
-         */
-        function getCsrfToken() {
-            const csrfMeta = document.querySelector('meta[name="_csrf"]');
-            if (csrfMeta) {
-                const token = csrfMeta.getAttribute('content');
-                console.log('从 meta 标签获取 CSRF token:', token);
-                return token;
-            }
-            console.error('未找到 CSRF meta 标签');
-            return null;
-        }
-
-        /**
-         * 从 meta 标签中获取 CSRF header 名称
-         */
-        function getCsrfHeaderName() {
-            const headerMeta = document.querySelector('meta[name="_csrf_header"]');
-            if (headerMeta) {
-                const headerName = headerMeta.getAttribute('content');
-                console.log('CSRF header 名称:', headerName);
-                return headerName;
-            }
-            return 'X-XSRF-TOKEN'; // 默认值
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            loadComments();
-            loadPendingCount();
-
-            // 页面加载时检查 CSRF 配置
-            console.log('页面加载完成，检查 CSRF token...');
-            const token = getCsrfToken();
-            const headerName = getCsrfHeaderName();
-            if (!token) {
-                console.error('警告：无法获取 CSRF token，审核操作可能失败');
-            } else {
-                console.log('CSRF 配置正常：header=' + headerName + ', token=' + token);
-            }
-        });
-
-        function loadComments(filter = currentFilter, page = currentPage) {
-            currentFilter = filter;
-            currentPage = page;
-            const url = filter === 'pending' ? `/api/admin/comments/pending?page=${page}&size=10` : `/api/admin/comments?page=${page}&size=10`;
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.code === 200) { renderCommentTable(data.data.content); renderPagination(data.data); }
-                });
-        }
-
-        function loadPendingCount() {
-            fetch('/api/admin/comments/count/pending')
-                .then(response => response.json())
-                .then(data => { if (data.code === 200) document.getElementById('pendingCount').textContent = data.data; });
-        }
-
-        function renderCommentTable(comments) {
-            const tbody = document.getElementById('commentTableBody');
-            const spinner = document.getElementById('loadingSpinner');
-            const table = document.getElementById('commentTable');
-            const emptyMsg = document.getElementById('emptyMessage');
-            const pagination = document.getElementById('pagination');
-
-            spinner.style.display = 'none';
-            if (comments.length === 0) { table.style.display = 'none'; pagination.style.display = 'none'; emptyMsg.style.display = 'block'; return; }
-            table.style.display = 'table'; pagination.style.display = 'block'; emptyMsg.style.display = 'none';
-
-            tbody.innerHTML = comments.map(comment => `
-                <tr>
-                    <td>${comment.id}</td>
-                    <td>${comment.nickname}</td>
-                    <td>${comment.email}</td>
-                    <td>${comment.content.length > 50 ? comment.content.substring(0,50)+'...' : comment.content}</td>
-                    <td><span class="badge ${getStatusBadge(comment.status)}">${getStatusText(comment.status)}</span></td>
-                    <td>${formatDate(comment.createdAt)}</td>
-                    <td>${comment.ipAddress || '-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-info" onclick="viewComment(${comment.id})"><i class="bi bi-eye"></i></button>
-                        <button class="btn btn-sm btn-success" onclick="approveComment(${comment.id})"><i class="bi bi-check"></i></button>
-                        <button class="btn btn-sm btn-warning" onclick="rejectComment(${comment.id})"><i class="bi bi-x"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteComment(${comment.id})"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function getStatusBadge(status) {
-            switch(status) {
-                case 'APPROVED': return 'bg-success';
-                case 'PENDING': return 'bg-warning';
-                case 'REJECTED': return 'bg-danger';
-                default: return 'bg-secondary';
-            }
-        }
-
-        function getStatusText(status) {
-            switch(status) {
-                case 'APPROVED': return '已批准';
-                case 'PENDING': return '待审核';
-                case 'REJECTED': return '已拒绝';
-                default: return status;
-            }
-        }
-
-        function renderPagination(pageData) {
-            const paginationList = document.getElementById('paginationList');
-            paginationList.innerHTML = '';
-            for (let i = 0; i < pageData.totalPages; i++) {
-                const li = document.createElement('li');
-                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-                li.innerHTML = `<a class="page-link" onclick="loadComments(currentFilter, ${i})">${i+1}</a>`;
-                paginationList.appendChild(li);
-            }
-        }
-
-        function viewComment(id) {
-            fetch(`/api/admin/comments?page=0&size=100`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.code === 200) {
-                        const comment = data.data.content.find(c => c.id === id);
-                        if (comment) {
-                            document.getElementById('viewModalBody').innerHTML = `
-                                <p><strong>昵称：</strong>${comment.nickname}</p>
-                                <p><strong>邮箱：</strong>${comment.email}</p>
-                                <p><strong>网站：</strong>${comment.website || '-'}</p>
-                                <p><strong>内容：</strong>${comment.content}</p>
-                                <p><strong>状态：</strong>${getStatusText(comment.status)}</p>
-                                <p><strong>提交时间：</strong>${formatDate(comment.createdAt)}</p>
-                                <p><strong>IP地址：</strong>${comment.ipAddress || '-'}</p>
-                                <p><strong>UserAgent：</strong>${comment.userAgent || '-'}</p>
-                            `;
-                            new bootstrap.Modal(document.getElementById('viewModal')).show();
-                        }
-                    }
-                });
+        function filterByStatus(status) {
+            window.location.href = `/admin/comments?status=${status}`;
         }
 
         function approveComment(id) {
-            const csrfToken = getCsrfToken();
-            const csrfHeaderName = getCsrfHeaderName();
-            console.log('批准评论 - CSRF Token:', csrfToken, 'Header:', csrfHeaderName);
-
-            const headers = {
-                'Content-Type': 'application/json'
-            };
-            headers[csrfHeaderName] = csrfToken;
-
-            fetch(`/api/admin/comments/${id}/approve`, {
-                method: 'PUT',
-                headers: headers
-            })
-                .then(response => {
-                    console.log('批准评论响应状态:', response.status);
-                    if (response.status === 403) {
-                        throw new Error('CSRF验证失败，请刷新页面重试');
+            if (confirm('确定要通过这条评论吗？')) {
+                fetch(`/admin/comments/${id}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
                     }
-                    return response.json();
                 })
-                .then(result => {
-                    if (result.code === 200) {
-                        loadComments();
-                        loadPendingCount();
-                        alert('评论已批准');
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
                     } else {
-                        alert('批准失败：' + result.message);
+                        alert('操作失败，请重试');
                     }
                 })
                 .catch(error => {
-                    console.error('批准评论失败：', error);
-                    alert(error.message || '操作失败，请刷新页面重试');
+                    console.error('Error:', error);
+                    alert('操作失败，请重试');
                 });
-        }
-
-        function rejectComment(id) {
-            const csrfToken = getCsrfToken();
-            const csrfHeaderName = getCsrfHeaderName();
-            console.log('拒绝评论 - CSRF Token:', csrfToken, 'Header:', csrfHeaderName);
-
-            const headers = {
-                'Content-Type': 'application/json'
-            };
-            headers[csrfHeaderName] = csrfToken;
-
-            fetch(`/api/admin/comments/${id}/reject`, {
-                method: 'PUT',
-                headers: headers
-            })
-                .then(response => {
-                    console.log('拒绝评论响应状态:', response.status);
-                    if (response.status === 403) {
-                        throw new Error('CSRF验证失败，请刷新页面重试');
-                    }
-                    return response.json();
-                })
-                .then(result => {
-                    if (result.code === 200) {
-                        loadComments();
-                        loadPendingCount();
-                        alert('评论已拒绝');
-                    } else {
-                        alert('拒绝失败：' + result.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('拒绝评论失败：', error);
-                    alert(error.message || '操作失败，请刷新页面重试');
-                });
-        }
-
-        function deleteComment(id) {
-            if (confirm('确定要删除这条评论吗？删除后将无法恢复！')) {
-                const csrfToken = getCsrfToken();
-                const csrfHeaderName = getCsrfHeaderName();
-                console.log('删除评论 - CSRF Token:', csrfToken, 'Header:', csrfHeaderName);
-
-                const headers = {
-                    'Content-Type': 'application/json'
-                };
-                headers[csrfHeaderName] = csrfToken;
-
-                fetch(`/api/admin/comments/${id}`, {
-                    method: 'DELETE',
-                    headers: headers
-                })
-                    .then(response => {
-                        console.log('删除评论响应状态:', response.status);
-                        if (response.status === 403) {
-                            throw new Error('CSRF验证失败，请刷新页面重试');
-                        }
-                        return response.json();
-                    })
-                    .then(result => {
-                        if (result.code === 200) {
-                            loadComments();
-                            alert('评论已删除');
-                        } else {
-                            alert('删除失败：' + result.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('删除评论失败：', error);
-                        alert(error.message || '操作失败，请刷新页面重试');
-                    });
             }
         }
 
-        function formatDate(dateString) {
-            if (!dateString) return '-';
-            const date = new Date(dateString);
-            return date.toLocaleString('zh-CN');
+        function rejectComment(id) {
+            if (confirm('确定要拒绝这条评论吗？')) {
+                fetch(`/admin/comments/${id}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('操作失败，请重试');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失败，请重试');
+                });
+            }
+        }
+
+        function deleteComment(id) {
+            if (confirm('确定要删除这条评论吗？')) {
+                fetch(`/admin/comments/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('操作失败，请重试');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失败，请重试');
+                });
+            }
         }
     </script>
 </body>

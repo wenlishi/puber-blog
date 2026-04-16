@@ -3,376 +3,304 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>分类管理 - puber-blog后台</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .navbar-brand {
-            font-weight: bold;
-        }
-        .card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
-        .table tbody tr:hover {
-            background-color: #f1f3f5;
-        }
-        .action-buttons .btn {
-            margin-right: 0.25rem;
-        }
-        .sort-order-input {
-            width: 60px;
-            text-align: center;
-        }
-    </style>
+    <title>分类管理 - 知筑后台</title>
+    <th:block th:replace="~{admin/layout :: adminStyles}"/>
 </head>
 <body>
-    <!-- 导航栏 -->
-    <div th:replace="~{admin/fragments :: navbar('categories')}"></div>
+    <!-- 侧边栏 -->
+    <div th:replace="~{admin/layout :: sidebar('categories')}"></div>
 
-    <!-- 主内容 -->
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-12">
+    <!-- 主内容区 -->
+    <main class="main-wrapper">
+        <!-- 顶栏 -->
+        <div th:replace="~{admin/layout :: topbar}"></div>
+
+        <!-- 页面内容 -->
+        <div class="content">
+            <div class="page-header">
+                <h1>分类与标签。</h1>
+                <p>管理文章分类和标签，组织内容结构。</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <!-- 分类管理 -->
                 <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="bi bi-folder-fill"></i> 分类列表
-                        </h5>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="openCreateModal()">
-                            <i class="bi bi-plus-circle-fill"></i> 新增分类
+                    <div class="card-header">
+                        <div class="card-title-text">分类管理</div>
+                        <button class="btn-primary-custom" onclick="showCategoryModal()">
+                            <i class="ph-bold ph-plus"></i> 新增分类
                         </button>
                     </div>
                     <div class="card-body">
-                        <!-- 加载提示 -->
-                        <div id="loadingSpinner" class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">加载中...</span>
-                            </div>
-                        </div>
-
-                        <!-- 分类表格 -->
-                        <table class="table table-hover" id="categoryTable" style="display: none;">
+                        <table class="table-custom" th:if="${categories != null and categories.size() > 0}">
                             <thead>
                                 <tr>
                                     <th width="50">ID</th>
-                                    <th width="150">分类名称</th>
-                                    <th width="150">别名（Slug）</th>
-                                    <th>描述</th>
-                                    <th width="80">排序</th>
-                                    <th width="100">文章数</th>
-                                    <th width="150">创建时间</th>
-                                    <th width="150">操作</th>
+                                    <th>名称</th>
+                                    <th width="80">文章数</th>
+                                    <th width="120">操作</th>
                                 </tr>
                             </thead>
-                            <tbody id="categoryTableBody">
-                                <!-- 动态填充 -->
+                            <tbody>
+                                <tr th:each="category : ${categories}">
+                                    <td style="color: var(--text-muted);" th:text="${category.id}">1</td>
+                                    <td>
+                                        <span style="font-weight: 500; color: var(--text-main);" th:text="${category.name}">分类名称</span>
+                                    </td>
+                                    <td style="color: var(--text-muted);" th:text="${category.articleCount}">0</td>
+                                    <td>
+                                        <button th:onclick="'showEditCategoryModal(' + ${category.id} + ', \'' + ${category.name} + '\')'" 
+                                                class="btn-outline-custom btn-sm-custom" style="margin-right: 4px;">
+                                            <i class="ph-bold ph-pencil"></i> 编辑
+                                        </button>
+                                        <button th:onclick="'deleteCategory(' + ${category.id} + ')'" 
+                                                class="btn-outline-custom btn-sm-custom" style="border-color: #DC3545; color: #DC3545;">
+                                            <i class="ph-bold ph-trash"></i> 删除
+                                        </button>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
+                        <div th:if="${categories == null or categories.size() == 0}" class="text-center py-4" style="text-align: center; padding: 40px;">
+                            <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
+                            <p style="margin-top: 16px; color: var(--text-muted);">暂无分类</p>
+                        </div>
+                    </div>
+                </div>
 
-                        <!-- 空数据提示 -->
-                        <div id="emptyMessage" class="text-center py-4" style="display: none;">
-                            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
-                            <p class="text-muted mt-2">暂无分类数据</p>
+                <!-- 标签管理 -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-text">标签管理</div>
+                        <button class="btn-primary-custom" onclick="showTagModal()">
+                            <i class="ph-bold ph-plus"></i> 新增标签
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <table class="table-custom" th:if="${tags != null and tags.size() > 0}">
+                            <thead>
+                                <tr>
+                                    <th width="50">ID</th>
+                                    <th>名称</th>
+                                    <th width="80">文章数</th>
+                                    <th width="120">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="tag : ${tags}">
+                                    <td style="color: var(--text-muted);" th:text="${tag.id}">1</td>
+                                    <td>
+                                        <span style="font-weight: 500; color: var(--text-main);" th:text="${tag.name}">标签名称</span>
+                                    </td>
+                                    <td style="color: var(--text-muted);" th:text="${tag.articleCount}">0</td>
+                                    <td>
+                                        <button th:onclick="'showEditTagModal(' + ${tag.id} + ', \'' + ${tag.name} + '\')'" 
+                                                class="btn-outline-custom btn-sm-custom" style="margin-right: 4px;">
+                                            <i class="ph-bold ph-pencil"></i> 编辑
+                                        </button>
+                                        <button th:onclick="'deleteTag(' + ${tag.id} + ')'" 
+                                                class="btn-outline-custom btn-sm-custom" style="border-color: #DC3545; color: #DC3545;">
+                                            <i class="ph-bold ph-trash"></i> 删除
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div th:if="${tags == null or tags.size() == 0}" class="text-center py-4" style="text-align: center; padding: 40px;">
+                            <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
+                            <p style="margin-top: 16px; color: var(--text-muted);">暂无标签</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- 新增/编辑分类模态框 -->
-    <div class="modal fade" id="categoryModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">新增分类</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="categoryForm">
-                        <input type="hidden" id="categoryId">
-
-                        <div class="mb-3">
-                            <label for="categoryName" class="form-label">分类名称 <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="categoryName" required>
-                            <div class="form-text">分类名称不能重复</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="categorySlug" class="form-label">别名（Slug）</label>
-                            <input type="text" class="form-control" id="categorySlug">
-                            <div class="form-text">如果不填写，系统会自动根据名称生成</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="categoryDescription" class="form-label">描述</label>
-                            <textarea class="form-control" id="categoryDescription" rows="3"></textarea>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="categorySortOrder" class="form-label">排序顺序</label>
-                            <input type="number" class="form-control sort-order-input" id="categorySortOrder" value="0">
-                            <div class="form-text">数值越小，排名越靠前</div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="saveCategory()">
-                        <i class="bi bi-check-circle-fill"></i> 保存
-                    </button>
-                </div>
+    <!-- 分类模态框 -->
+    <div id="categoryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: var(--radius-lg); padding: 24px; max-width: 400px; width: 90%;">
+            <h5 style="margin-bottom: 16px; color: var(--text-main); font-size: 16px; font-weight: 600;" id="categoryModalTitle">新增分类</h5>
+            <input type="hidden" id="categoryId">
+            <input type="text" id="categoryName" placeholder="分类名称" 
+                   style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); outline: none; font-size: 14px; margin-bottom: 16px;">
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button onclick="closeCategoryModal()" class="btn-outline-custom btn-sm-custom">取消</button>
+                <button onclick="saveCategory()" class="btn-primary-custom">保存</button>
             </div>
         </div>
     </div>
 
-    <!-- 删除确认对话框 -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-exclamation-triangle-fill"></i> 删除确认
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>确定要删除分类 <strong id="deleteCategoryName"></strong> 吗？</p>
-                    <p class="text-danger"><small>注意：如果该分类下有文章，将无法删除</small></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
-                        <i class="bi bi-trash-fill"></i> 确认删除
-                    </button>
-                </div>
+    <!-- 标签模态框 -->
+    <div id="tagModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: var(--radius-lg); padding: 24px; max-width: 400px; width: 90%;">
+            <h5 style="margin-bottom: 16px; color: var(--text-main); font-size: 16px; font-weight: 600;" id="tagModalTitle">新增标签</h5>
+            <input type="hidden" id="tagId">
+            <input type="text" id="tagName" placeholder="标签名称" 
+                   style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); outline: none; font-size: 14px; margin-bottom: 16px;">
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button onclick="closeTagModal()" class="btn-outline-custom btn-sm-custom">取消</button>
+                <button onclick="saveTag()" class="btn-primary-custom">保存</button>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- 自定义脚本 -->
+    <th:block th:replace="~{admin/layout :: adminScripts}"/>
     <script>
-        let currentCategoryId = null;
-        let deleteCategoryId = null;
-
-        // 页面加载完成后获取分类列表
-        document.addEventListener('DOMContentLoaded', function() {
-            loadCategories();
-        });
-
-        // 加载分类列表
-        function loadCategories() {
-            fetch('/api/admin/categories')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.code === 200 && data.data) {
-                        renderCategoryTable(data.data);
-                    } else {
-                        showError(data.message || '加载分类列表失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showError('网络请求失败');
-                });
-        }
-
-        // 渲染分类表格
-        function renderCategoryTable(categories) {
-            const tbody = document.getElementById('categoryTableBody');
-            const spinner = document.getElementById('loadingSpinner');
-            const table = document.getElementById('categoryTable');
-            const emptyMsg = document.getElementById('emptyMessage');
-
-            spinner.style.display = 'none';
-
-            if (categories.length === 0) {
-                table.style.display = 'none';
-                emptyMsg.style.display = 'block';
-                return;
-            }
-
-            table.style.display = 'table';
-            emptyMsg.style.display = 'none';
-
-            tbody.innerHTML = categories.map(category => `
-                <tr>
-                    <td>${category.id}</td>
-                    <td>${category.name}</td>
-                    <td><code>${category.slug}</code></td>
-                    <td>${category.description || '-'}</td>
-                    <td>${category.sortOrder}</td>
-                    <td>
-                        <span class="badge bg-info">${category.articleCount}</span>
-                    </td>
-                    <td>${formatDate(category.createdAt)}</td>
-                    <td class="action-buttons">
-                        <button class="btn btn-sm btn-warning" onclick="openEditModal(${category.id})">
-                            <i class="bi bi-pencil-fill"></i> 编辑
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${category.id}, '${category.name}', ${category.articleCount})">
-                            <i class="bi bi-trash-fill"></i> 删除
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        // 打开新增分类模态框
-        function openCreateModal() {
-            currentCategoryId = null;
-            document.getElementById('modalTitle').textContent = '新增分类';
-            document.getElementById('categoryForm').reset();
+        function showCategoryModal() {
+            document.getElementById('categoryModalTitle').textContent = '新增分类';
             document.getElementById('categoryId').value = '';
-            document.getElementById('categorySortOrder').value = '0';
+            document.getElementById('categoryName').value = '';
+            document.getElementById('categoryModal').style.display = 'flex';
         }
 
-        // 打开编辑分类模态框
-        function openEditModal(id) {
-            currentCategoryId = id;
-            document.getElementById('modalTitle').textContent = '编辑分类';
-
-            // 获取分类详情
-            fetch(`/api/admin/categories/${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.code === 200 && data.data) {
-                        const category = data.data;
-                        document.getElementById('categoryId').value = category.id;
-                        document.getElementById('categoryName').value = category.name;
-                        document.getElementById('categorySlug').value = category.slug;
-                        document.getElementById('categoryDescription').value = category.description || '';
-                        document.getElementById('categorySortOrder').value = category.sortOrder;
-
-                        // 显示模态框
-                        const modal = new bootstrap.Modal(document.getElementById('categoryModal'));
-                        modal.show();
-                    } else {
-                        showError(data.message || '获取分类详情失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showError('网络请求失败');
-                });
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').style.display = 'none';
         }
 
-        // 保存分类（新增或编辑）
+        function showEditCategoryModal(id, name) {
+            document.getElementById('categoryModalTitle').textContent = '编辑分类';
+            document.getElementById('categoryId').value = id;
+            document.getElementById('categoryName').value = name;
+            document.getElementById('categoryModal').style.display = 'flex';
+        }
+
         function saveCategory() {
-            const name = document.getElementById('categoryName').value.trim();
-            const slug = document.getElementById('categorySlug').value.trim();
-            const description = document.getElementById('categoryDescription').value.trim();
-            const sortOrder = parseInt(document.getElementById('categorySortOrder').value) || 0;
-
-            if (!name) {
-                showError('分类名称不能为空');
+            const id = document.getElementById('categoryId').value;
+            const name = document.getElementById('categoryName').value;
+            
+            if (!name.trim()) {
+                alert('请输入分类名称');
                 return;
             }
 
-            const data = {
-                name: name,
-                slug: slug,
-                description: description,
-                sortOrder: sortOrder
-            };
-
-            const url = currentCategoryId
-                ? `/api/admin/categories/${currentCategoryId}`
-                : '/api/admin/categories';
-            const method = currentCategoryId ? 'PUT' : 'POST';
-
+            const url = id ? `/admin/categories/${id}` : '/admin/categories';
+            const method = id ? 'PUT' : 'POST';
+            
             fetch(url, {
                 method: method,
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify({ name: name })
             })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.code === 200) {
-                        // 关闭模态框
-                        bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
-                        // 重新加载列表
-                        loadCategories();
-                        showSuccess(currentCategoryId ? '分类更新成功' : '分类创建成功');
-                    } else {
-                        showError(result.message || '保存失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showError('网络请求失败');
-                });
-        }
-
-        // 打开删除确认对话框
-        function openDeleteModal(id, name, articleCount) {
-            if (articleCount > 0) {
-                showError(`该分类下有${articleCount}篇文章，无法删除`);
-                return;
-            }
-
-            deleteCategoryId = id;
-            document.getElementById('deleteCategoryName').textContent = name;
-
-            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            modal.show();
-        }
-
-        // 确认删除
-        function confirmDelete() {
-            fetch(`/api/admin/categories/${deleteCategoryId}`, {
-                method: 'DELETE'
+            .then(response => {
+                if (response.ok) {
+                    closeCategoryModal();
+                    location.reload();
+                } else {
+                    alert('保存失败，请重试');
+                }
             })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.code === 200) {
-                        // 关闭模态框
-                        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-                        // 重新加载列表
-                        loadCategories();
-                        showSuccess('分类删除成功');
-                    } else {
-                        showError(result.message || '删除失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showError('网络请求失败');
-                });
-        }
-
-        // 格式化日期
-        function formatDate(dateString) {
-            if (!dateString) return '-';
-            const date = new Date(dateString);
-            return date.toLocaleString('zh-CN', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
+            .catch(error => {
+                console.error('Error:', error);
+                alert('保存失败，请重试');
             });
         }
 
-        // 显示成功提示
-        function showSuccess(message) {
-            alert(message); // 后续可替换为更优雅的Toast提示
+        function deleteCategory(id) {
+            if (confirm('确定要删除这个分类吗？')) {
+                fetch(`/admin/categories/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('删除失败，请重试');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('删除失败，请重试');
+                });
+            }
         }
 
-        // 显示错误提示
-        function showError(message) {
-            alert('错误：' + message); // 后续可替换为更优雅的Toast提示
+        function showTagModal() {
+            document.getElementById('tagModalTitle').textContent = '新增标签';
+            document.getElementById('tagId').value = '';
+            document.getElementById('tagName').value = '';
+            document.getElementById('tagModal').style.display = 'flex';
         }
+
+        function closeTagModal() {
+            document.getElementById('tagModal').style.display = 'none';
+        }
+
+        function showEditTagModal(id, name) {
+            document.getElementById('tagModalTitle').textContent = '编辑标签';
+            document.getElementById('tagId').value = id;
+            document.getElementById('tagName').value = name;
+            document.getElementById('tagModal').style.display = 'flex';
+        }
+
+        function saveTag() {
+            const id = document.getElementById('tagId').value;
+            const name = document.getElementById('tagName').value;
+            
+            if (!name.trim()) {
+                alert('请输入标签名称');
+                return;
+            }
+
+            const url = id ? `/admin/tags/${id}` : '/admin/tags';
+            const method = id ? 'PUT' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                },
+                body: JSON.stringify({ name: name })
+            })
+            .then(response => {
+                if (response.ok) {
+                    closeTagModal();
+                    location.reload();
+                } else {
+                    alert('保存失败，请重试');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('保存失败，请重试');
+            });
+        }
+
+        function deleteTag(id) {
+            if (confirm('确定要删除这个标签吗？')) {
+                fetch(`/admin/tags/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('删除失败，请重试');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('删除失败，请重试');
+                });
+            }
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('categoryModal').addEventListener('click', function(e) {
+            if (e.target === this) closeCategoryModal();
+        });
+        document.getElementById('tagModal').addEventListener('click', function(e) {
+            if (e.target === this) closeTagModal();
+        });
     </script>
 </body>
 </html>

@@ -1,12 +1,20 @@
 package com.puber.blog.controller.admin;
 
+import com.puber.blog.service.CategoryService;
 import com.puber.blog.service.DashboardService;
+import com.puber.blog.service.TagService;
 import com.puber.blog.vo.DashboardVO;
+import com.puber.blog.vo.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * 后台管理控制器
@@ -22,6 +30,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class AdminController {
 
     private final DashboardService dashboardService;
+    private final CategoryService categoryService;
+    private final TagService tagService;
 
     /**
      * 后台仪表盘
@@ -100,5 +110,41 @@ public class AdminController {
     @GetMapping("/admin/comments")
     public String comments() {
         return "admin/comments";
+    }
+}
+
+/**
+ * 后台 API 控制器
+ * 提供后台页面的数据 API
+ */
+@Slf4j
+@RestController
+@RequestMapping("/admin/api")
+@RequiredArgsConstructor
+class AdminApiController {
+
+    private final CategoryService categoryService;
+    private final TagService tagService;
+
+    /**
+     * 获取所有分类列表
+     *
+     * @return Result<List> 分类列表
+     */
+    @GetMapping("/categories")
+    public Result<List<?>> getCategories() {
+        log.debug("获取所有分类列表");
+        return Result.success((List<?>) categoryService.getAllCategories());
+    }
+
+    /**
+     * 获取所有标签列表
+     *
+     * @return Result<List> 标签列表
+     */
+    @GetMapping("/tags")
+    public Result<List<?>> getTags() {
+        log.debug("获取所有标签列表");
+        return Result.success((List<?>) tagService.getAllTags());
     }
 }
