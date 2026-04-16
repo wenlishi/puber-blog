@@ -12,6 +12,259 @@
 /* 导航栏固定在顶部 */
 body {
     padding-top: 56px; /* 为固定导航栏留出空间 */
+    background-color: #f5f7fa; /* 浅灰蓝背景，更柔和 */
+}
+
+/* ==================== 导航栏优化样式 ==================== */
+
+/* 渐变背景导航栏 */
+.navbar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+/* Logo样式 */
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    color: #fff !important;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+    text-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+}
+
+/* 导航项hover动画 */
+.navbar-nav .nav-link {
+    position: relative;
+    color: rgba(255, 255, 255, 0.9) !important;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+}
+
+.navbar-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 50%;
+    background: linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.5) 100%);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.navbar-nav .nav-link:hover {
+    color: #fff !important;
+    transform: translateY(-2px);
+}
+
+.navbar-nav .nav-link:hover::after {
+    width: 80%;
+}
+
+/* 导航图标动画 */
+.navbar-nav .nav-link .bi {
+    transition: transform 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover .bi {
+    transform: scale(1.2) rotate(-5deg);
+}
+
+/* 下拉菜单优化 */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    animation: dropdownFade 0.3s ease;
+}
+
+@keyframes dropdownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-item {
+    padding: 0.75rem 1.25rem;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    color: #fff !important;
+    transform: translateX(5px);
+}
+
+/* 搜索框优化 */
+.input-group {
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.form-control[type="search"] {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    padding-left: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control[type="search"]:focus {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #fff;
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+}
+
+.form-control[type="search"]::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.btn-outline-light {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+/* ==================== 侧边栏优化样式 ==================== */
+
+/* 侧边栏卡片基础样式 */
+.sidebar-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    background: #fff;
+}
+
+.sidebar-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+}
+
+/* 侧边栏卡片头部 */
+.sidebar-card .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+    border-bottom: none;
+    position: relative;
+}
+
+.sidebar-card .card-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-card:hover .card-header::before {
+    opacity: 1;
+}
+
+.sidebar-card .card-header .bi {
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+    animation: iconPulse 2s infinite;
+}
+
+@keyframes iconPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* 侧边栏卡片主体 */
+.sidebar-card .card-body {
+    padding: 1.25rem;
+    background: #fff;
+}
+
+/* 侧边栏列表项样式 */
+.sidebar-article-list li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.sidebar-article-list li:last-child {
+    border-bottom: none;
+}
+
+.sidebar-article-list li:hover {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    padding-left: 0.5rem;
+}
+
+.sidebar-article-list li a {
+    color: #495057;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar-article-list li a:hover {
+    color: #667eea;
+}
+
+.sidebar-article-list li a .badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.75rem;
+}
+
+/* 标签云优化 */
+.tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tag-cloud-item {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    color: #667eea;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.tag-cloud-item:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
 }
 
 /* ==================== 文章卡片样式 ==================== */
@@ -20,11 +273,13 @@ body {
 .article-card {
     transition: all 0.3s ease;
     border: none;
+    border-radius: 12px;
+    overflow: hidden;
 }
 
 .article-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.25) !important;
 }
 
 /* 文章卡片封面图hover效果 */
