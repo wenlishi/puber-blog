@@ -245,7 +245,7 @@ CREATE INDEX IF NOT EXISTS idx_friend_link_sort_order ON friend_link(sort_order)
 -- 插入默认管理员账号
 -- 密码：admin123（使用 BCrypt 加密）
 INSERT INTO blog_user (username, password, nickname, email, role, enabled)
-SELECT 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', 'Administrator', 'admin@example.com', 'ROLE_ADMIN', true
+SELECT 'admin', '$2a$10$qXTZUpgXjlplImwSvh/Kku5xlIldtbqL4CHxQSBoeyTZIxyA1CVR2', 'Administrator', 'admin@example.com', 'ROLE_ADMIN', true
 WHERE NOT EXISTS (SELECT 1 FROM blog_user WHERE username = 'admin');
 
 -- 插入默认网站配置
@@ -268,6 +268,42 @@ WHERE NOT EXISTS (SELECT 1 FROM site_setting WHERE setting_key = 'footer_text');
 INSERT INTO site_setting (setting_key, setting_value, setting_type, description)
 SELECT 'posts_per_page', '10', 'INTEGER', '每页文章数'
 WHERE NOT EXISTS (SELECT 1 FROM site_setting WHERE setting_key = 'posts_per_page');
+
+-- 创建演示表（交互式HTML/CSS/JS演示功能）
+CREATE TABLE IF NOT EXISTS demo (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    slug VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT,
+    full_html_content TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    view_count BIGINT NOT NULL DEFAULT 0,
+    author_id BIGINT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    published_at TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT fk_demo_author FOREIGN KEY (author_id) REFERENCES blog_user(id) ON DELETE CASCADE
+);
+
+COMMENT ON TABLE demo IS '交互式演示表';
+COMMENT ON COLUMN demo.id IS '演示ID';
+COMMENT ON COLUMN demo.name IS '演示名称';
+COMMENT ON COLUMN demo.slug IS '演示别名（URL友好）';
+COMMENT ON COLUMN demo.description IS '演示描述';
+COMMENT ON COLUMN demo.full_html_content IS '完整HTML内容（包含HTML/CSS/JS）';
+COMMENT ON COLUMN demo.status IS '状态（PUBLISHED/DRAFT）';
+COMMENT ON COLUMN demo.view_count IS '浏览次数';
+COMMENT ON COLUMN demo.author_id IS '作者ID';
+COMMENT ON COLUMN demo.created_at IS '创建时间';
+COMMENT ON COLUMN demo.updated_at IS '更新时间';
+COMMENT ON COLUMN demo.published_at IS '发布时间';
+
+-- 创建演示表索引
+CREATE INDEX IF NOT EXISTS idx_demo_status ON demo(status);
+CREATE INDEX IF NOT EXISTS idx_demo_slug ON demo(slug);
+CREATE INDEX IF NOT EXISTS idx_demo_author_id ON demo(author_id);
+CREATE INDEX IF NOT EXISTS idx_demo_created_at ON demo(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_demo_published_at ON demo(published_at DESC);
 
 -- 创建更新时间自动更新触发器函数
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -312,6 +348,12 @@ CREATE TRIGGER update_comment_updated_at
 DROP TRIGGER IF EXISTS update_site_setting_updated_at ON site_setting;
 CREATE TRIGGER update_site_setting_updated_at
     BEFORE UPDATE ON site_setting
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_demo_updated_at ON demo;
+CREATE TRIGGER update_demo_updated_at
+    BEFORE UPDATE ON demo
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 

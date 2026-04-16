@@ -71,7 +71,9 @@ uploads/
 *.mv.db
 *.trace.db
 data/
-db/
+# Ignore database data files, but keep migration scripts
+db/*.db
+db/data/
 
 # Spring Boot additional configs
 application-local.yml

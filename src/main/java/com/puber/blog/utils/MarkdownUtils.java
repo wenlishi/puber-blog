@@ -26,6 +26,41 @@ public class MarkdownUtils {
     private static final HtmlRenderer renderer = HtmlRenderer.builder().build();
 
     /**
+     * 处理短代码预处理
+     * 将{{demo:slug}}替换为iframe标签
+     *
+     * @param markdown Markdown 文本
+     * @return String 处理后的 Markdown 文本
+     */
+    private static String processShortcodes(String markdown) {
+        if (markdown == null || markdown.trim().isEmpty()) {
+            return "";
+        }
+
+        // 正则匹配 {{demo:slug}} 短代码
+        // 支持：{{demo:button-animation}}、{{demo:card-flip}}等
+        String pattern = "\\{\\{demo:([a-zA-Z0-9-]+)\\}\\}";
+
+        // 替换为 iframe 标签
+        // 使用同源 src="/demo/{slug}/embed" (精简模板，无框架)
+        // 添加响应式样式和 sandbox 安全属性
+        String processed = markdown.replaceAll(pattern,
+                "<div class=\"demo-container\">\n" +
+                "  <iframe src=\"/demo/$1/embed\" " +
+                "class=\"demo-iframe\" " +
+                "width=\"100%\" " +
+                "height=\"400\" " +
+                "frameborder=\"0\" " +
+                "sandbox=\"allow-scripts allow-same-origin\" " +
+                "loading=\"lazy\">\n" +
+                "  </iframe>\n" +
+                "</div>"
+        );
+
+        return processed;
+    }
+
+    /**
      * 将 Markdown 文本转换为 HTML（使用宽松策略）
      * 适用于后台管理员发布的文章内容
      *
@@ -33,7 +68,19 @@ public class MarkdownUtils {
      * @return String 安全的 HTML 文本
      */
     public static String toHtml(String markdown) {
-        return toHtml(markdown, XssPolicy.RELAXED);
+        if (markdown == null || markdown.trim().isEmpty()) {
+            return "";
+        }
+
+        // 1. 首先处理短代码（替换为 iframe）
+        String processed = processShortcodes(markdown);
+
+        // 2. 然后转换为 HTML
+        Node document = parser.parse(processed);
+        String html = renderer.render(document);
+
+        // 3. 最后进行 XSS 过滤（RELAXED 策略已支持 iframe）
+        return XssUtils.sanitize(html, XssPolicy.RELAXED);
     }
 
     /**

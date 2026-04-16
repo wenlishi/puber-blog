@@ -7,7 +7,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 
 /**
  * Spring Security 安全配置类
@@ -46,7 +46,7 @@ public class SecurityConfig {
             // 配置授权规则
             .authorizeHttpRequests(auth -> auth
                 // 公开访问的路径（前台页面、静态资源）
-                .requestMatchers("/", "/index", "/article/**", "/category/**", "/tag/**", "/archive", "/about", "/search")
+                .requestMatchers("/", "/index", "/article/**", "/category/**", "/tag/**", "/archive", "/about", "/search", "/demo/**")
                 .permitAll()
                 // 静态资源
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/uploads/**")
@@ -66,6 +66,13 @@ public class SecurityConfig {
                 .anyRequest()
                 .authenticated()
             )
+            // 配置 Headers - 允许iframe嵌入演示页面
+            .headers(headers -> headers
+                // 禁用默认的X-Frame-Options
+                .frameOptions(frameOptions -> frameOptions.disable())
+                // 添加自定义headers允许同源iframe
+                .addHeaderWriter(new StaticHeadersWriter("X-Frame-Options", "SAMEORIGIN"))
+            )
             // 配置表单登录
             .formLogin(form -> form
                 .loginPage("/login")
@@ -83,10 +90,9 @@ public class SecurityConfig {
                 .permitAll()
             )
             // 配置 CSRF 防护
-            // 对前台公开接口（游客评论）禁用 CSRF，其他接口启用 CSRF
+            // 对所有API接口禁用 CSRF（前后端分离架构，使用token认证）
             .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/api/public/comments")
+                .ignoringRequestMatchers("/api/**")
             )
             // 配置 Session 管理
             .sessionManagement(session -> session

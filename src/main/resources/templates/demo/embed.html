@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${demo.name}">演示</title>
+</head>
+<body>
+    <!-- 演示内容渲染区（iframe沙箱内安全渲染完整HTML） -->
+    <div th:utext="${demo.fullHtmlContent}">
+        <!-- 完整HTML内容由后台管理注入，在iframe沙箱中安全运行 -->
+    </div>
+</body>
+</html>

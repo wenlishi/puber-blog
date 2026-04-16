@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${demo.name + ' - 交互式演示 - ' + siteName}">演示页面</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- 自定义样式 -->
+    <link href="/css/front.css" rel="stylesheet">
+    <style>
+        .demo-iframe {
+            width: 100%;
+            min-height: 500px;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+
+    <!-- SEO Meta -->
+    <meta name="description" th:content="${demo.description}">
+    <meta name="keywords" th:content="${demo.name}">
+</head>
+<body>
+
+<!-- 导航栏 -->
+<div th:replace="~{front/fragments :: navbar}"></div>
+
+<!-- 演示容器 -->
+<div class="container demo-container-main mt-4">
+    <!-- 元信息 -->
+    <div class="demo-header mb-4">
+        <h1 class="demo-title" th:text="${demo.name}">演示名称</h1>
+        <div class="demo-meta text-muted">
+            <span th:if="${demo.author != null}">
+                <i class="bi bi-person-circle"></i>
+                <span th:text="${demo.author.nickname ?: demo.author.username}">作者</span>
+            </span>
+            <span class="ms-3" th:if="${demo.publishedAt != null}">
+                <i class="bi bi-calendar"></i>
+                <span th:text="${#temporals.format(demo.publishedAt, 'yyyy-MM-dd HH:mm')}">发布时间</span>
+            </span>
+            <span class="ms-3">
+                <i class="bi bi-eye"></i>
+                <span th:text="${demo.viewCount} + ' 次浏览'">浏览量</span>
+            </span>
+        </div>
+        <p class="demo-description mt-2" th:if="${demo.description != null}" th:text="${demo.description}">演示描述</p>
+    </div>
+
+    <!-- 演示内容渲染区（使用iframe沙箱隔离，更安全） -->
+    <div class="demo-render-area">
+        <iframe
+            th:src="'/demo/' + ${demo.slug} + '/embed'"
+            class="demo-iframe"
+            sandbox="allow-scripts allow-same-origin"
+            loading="lazy">
+        </iframe>
+    </div>
+
+    <!-- 返回链接 -->
+    <div class="mt-4">
+        <a href="/" class="btn btn-outline-primary">
+            <i class="bi bi-home"></i> 返回首页
+        </a>
+    </div>
+</div>
+
+<!-- 页脚 -->
+<div th:replace="~{front/fragments :: footer}"></div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

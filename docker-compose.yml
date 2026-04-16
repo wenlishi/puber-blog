@@ -1,0 +1,107 @@
+# =====================================================
+# puber-blog 完整生产环境部署配置
+# =====================================================
+# 包含：应用、数据库、反向代理
+# =====================================================
+
+version: '3.8'
+
+services:
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: puber-blog-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: puber_blog
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+    volumes:
+      # 数据持久化（数据库数据不会丢失）
+      - postgres_data:/var/lib/postgresql/data
+      # 初始化脚本（可选，首次启动时执行）
+      - ./db/init/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    # 不对外暴露端口，只通过Docker内部网络通信
+    # ports:
+    #   - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - puber-blog-network
+
+  # Spring Boot应用
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # 构建参数（可选）
+      args:
+        - MAVEN_OPTS=-Dmaven.repo.local=/build/.m2/repository
+    image: puber-blog:latest
+    container_name: puber-blog-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # 数据库连接（使用服务名postgres）
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/puber_blog
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-changeme}
+      # Spring配置
+      SPRING_PROFILES_ACTIVE: prod
+      # 文件上传路径（容器内路径）
+      FILE_UPLOAD_PATH: /app/uploads
+      # JVM参数（可通过环境变量覆盖）
+      JAVA_OPTS: ${JAVA_OPTS:--Xms512m -Xmx1024m -XX:+UseG1GC}
+    volumes:
+      # 日志持久化（便于查看日志）
+      - ./logs:/app/logs
+      # 上传文件持久化（用户上传的图片、文件）
+      - ./uploads:/app/uploads
+      # 配置文件挂载（便于动态修改配置，可选）
+      - ./config:/app/config:ro
+    # 不对外暴露端口，只通过Docker内部网络通信
+    # ports:
+    #   - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - puber-blog-network
+
+  # Nginx反向代理（可选，推荐生产环境使用）
+  nginx:
+    image: nginx:alpine
+    container_name: puber-blog-nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    volumes:
+      # Nginx配置
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      # 静态资源缓存（可选）
+      - ./static-cache:/var/cache/nginx
+      # SSL证书（HTTPS，可选）
+      - ./ssl:/etc/nginx/ssl:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - puber-blog-network
+
+networks:
+  puber-blog-network:
+    driver: bridge
+
+volumes:
+  # 数据库数据持久化
+  postgres_data:
+    driver: local
