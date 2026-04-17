@@ -35,8 +35,8 @@
             font-size: 12px;
             font-weight: 600;
         }
-        .badge-success { background: #ECFDF5; color: #059669; }
-        .badge-warning { background: #FFF7ED; color: #EA580C; }
+        .badge-success { background: #F3F4F6; color: #6B7280; }
+        .badge-warning { background: var(--primary-light); color: var(--primary); }
         .action-btn {
             background: transparent;
             border: none;
@@ -84,72 +84,7 @@
 </head>
 <body>
 
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <a href="/admin/dashboard" class="logo">
-            <div class="logo-icon"><i class="ph-bold ph-feather"></i></div>
-            <div class="logo-text">
-                <span class="logo-title">ZHIZHU.</span>
-                <span class="logo-sub">工作台</span>
-            </div>
-        </a>
-    </div>
-
-    <div class="nav-body">
-        <div class="nav-section-label">创作</div>
-        <a href="/admin/dashboard" class="nav-item">
-            <i class="ph ph-squares-four nav-icon"></i> 概览
-        </a>
-        <a href="/admin/article-form" class="nav-item">
-            <i class="ph ph-pencil-line nav-icon"></i> 写文章
-        </a>
-        <a href="/admin/categories" class="nav-item">
-            <i class="ph ph-folder-open nav-icon"></i> 专栏与分类
-        </a>
-        <a href="#" class="nav-item">
-            <i class="ph ph-image nav-icon"></i> 我的图床
-        </a>
-        
-        <div class="nav-section-label">管理</div>
-        <a href="/admin/demos" class="nav-item">
-            <i class="ph ph-rocket-launch nav-icon"></i> 演示管理
-        </a>
-        <a href="#" class="nav-item">
-            <i class="ph ph-chats-circle nav-icon"></i> 留言板
-        </a>
-        <a href="/admin/comments" class="nav-item active">
-            <i class="ph ph-chat-centered-text nav-icon"></i> 评论管理
-        </a>
-        <a href="/admin/friend-links" class="nav-item">
-            <i class="ph ph-link nav-icon"></i> 友情链接
-        </a>
-
-        <div class="nav-section-label">设置</div>
-        <a href="/admin/settings" class="nav-item">
-            <i class="ph ph-paint-brush nav-icon"></i> 主题外观
-        </a>
-        <a href="/admin/settings" class="nav-item">
-            <i class="ph ph-gear-six nav-icon"></i> 基础设置
-        </a>
-    </div>
-
-    <div class="sidebar-footer">
-        <div class="user-menu-wrapper">
-            <div class="sidebar-user" id="userMenuBtn">
-                <div class="user-profile">
-                    <img src="https://ui-avatars.com/api/?name=Li&background=059669&color=fff&font-size=0.4" alt="头像" class="user-avatar" id="sidebarAvatar">
-                    <div class="user-name" th:text="${#authentication.name}">管理员</div>
-                </div>
-                <i class="ph ph-caret-up user-menu-icon" id="userMenuIcon"></i>
-            </div>
-            <div class="user-dropdown" id="userDropdown">
-                <a href="/admin/profile" class="dropdown-item"><i class="ph ph-user"></i> 个人资料</a>
-                <div class="dropdown-divider"></div>
-                <a href="/logout" class="dropdown-item text-danger"><i class="ph ph-sign-out"></i> 退出登录</a>
-            </div>
-        </div>
-    </div>
-</aside>
+<aside th:replace="~{admin/layout :: sidebar(activePage='comments')}"></aside>
 
 <main class="main-wrapper">
     <header class="topbar">
@@ -193,44 +128,20 @@
             <p>审核和管理用户评论，维护良好的互动环境。</p>
         </div>
 
-        <div class="stats-grid animate-fade-up delay-1" style="margin-bottom: 8px;">
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-info">
-                        <span class="stat-title">待审核</span>
-                        <span class="stat-value" id="pendingCount" style="color: var(--primary);">0</span>
-                    </div>
-                    <div class="icon-box"><i class="ph-light ph-clock"></i></div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-info">
-                        <span class="stat-title">已通过</span>
-                        <span class="stat-value" id="approvedCount">0</span>
-                    </div>
-                    <div class="icon-box"><i class="ph-light ph-check-circle"></i></div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-info">
-                        <span class="stat-title">总计</span>
-                        <span class="stat-value" id="totalCount">0</span>
-                    </div>
-                    <div class="icon-box"><i class="ph-light ph-chat-centered-text"></i></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card animate-fade-up delay-2">
+        <div class="card animate-fade-up delay-1">
             <div class="card-header">
-                <div class="card-title-text">评论列表</div>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div class="card-title-text">评论列表</div>
+                    <div style="display: flex; gap: 12px; font-size: 13px; color: var(--text-muted);">
+                        <span><i class="ph-bold ph-clock" style="color: var(--primary);"></i> 待审核 <strong id="pendingCount" style="color: var(--primary);">0</strong></span>
+                        <span><i class="ph-bold ph-chat-centered-text"></i> 总计 <strong id="totalCount">0</strong></span>
+                    </div>
+                </div>
                 <div style="display: flex; gap: 8px;">
-                    <button class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('ALL')">
+                    <button id="btnAll" class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('ALL')">
                         <i class="ph-bold ph-list"></i> 全部
                     </button>
-                    <button class="btn-primary-custom" onclick="filterByStatus('PENDING')">
+                    <button id="btnPending" class="btn-primary-custom" onclick="filterByStatus('PENDING')">
                         <i class="ph-bold ph-clock"></i> 待审核
                     </button>
                 </div>
@@ -247,6 +158,9 @@
                     <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
                     <p style="margin-top: 16px; color: var(--text-muted);">暂无评论数据</p>
                 </div>
+
+                <!-- 分页 -->
+                <div id="pagination" style="display:none; justify-content: center; align-items: center; gap: 12px; padding: 20px 0;"></div>
             </div>
         </div>
     </div>
@@ -298,6 +212,8 @@
 <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 <script>
 let currentFilter = 'PENDING';
+let currentPage = 0;
+let totalPages = 0;
 let commentToReply = null;
 let commentToDelete = null;
 
@@ -356,18 +272,80 @@ function initThemeSwitcher() {
 }
 
 function loadStats() {
-    fetch('/admin/comments/api/stats')
+    // 获取待审核评论数量
+    fetch('/api/admin/comments/count/pending')
         .then(response => response.json())
-        .then(data => {
-            document.getElementById('pendingCount').textContent = data.pending || 0;
-            document.getElementById('approvedCount').textContent = data.approved || 0;
-            document.getElementById('totalCount').textContent = data.total || 0;
+        .then(result => {
+            if (result.success && result.data) {
+                document.getElementById('pendingCount').textContent = result.data || 0;
+            }
         })
         .catch(error => console.error('Error loading stats:', error));
+
+    // 获取所有评论统计
+    fetch('/api/admin/comments?page=0&size=1')
+        .then(response => response.json())
+        .then(result => {
+            if (result.success && result.data) {
+                document.getElementById('totalCount').textContent = result.data.totalElements || 0;
+            }
+        })
+        .catch(error => console.error('Error loading total count:', error));
 }
 
 function filterByStatus(status) {
     currentFilter = status;
+    currentPage = 0;  // 重置页码
+
+    // 更新按钮样式
+    const btnAll = document.getElementById('btnAll');
+    const btnPending = document.getElementById('btnPending');
+
+    if (status === 'ALL') {
+        btnAll.className = 'btn-primary-custom btn-sm-custom';
+        btnPending.className = 'btn-outline-custom btn-sm-custom';
+    } else {
+        btnAll.className = 'btn-outline-custom btn-sm-custom';
+        btnPending.className = 'btn-primary-custom btn-sm-custom';
+    }
+
+    loadComments();
+}
+
+function renderPagination() {
+    const pagination = document.getElementById('pagination');
+    if (!pagination) return;
+
+    // 即使只有1页也显示分页信息，但隐藏分页按钮
+    if (totalPages <= 1) {
+        pagination.innerHTML = `<span style="color: var(--text-muted); font-size: 14px;">共 ${totalPages} 页</span>`;
+        pagination.style.display = 'flex';
+        return;
+    }
+
+    pagination.innerHTML = `
+        ${currentPage > 0 ? `<button class="btn-outline-custom btn-sm-custom" onclick="goToPage(${currentPage - 1})">上一页</button>` : ''}
+        <span style="color: var(--text-muted); font-size: 14px; padding: 0 8px;">共 ${totalPages} 页</span>
+        <input type="number" min="1" max="${totalPages}" value="${currentPage + 1}" id="pageJumpInput" style="width: 50px; padding: 4px 8px; border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 14px; text-align: center;" onkeypress="if(event.keyCode===13) jumpToPage()">
+        <button class="btn-outline-custom btn-sm-custom" onclick="jumpToPage()">跳转</button>
+        ${currentPage < totalPages - 1 ? `<button class="btn-outline-custom btn-sm-custom" onclick="goToPage(${currentPage + 1})">下一页</button>` : ''}
+    `;
+    pagination.style.display = 'flex';
+}
+
+function jumpToPage() {
+    const input = document.getElementById('pageJumpInput');
+    const page = parseInt(input.value) - 1;
+    if (page >= 0 && page < totalPages) {
+        goToPage(page);
+    } else {
+        showToast('请输入有效页码（1-' + totalPages + '）', 'error');
+    }
+}
+
+function goToPage(page) {
+    if (page < 0 || page >= totalPages) return;
+    currentPage = page;
     loadComments();
 }
 
@@ -375,15 +353,29 @@ function loadComments() {
     document.getElementById('loadingSpinner').style.display = 'block';
     document.getElementById('commentList').style.display = 'none';
     document.getElementById('emptyMessage').style.display = 'none';
+    document.getElementById('pagination').style.display = 'none';
 
-    fetch(`/admin/comments/api?status=${currentFilter}`)
+    // 根据过滤器选择不同的API路径，添加分页参数
+    const apiUrl = currentFilter === 'PENDING'
+        ? `/api/admin/comments/pending?page=${currentPage}&size=10`
+        : `/api/admin/comments?page=${currentPage}&size=10`;
+
+    fetch(apiUrl)
         .then(response => response.json())
-        .then(data => {
+        .then(result => {
             document.getElementById('loadingSpinner').style.display = 'none';
-            
-            if (data.comments && data.comments.length > 0) {
-                renderComments(data.comments);
-                document.getElementById('commentList').style.display = 'flex';
+
+            if (result.success && result.data) {
+                totalPages = result.data.totalPages || 1;
+
+                if (result.data.content && result.data.content.length > 0) {
+                    renderComments(result.data.content);
+                    document.getElementById('commentList').style.display = 'flex';
+                    renderPagination();
+                    document.getElementById('pagination').style.display = 'flex';
+                } else {
+                    document.getElementById('emptyMessage').style.display = 'block';
+                }
             } else {
                 document.getElementById('emptyMessage').style.display = 'block';
             }
@@ -402,13 +394,13 @@ function renderComments(comments) {
             <div class="card-body" style="padding: 16px 24px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(comment.nickname || 'User')}&background=random&color=fff" 
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(comment.nickname || 'User')}&background=random&color=fff"
                              style="width: 36px; height: 36px; border-radius: 50%;" alt="avatar">
                         <div>
                             <div style="font-weight: 600; color: var(--text-main);">${comment.nickname || '匿名'}</div>
                             <div style="font-size: 12.5px; color: var(--text-muted);">
                                 ${comment.email ? comment.email : ''}
-                                ${comment.createTime ? ' · ' + new Date(comment.createTime).toLocaleString('zh-CN') : ''}
+                                ${comment.createdAt ? ' · ' + new Date(comment.createdAt).toLocaleString('zh-CN') : ''}
                             </div>
                         </div>
                     </div>
@@ -449,21 +441,22 @@ function renderComments(comments) {
 }
 
 function approveComment(id) {
-    fetch(`/admin/comments/${id}/approve`, { method: 'POST' })
-        .then(response => {
-            if (response.ok) {
+    fetch(`/api/admin/comments/${id}/approve`, { method: 'PUT' })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showToast('评论已批准', 'success');
                 loadComments();
                 loadStats();
             } else {
-                alert('操作失败，请重试');
+                showToast('操作失败', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('操作失败，请重试');
+            showToast('操作失败', 'error');
         });
 }
-
 function showReplyModal(id, content) {
     commentToReply = id;
     document.getElementById('replyOriginalComment').textContent = content;
@@ -479,26 +472,28 @@ function closeReplyModal() {
 function submitReply() {
     const content = document.getElementById('replyContent').value.trim();
     if (!content) {
-        alert('请输入回复内容');
+        showToast('请输入回复内容', 'error');
         return;
     }
-    
-    fetch(`/admin/comments/${commentToReply}/reply`, {
+
+    fetch(`/api/admin/comments/${commentToReply}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content })
     })
-    .then(response => {
-        if (response.ok) {
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
             closeReplyModal();
+            showToast('回复成功', 'success');
             loadComments();
         } else {
-            alert('回复失败，请重试');
+            showToast('回复失败，请重试', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('回复失败，请重试');
+        showToast('回复失败，请重试', 'error');
     });
 }
 
@@ -514,21 +509,39 @@ function closeDeleteModal() {
 
 function confirmDelete() {
     if (commentToDelete) {
-        fetch(`/admin/comments/${commentToDelete}`, { method: 'DELETE' })
-            .then(response => {
-                if (response.ok) {
+        fetch(`/api/admin/comments/${commentToDelete}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
                     closeDeleteModal();
+                    showToast('评论已删除', 'success');
                     loadComments();
                     loadStats();
                 } else {
-                    alert('删除失败，请重试');
+                    showToast('删除失败，请重试', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('删除失败，请重试');
+                showToast('删除失败，请重试', 'error');
             });
     }
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <i class="ph-bold ${type === 'success' ? 'ph-check-circle' : 'ph-warning'}" style="font-size: 20px;"></i>
+        <span style="color: var(--text-regular);">${message}</span>
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 </script>
 </body>

@@ -76,72 +76,7 @@
 </head>
 <body>
 
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <a href="/admin/dashboard" class="logo">
-            <div class="logo-icon"><i class="ph-bold ph-feather"></i></div>
-            <div class="logo-text">
-                <span class="logo-title">ZHIZHU.</span>
-                <span class="logo-sub">工作台</span>
-            </div>
-        </a>
-    </div>
-
-    <div class="nav-body">
-        <div class="nav-section-label">创作</div>
-        <a href="/admin/dashboard" class="nav-item">
-            <i class="ph ph-squares-four nav-icon"></i> 概览
-        </a>
-        <a href="/admin/article-form" class="nav-item active">
-            <i class="ph ph-pencil-line nav-icon"></i> 写文章
-        </a>
-        <a href="/admin/categories" class="nav-item">
-            <i class="ph ph-folder-open nav-icon"></i> 专栏与分类
-        </a>
-        <a href="#" class="nav-item">
-            <i class="ph ph-image nav-icon"></i> 我的图床
-        </a>
-        
-        <div class="nav-section-label">管理</div>
-        <a href="/admin/demos" class="nav-item">
-            <i class="ph ph-rocket-launch nav-icon"></i> 演示管理
-        </a>
-        <a href="#" class="nav-item">
-            <i class="ph ph-chats-circle nav-icon"></i> 留言板
-        </a>
-        <a href="/admin/comments" class="nav-item">
-            <i class="ph ph-chat-centered-text nav-icon"></i> 评论管理
-        </a>
-        <a href="/admin/friend-links" class="nav-item">
-            <i class="ph ph-link nav-icon"></i> 友情链接
-        </a>
-
-        <div class="nav-section-label">设置</div>
-        <a href="/admin/settings" class="nav-item">
-            <i class="ph ph-paint-brush nav-icon"></i> 主题外观
-        </a>
-        <a href="/admin/settings" class="nav-item">
-            <i class="ph ph-gear-six nav-icon"></i> 基础设置
-        </a>
-    </div>
-
-    <div class="sidebar-footer">
-        <div class="user-menu-wrapper">
-            <div class="sidebar-user" id="userMenuBtn">
-                <div class="user-profile">
-                    <img src="https://ui-avatars.com/api/?name=Li&background=059669&color=fff&font-size=0.4" alt="头像" class="user-avatar" id="sidebarAvatar">
-                    <div class="user-name" th:text="${#authentication.name}">管理员</div>
-                </div>
-                <i class="ph ph-caret-up user-menu-icon" id="userMenuIcon"></i>
-            </div>
-            <div class="user-dropdown" id="userDropdown">
-                <a href="/admin/profile" class="dropdown-item"><i class="ph ph-user"></i> 个人资料</a>
-                <div class="dropdown-divider"></div>
-                <a href="/logout" class="dropdown-item text-danger"><i class="ph ph-sign-out"></i> 退出登录</a>
-            </div>
-        </div>
-    </div>
-</aside>
+<aside th:replace="~{admin/layout :: sidebar(activePage='articles')}"></aside>
 
 <main class="main-wrapper">
     <header class="topbar">
@@ -224,13 +159,6 @@
                         <div class="card-title-text">发布设置</div>
                     </div>
                     <div class="card-body" style="display: flex; flex-direction: column; gap: 16px;">
-                        <div>
-                            <label for="status" class="form-label">状态</label>
-                            <select class="form-select" id="status">
-                                <option value="PUBLISHED">已发布</option>
-                                <option value="DRAFT">草稿</option>
-                            </select>
-                        </div>
                         <div>
                             <label for="categoryId" class="form-label">分类</label>
                             <select class="form-select" id="categoryId">
@@ -323,22 +251,27 @@ document.addEventListener('DOMContentLoaded', function() {
     loadCategories();
     loadTags();
     initThemeSwitcher();
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
-    if (id) {
+
+    // 从 URL 路径中提取 ID: /admin/articles/{id}/edit
+    const pathParts = window.location.pathname.split('/');
+    const id = pathParts[3]; // ['', 'admin', 'articles', '123', 'edit']
+    if (id && id !== 'new') {
         articleId = id;
         loadArticle(id);
     }
 });
 
 function initEditor() {
+    // 从 URL 路径中提取 ID: /admin/articles/{id}/edit 或 /admin/articles/new
+    const pathParts = window.location.pathname.split('/');
+    const id = pathParts[3]; // ['', 'admin', 'articles', '123', 'edit'] 或 ['', 'admin', 'articles', 'new']
+
     editor = new EasyMDE({
         element: document.getElementById('content'),
         spellChecker: false,
         autosave: {
-            enabled: true,
-            uniqueId: 'article-editor',
+            enabled: id && id !== 'new', // 只在编辑已有文章时启用自动保存
+            uniqueId: id && id !== 'new' ? `article-editor-${id}` : 'article-editor-new',
             delay: 10000
         },
         toolbar: ['bold', 'italic', 'heading', '|', 'quote', 'code', 'link', 'image', '|', 'unordered-list', 'ordered-list', '|', 'preview', 'side-by-side', 'fullscreen'],
@@ -347,7 +280,7 @@ function initEditor() {
             highlightFunction: (code, lang) => hljs.highlight(code, { language: lang || 'plaintext' }).value
         }
     });
-    
+
     editor.codemirror.on('change', () => {
         document.getElementById('save-status').textContent = '未保存的更改...';
         clearTimeout(autoSaveTimer);
@@ -402,7 +335,7 @@ function initThemeSwitcher() {
 }
 
 function loadCategories() {
-    fetch('/admin/categories/api')
+    fetch('/api/admin/categories')
         .then(response => response.json())
         .then(data => {
             const select = document.getElementById('categoryId');
@@ -419,7 +352,7 @@ function loadCategories() {
 }
 
 function loadTags() {
-    fetch('/admin/tags/api')
+    fetch('/api/admin/tags')
         .then(response => response.json())
         .then(data => {
             const container = document.getElementById('tagCheckboxes');
@@ -436,29 +369,41 @@ function loadTags() {
 }
 
 function loadArticle(id) {
-    fetch(`/admin/articles/api/${id}`)
+    fetch(`/api/admin/articles/${id}`)
         .then(response => response.json())
-        .then(article => {
-            document.getElementById('title').value = article.title || '';
-            document.getElementById('slug').value = article.slug || '';
-            editor.value(article.content || '');
-            document.getElementById('status').value = article.status || 'DRAFT';
-            document.getElementById('categoryId').value = article.categoryId || '';
-            document.getElementById('sticky').checked = article.sticky || false;
-            document.getElementById('coverUrl').value = article.cover || '';
-            document.getElementById('metaDescription').value = article.metaDescription || '';
-            document.getElementById('metaKeywords').value = article.metaKeywords || '';
-            
-            if (article.cover) {
-                const preview = document.getElementById('coverPreview');
-                preview.src = article.cover;
-                preview.style.display = 'block';
+        .then(result => {
+            if (result.code === 200) {
+                const article = result.data;
+                document.getElementById('title').value = article.title || '';
+                document.getElementById('slug').value = article.slug || '';
+                editor.value(article.contentMarkdown || '');
+                document.getElementById('status').value = article.status || 'DRAFT';
+
+                // 分类
+                if (article.category) {
+                    document.getElementById('categoryId').value = article.category.id || '';
+                }
+
+                // 置顶
+                document.getElementById('sticky').checked = article.isTop || false;
+
+                // 封面图片
+                document.getElementById('coverUrl').value = article.coverImage || '';
+                if (article.coverImage) {
+                    const preview = document.getElementById('coverPreview');
+                    preview.src = article.coverImage;
+                    preview.style.display = 'block';
+                }
+
+                // 标签
+                if (article.tags && article.tags.length > 0) {
+                    const tagIds = article.tags.map(tag => tag.id);
+                    const tagCheckboxes = document.querySelectorAll('#tagCheckboxes input[type="checkbox"]');
+                    tagCheckboxes.forEach(cb => {
+                        cb.checked = tagIds.includes(parseInt(cb.value));
+                    });
+                }
             }
-            
-            const tagCheckboxes = document.querySelectorAll('#tagCheckboxes input[type="checkbox"]');
-            tagCheckboxes.forEach(cb => {
-                cb.checked = article.tagIds && article.tagIds.includes(parseInt(cb.value));
-            });
         })
         .catch(error => console.error('Error loading article:', error));
 }
@@ -470,16 +415,15 @@ function autoSave() {
 }
 
 function saveArticle(status, isAutoSave = false) {
+    const categoryIdValue = document.getElementById('categoryId').value;
     const data = {
         title: document.getElementById('title').value,
         slug: document.getElementById('slug').value,
         content: editor.value(),
         status: status,
-        categoryId: document.getElementById('categoryId').value,
-        sticky: document.getElementById('sticky').checked,
-        cover: document.getElementById('coverUrl').value,
-        metaDescription: document.getElementById('metaDescription').value,
-        metaKeywords: document.getElementById('metaKeywords').value,
+        categoryId: categoryIdValue ? parseInt(categoryIdValue) : null,
+        isTop: document.getElementById('sticky').checked,
+        coverImage: document.getElementById('coverUrl').value || null,
         tagIds: Array.from(document.querySelectorAll('#tagCheckboxes input[type="checkbox"]:checked')).map(cb => parseInt(cb.value))
     };
 
@@ -488,7 +432,7 @@ function saveArticle(status, isAutoSave = false) {
         return;
     }
 
-    const url = articleId ? `/admin/articles/${articleId}` : '/admin/articles';
+    const url = articleId ? `/api/admin/articles/${articleId}` : '/api/admin/articles';
     const method = articleId ? 'PUT' : 'POST';
 
     fetch(url, {
@@ -498,8 +442,9 @@ function saveArticle(status, isAutoSave = false) {
     })
     .then(response => response.json())
     .then(result => {
-        if (result.id) {
-            articleId = result.id;
+        console.log("Response:", result);
+        if (result.success && result.data) {
+            articleId = result.data.id;
             if (!isAutoSave) {
                 showToast(status === 'PUBLISHED' ? '文章已发布' : '草稿已保存', 'success');
             } else {
@@ -522,7 +467,7 @@ function addNewTag() {
     const name = document.getElementById('newTagInput').value.trim();
     if (!name) return;
 
-    fetch('/admin/tags', {
+    fetch('/api/admin/tags', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
@@ -556,7 +501,7 @@ function uploadCover() {
 
         document.getElementById('upload-progress').style.display = 'flex';
         
-        fetch('/admin/upload/image', {
+        fetch('/api/admin/articles/upload-image', {
             method: 'POST',
             body: formData
         })

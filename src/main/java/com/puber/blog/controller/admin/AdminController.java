@@ -43,17 +43,8 @@ public class AdminController {
     public String dashboard(Model model) {
         log.info("访问后台仪表盘");
 
-        // 获取仪表盘统计数据
         DashboardVO dashboardData = dashboardService.getDashboardData();
-
-        // 将统计数据添加到模型（方便模板直接访问）
         model.addAttribute("dashboard", dashboardData);
-        model.addAttribute("totalViews", dashboardData.getArticleStats().getTotalViewCount());
-        model.addAttribute("articleCount", dashboardData.getArticleStats().getPublishedCount());
-        model.addAttribute("commentCount", dashboardData.getCommentStats().getTotalCount());
-        model.addAttribute("pendingComments", dashboardData.getCommentStats().getPendingCount());
-        model.addAttribute("topArticles", dashboardData.getHotArticles());
-        model.addAttribute("weeklyViews", dashboardData.getArticleStats().getTotalViewCount());
 
         return "admin/dashboard";
     }

@@ -6,78 +6,13 @@
     <title>知筑 | 博客后台管理</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://fastly.jsdelivr.net/npm/@phosphor-icons/web"></script>
-    <script src="https://fastly.jsdelivr.net/npm/chart.js"></script>
-    <style th:replace="~{admin/layout :: adminStyles}"></style>
+    <script src="/js/phosphor-web-loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
 </head>
 <body>
 
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <a href="/admin/dashboard" class="logo">
-            <div class="logo-icon"><i class="ph-bold ph-feather"></i></div>
-            <div class="logo-text">
-                <span class="logo-title">ZHIZHU.</span>
-                <span class="logo-sub">工作台</span>
-            </div>
-        </a>
-    </div>
-
-    <div class="nav-body">
-        <div class="nav-section-label">创作</div>
-        <a href="/admin/dashboard" class="nav-item active">
-            <i class="ph ph-squares-four nav-icon"></i> 概览
-        </a>
-        <a href="/admin/article-form" class="nav-item">
-            <i class="ph ph-pencil-line nav-icon"></i> 写文章
-        </a>
-        <a href="/admin/categories" class="nav-item">
-            <i class="ph ph-folder-open nav-icon"></i> 专栏与分类
-        </a>
-        <a href="#" class="nav-item">
-            <i class="ph ph-image nav-icon"></i> 我的图床
-        </a>
-        
-        <div class="nav-section-label">管理</div>
-        <a href="/admin/demos" class="nav-item">
-            <i class="ph ph-rocket-launch nav-icon"></i> 演示管理
-        </a>
-        <a href="#" class="nav-item">
-            <i class="ph ph-chats-circle nav-icon"></i> 留言板
-        </a>
-        <a href="/admin/comments" class="nav-item">
-            <i class="ph ph-chat-centered-text nav-icon"></i> 评论管理
-        </a>
-        <a href="/admin/friend-links" class="nav-item">
-            <i class="ph ph-link nav-icon"></i> 友情链接
-        </a>
-
-        <div class="nav-section-label">设置</div>
-        <a href="/admin/settings" class="nav-item">
-            <i class="ph ph-paint-brush nav-icon"></i> 主题外观
-        </a>
-        <a href="/admin/settings" class="nav-item">
-            <i class="ph ph-gear-six nav-icon"></i> 基础设置
-        </a>
-    </div>
-
-    <div class="sidebar-footer">
-        <div class="user-menu-wrapper">
-            <div class="sidebar-user" id="userMenuBtn">
-                <div class="user-profile">
-                    <img src="https://ui-avatars.com/api/?name=Li&background=059669&color=fff&font-size=0.4" alt="头像" class="user-avatar" id="sidebarAvatar">
-                    <div class="user-name" th:text="${#authentication.name}">李博主</div>
-                </div>
-                <i class="ph ph-caret-up user-menu-icon" id="userMenuIcon"></i>
-            </div>
-            <div class="user-dropdown" id="userDropdown">
-                <a href="/admin/profile" class="dropdown-item"><i class="ph ph-user"></i> 个人资料</a>
-                <div class="dropdown-divider"></div>
-                <a href="/logout" class="dropdown-item text-danger"><i class="ph ph-sign-out"></i> 退出登录</a>
-            </div>
-        </div>
-    </div>
-</aside>
+    <aside th:replace="~{admin/layout :: sidebar(activePage='dashboard')}"></aside>
 
 <main class="main-wrapper">
     <header class="topbar">
@@ -85,11 +20,11 @@
             <i class="ph-light ph-calendar-blank"></i>
             <span id="currentDate">2026 年 4 月 17 日 · 星期五</span>
         </div>
-        
+
         <div class="topbar-right">
             <button class="topbar-btn" title="查看站点" onclick="window.open('/')"><i class="ph ph-arrow-up-right"></i></button>
             <button class="topbar-btn" title="通知"><i class="ph ph-bell"></i><span class="notif-dot"></span></button>
-            
+
             <div class="theme-menu-wrapper">
                 <button class="topbar-btn" id="themeSwitchBtn" title="后台配色">
                     <i class="ph ph-dots-three"></i>
@@ -118,253 +53,84 @@
     <div class="content">
         <div class="page-header animate-fade-up">
             <h1>工作台概览。</h1>
-            <p>静心沉淀，文字自有力量。今日已记录 <strong style="color: var(--primary); font-weight: 600; transition: color 0.3s;" th:text="${totalViews ?: 32}">32</strong> 次来自远方的访问。</p>
-        </div>
-
-        <div class="stats-grid animate-fade-up delay-1">
-            
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-info"><span class="stat-title">总浏览量</span><span class="stat-value" th:text="${totalViews ?: '12,482'}">12,482</span></div>
-                    <div class="icon-box"><i class="ph-light ph-chart-line-up"></i></div>
-                </div>
-                <div class="stat-footer">
-                    <span class="trend-badge trend-neutral"><i class="ph-bold ph-users"></i> <span th:text="${uniqueVisitors ?: '3,105'}">3,105</span> 独立访客</span> 
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-info"><span class="stat-title">已发布文章</span><span class="stat-value" th:text="${articleCount ?: '124'}">124</span></div>
-                    <div class="icon-box"><i class="ph-light ph-book-open-text"></i></div>
-                </div>
-                <div class="stat-footer">
-                    <span class="trend-badge trend-neutral">持续输出</span> 
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-info"><span class="stat-title">累计评论</span><span class="stat-value" th:text="${commentCount ?: '856'}">856</span></div>
-                    <div class="icon-box"><i class="ph-light ph-chat-centered-text"></i></div>
-                </div>
-                <div class="stat-footer">
-                    <span class="trend-badge trend-primary"><i class="ph-bold ph-warning-circle"></i> <span th:text="${pendingComments ?: 3}">3</span> 条待审核</span> 
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-info"><span class="stat-title">累计留言</span><span class="stat-value" th:text="${messageCount ?: '342'}">342</span></div>
-                    <div class="icon-box"><i class="ph-light ph-chats-circle"></i></div>
-                </div>
-                <div class="stat-footer">
-                    <span class="trend-badge trend-neutral"><i class="ph-bold ph-check-circle"></i> <span th:text="${pendingMessages ?: 0}">0</span> 条待审核</span> 
-                </div>
-            </div>
-
-        </div>
-
-        <div class="bento-layout">
-            <div class="left-panel animate-fade-up delay-2">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title-text">访问趋势</div>
-                        <select class="select-sm">
-                            <option>最近 7 天</option>
-                            <option>最近 30 天</option>
-                        </select>
-                    </div>
-                    <div class="chart-header-data">
-                        <span class="chart-big-num" th:text="${weeklyViews ?: '1,284'}">1,284</span>
-                        <span class="chart-sub-num">本周累计翻阅</span>
-                    </div>
-                    <div class="chart-area">
-                        <div style="position: absolute; top: 12px; bottom: 24px; left: 24px; right: 24px;">
-                            <canvas id="trafficChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="right-panel animate-fade-up delay-3">
-                <div class="card">
-                    <div class="card-header"><div class="card-title-text">最多阅读</div></div>
-                    <div class="card-body">
-                        <div class="feed-list">
-                            <div class="feed-item" th:each="article, iterStat : ${topArticles ?: {}}">
-                                <span class="rank-num" th:classappend="${iterStat.index == 0} ? 'rank-1' : (${iterStat.index < 3} ? 'rank-2' : 'rank-other')" th:text="${#strings.padLeft(iterStat.index + 1, 2, '0')}">01</span>
-                                <div class="feed-content">
-                                    <a href="#" class="feed-title" th:text="${article.title}">基于 Spring Boot 的博客后端重构实践</a>
-                                    <div class="feed-meta" th:text="${article.views} + ' 次翻阅'">1,572 次翻阅</div>
-                                </div>
-                            </div>
-                            <!-- 默认数据（当没有文章时显示） -->
-                            <div th:if="${#lists.isEmpty(topArticles ?: {})}">
-                                <div class="feed-item">
-                                    <span class="rank-num rank-1">01</span>
-                                    <div class="feed-content">
-                                        <a href="#" class="feed-title">基于 Spring Boot 的博客后端重构实践</a>
-                                        <div class="feed-meta">1,572 次翻阅</div>
-                                    </div>
-                                </div>
-                                <div class="feed-item">
-                                    <span class="rank-num rank-2">02</span>
-                                    <div class="feed-content">
-                                        <a href="#" class="feed-title">ArcGIS 空间分析与数据处理实战</a>
-                                        <div class="feed-meta">984 次翻阅</div>
-                                    </div>
-                                </div>
-                                <div class="feed-item">
-                                    <span class="rank-num rank-3">03</span>
-                                    <div class="feed-content">
-                                        <a href="#" class="feed-title">LeetCode 刷题记录：动态规划篇</a>
-                                        <div class="feed-meta">651 次翻阅</div>
-                                    </div>
-                                </div>
-                                <div class="feed-item" style="border-bottom: none;">
-                                    <span class="rank-num rank-other">04</span>
-                                    <div class="feed-content">
-                                        <a href="#" class="feed-title" style="color: var(--text-regular);">Gitee/GitHub Actions 自动化部署静态博客</a>
-                                        <div class="feed-meta">420 次翻阅</div>
-                                    </div>
-                                </div>
-                                <div class="feed-item" style="border-bottom: none;">
-                                    <span class="rank-num rank-other">05</span>
-                                    <div class="feed-content">
-                                        <a href="#" class="feed-title" style="color: var(--text-regular);">9 年老车 Trinx M136 山地车折腾日记</a>
-                                        <div class="feed-meta">315 次翻阅</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <p>导航已完整，与articles页面一致</p>
         </div>
     </div>
 </main>
 
-<script>
-let myChart; 
+<script th:inline="javascript">
+    let myChart;
 
-document.addEventListener('DOMContentLoaded', function () {
-    const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-    document.getElementById('currentDate').innerText = dateStr.replace(/星期/, '· 星期');
+    document.addEventListener('DOMContentLoaded', function () {
+        const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+        document.getElementById('currentDate').innerText = dateStr.replace(/星期/, '· 星期');
 
-    // --- 悬浮菜单逻辑 (用户 & 主题) ---
-    const userMenuBtn = document.getElementById('userMenuBtn');
-    const userDropdown = document.getElementById('userDropdown');
-    const userMenuIcon = document.getElementById('userMenuIcon');
-    
-    const themeSwitchBtn = document.getElementById('themeSwitchBtn');
-    const themeDropdown = document.getElementById('themeDropdown');
-    const sidebarAvatar = document.getElementById('sidebarAvatar');
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+        const userMenuIcon = document.getElementById('userMenuIcon');
 
-    userMenuBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); 
-        themeDropdown.classList.remove('show'); 
-        userDropdown.classList.toggle('show');
-        userMenuIcon.classList.toggle('menu-open-icon');
-    });
+        const themeSwitchBtn = document.getElementById('themeSwitchBtn');
+        const themeDropdown = document.getElementById('themeDropdown');
+        const sidebarAvatar = document.getElementById('sidebarAvatar');
 
-    themeSwitchBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        userDropdown.classList.remove('show'); 
-        userMenuIcon.classList.remove('menu-open-icon');
-        themeDropdown.classList.toggle('show');
-    });
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            themeDropdown.classList.remove('show');
+            userDropdown.classList.toggle('show');
+            userMenuIcon.classList.toggle('menu-open-icon');
+        });
 
-    document.addEventListener('click', (e) => {
-        if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+        themeSwitchBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             userDropdown.classList.remove('show');
             userMenuIcon.classList.remove('menu-open-icon');
-        }
-        if (!themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
-            themeDropdown.classList.remove('show');
-        }
-    });
+            themeDropdown.classList.toggle('show');
+        });
 
-    // --- 主题切换动态逻辑 ---
-    const themeOptions = document.querySelectorAll('.theme-option');
-    themeOptions.forEach(option => {
-        option.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const targetTheme = this.getAttribute('data-color');
-            const targetHex = this.getAttribute('data-hex');
-            const targetRgb = this.getAttribute('data-rgb');
-
-            document.documentElement.setAttribute('data-theme', targetTheme);
-
-            themeOptions.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-
-            sidebarAvatar.src = `https://ui-avatars.com/api/?name=Li&background=${targetHex.substring(1)}&color=fff&font-size=0.4`;
-
-            if (myChart) {
-                const ctx = document.getElementById('trafficChart').getContext('2d');
-                const newGradient = ctx.createLinearGradient(0, 0, 0, 320);
-                newGradient.addColorStop(0, `rgba(${targetRgb}, 0.15)`);
-                newGradient.addColorStop(1, `rgba(${targetRgb}, 0)`);
-
-                myChart.data.datasets[0].borderColor = targetHex;
-                myChart.data.datasets[0].pointBorderColor = targetHex;
-                myChart.data.datasets[0].backgroundColor = newGradient;
-                myChart.update();
+        document.addEventListener('click', (e) => {
+            if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('show');
+                userMenuIcon.classList.remove('menu-open-icon');
             }
-            
-            themeDropdown.classList.remove('show');
+            if (!themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
+                themeDropdown.classList.remove('show');
+            }
+        });
+
+        const themeOptions = document.querySelectorAll('.theme-option');
+        themeOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const targetTheme = this.getAttribute('data-color');
+                const targetHex = this.getAttribute('data-hex');
+                const targetRgb = this.getAttribute('data-rgb');
+
+                document.documentElement.setAttribute('data-theme', targetTheme);
+
+                themeOptions.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+
+                sidebarAvatar.src = `https://ui-avatars.com/api/?name=Li&background=${targetHex.substring(1)}&color=fff&font-size=0.4`;
+
+                if (myChart) {
+                    const ctx = document.getElementById('trafficChart');
+                    if (ctx) {
+                        const chartCtx = ctx.getContext('2d');
+                        const newGradient = chartCtx.createLinearGradient(0, 0, 0, 320);
+                        newGradient.addColorStop(0, `rgba(${targetRgb}, 0.15)`);
+                        newGradient.addColorStop(1, `rgba(${targetRgb}, 0)`);
+                        myChart.data.datasets[0].borderColor = targetHex;
+                        myChart.data.datasets[0].pointBorderColor = targetHex;
+                        myChart.data.datasets[0].backgroundColor = newGradient;
+                        myChart.update();
+                    }
+                }
+
+                themeDropdown.classList.remove('show');
+            });
         });
     });
-
-    // --- 图表初始化逻辑 ---
-    Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif";
-    Chart.defaults.color = '#6B7280'; 
-    
-    const ctx = document.getElementById('trafficChart').getContext('2d');
-    const initialGradient = ctx.createLinearGradient(0, 0, 0, 320);
-    initialGradient.addColorStop(0, 'rgba(5, 150, 105, 0.15)'); 
-    initialGradient.addColorStop(1, 'rgba(5, 150, 105, 0)');
-
-    myChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['4-11', '4-12', '4-13', '4-14', '4-15', '4-16', '今日'],
-            datasets: [{
-                data: [120, 185, 142, 245, 190, 280, 320],
-                borderColor: '#059669',
-                borderWidth: 2.5,
-                backgroundColor: initialGradient,
-                pointBackgroundColor: '#ffffff',
-                pointBorderColor: '#059669',
-                pointBorderWidth: 2,
-                pointRadius: 0,
-                pointHoverRadius: 6,
-                fill: true,
-                tension: 0.35 
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1F2937', titleColor: '#F9FAFB', bodyColor: '#F9FAFB',
-                    borderColor: '#374151', borderWidth: 1, padding: 14, cornerRadius: 8,
-                    displayColors: false, titleFont: { size: 12, weight: '500' }, bodyFont: { size: 15, weight: '700' },
-                    callbacks: { label: function (ctx) { return ctx.parsed.y + ' 次翻阅'; } },
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)'
-                }
-            },
-            scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.04)', drawBorder: false }, ticks: { maxTicksLimit: 6, padding: 16 } },
-                x: { grid: { display: false }, ticks: { padding: 16 } }
-            }
-        }
-    });
-});
 </script>
+
 </body>
 </html>

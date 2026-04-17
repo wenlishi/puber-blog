@@ -260,6 +260,38 @@ public class CommentServiceImpl implements CommentService {
     }
 
     /**
+     * 管理员回复评论
+     * 添加回复内容并设置回复时间
+     *
+     * @param id 评论ID
+     * @param content 回复内容
+     */
+    @Override
+    @Transactional
+    @LogRecord(operation = "回复评论", level = LogLevel.INFO, recordParams = true, recordTime = true)
+    public void replyComment(Long id, String content) {
+        log.info("管理员回复评论：id={}, content={}", id, content);
+
+        // 验证回复内容
+        if (content == null || content.trim().isEmpty()) {
+            throw new BusinessException(400, "回复内容不能为空");
+        }
+
+        // 获取评论
+        Comment comment = getCommentById(id);
+
+        // XSS过滤回复内容
+        String safeContent = XssUtils.sanitizeStrict(content.trim());
+
+        // 设置回复内容和时间
+        comment.setReplyContent(safeContent);
+        comment.setReplyTime(java.time.LocalDateTime.now());
+
+        // 保存评论
+        commentRepository.save(comment);
+    }
+
+    /**
      * 构建评论树形结构
      * 将评论按照父子关系组织成树形结构
      *

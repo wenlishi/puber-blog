@@ -6,18 +6,99 @@
     <title>演示管理 - 知筑后台</title>
     <th:block th:replace="~{admin/layout :: adminStyles}"/>
     <style>
-        .btn-group-custom { display: flex; gap: 8px; }
-        .btn-group-custom .btn-outline-custom { border-radius: var(--radius-sm); }
+        .btn-outline-custom {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-regular);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline-custom:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+        .btn-sm-custom {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-success { background: #F3F4F6; color: #6B7280; }
+        .badge-secondary { background: var(--primary-light); color: var(--primary); }
+        .action-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        .action-btn:hover { background: var(--primary-light); color: var(--primary); }
+        .action-btn.delete:hover { background: #FEF2F2; color: #DC2626; }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: white; border-radius: var(--radius-lg);
+            padding: 24px; max-width: 500px; width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
     <!-- 侧边栏 -->
-    <div th:replace="~{admin/layout :: sidebar('demos')}"></div>
+    <aside th:replace="~{admin/layout :: sidebar(activePage='demos')}"></aside>
 
     <!-- 主内容区 -->
     <main class="main-wrapper">
-        <!-- 顶栏 -->
-        <div th:replace="~{admin/layout :: topbar}"></div>
+        <header class="topbar">
+            <div class="topbar-date">
+                <i class="ph-light ph-calendar-blank"></i>
+                <span id="currentDate">2026 年 4 月 17 日 · 星期五</span>
+            </div>
+            <div class="topbar-right">
+                <button class="topbar-btn" title="查看站点" onclick="window.open('/')"><i class="ph ph-arrow-up-right"></i></button>
+                <button class="topbar-btn" title="通知"><i class="ph ph-bell"></i><span class="notif-dot"></span></button>
+                <div class="theme-menu-wrapper">
+                    <button class="topbar-btn" id="themeSwitchBtn" title="后台配色">
+                        <i class="ph ph-dots-three"></i>
+                    </button>
+                    <div class="theme-dropdown" id="themeDropdown">
+                        <div class="theme-dropdown-header">后台专属配色</div>
+                        <div class="theme-options">
+                            <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
+                                <span class="color-dot" style="background: #059669;"></span> 翡翠绿
+                            </button>
+                            <button class="theme-option" data-color="orange" data-hex="#EA580C" data-rgb="234, 88, 12">
+                                <span class="color-dot" style="background: #EA580C;"></span> 破风橙
+                            </button>
+                            <button class="theme-option" data-color="blue" data-hex="#2563EB" data-rgb="37, 99, 235">
+                                <span class="color-dot" style="background: #2563EB;"></span> 探索蓝
+                            </button>
+                            <button class="theme-option" data-color="beige" data-hex="#C89F70" data-rgb="200, 159, 112">
+                                <span class="color-dot" style="background: #C89F70;"></span> 岁月黄
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
 
         <!-- 页面内容 -->
         <div class="content">
@@ -35,10 +116,12 @@
                 </div>
                 <div class="card-body">
                     <!-- 状态筛选 -->
-                    <div class="btn-group-custom" style="margin-bottom: 20px;">
-                        <button type="button" class="btn-primary-custom" onclick="loadDemos('ALL')">全部</button>
-                        <button type="button" class="btn-outline-custom btn-sm-custom" onclick="loadDemos('PUBLISHED')">已发布</button>
-                        <button type="button" class="btn-outline-custom btn-sm-custom" onclick="loadDemos('DRAFT')">草稿</button>
+                    <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: center;">
+                        <div class="btn-group" role="group" style="display: flex; gap: 8px;">
+                            <button type="button" id="btnAll" class="btn-primary-custom" onclick="loadDemos('ALL')">全部</button>
+                            <button type="button" id="btnPublished" class="btn-outline-custom btn-sm-custom" onclick="loadDemos('PUBLISHED')">已发布</button>
+                            <button type="button" id="btnDraft" class="btn-outline-custom btn-sm-custom" onclick="loadDemos('DRAFT')">草稿</button>
+                        </div>
                     </div>
 
                     <!-- 演示列表表格 -->
@@ -70,21 +153,90 @@
         </div>
     </main>
 
-    <th:block th:replace="~{admin/layout :: adminScripts}"/>
+    <!-- 删除确认模态框 -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);">
+                <h5 style="color: var(--text-main); font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                    <i class="ph-bold ph-warning" style="color: var(--primary);"></i> 删除确认
+                </h5>
+                <button type="button" onclick="closeDeleteModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <p style="color: var(--text-regular); margin-bottom: 8px;">确定要删除演示 <strong id="deleteDemoName" style="color: var(--primary);"></strong> 吗？</p>
+                <p style="color: var(--text-muted); font-size: 13px; margin: 0;">删除后无法恢复</p>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-outline-custom btn-sm-custom" onclick="closeDeleteModal()">取消</button>
+                <button type="button" class="btn-primary-custom" onclick="confirmDelete()" style="background: #DC2626;">
+                    <i class="ph-bold ph-trash"></i> 确认删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+            document.getElementById('currentDate').innerText = dateStr.replace(/星期/, '· 星期');
+
+            const themeSwitchBtn = document.getElementById('themeSwitchBtn');
+            const themeDropdown = document.getElementById('themeDropdown');
+            const sidebarAvatar = document.getElementById('sidebarAvatar');
+
+            themeSwitchBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                themeDropdown.classList.toggle('show');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
+                    themeDropdown.classList.remove('show');
+                }
+            });
+
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const targetTheme = this.getAttribute('data-color');
+                    const targetHex = this.getAttribute('data-hex');
+                    document.documentElement.setAttribute('data-theme', targetTheme);
+                    document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    sidebarAvatar.src = `https://ui-avatars.com/api/?name=Li&background=${targetHex.substring(1)}&color=fff&font-size=0.4`;
+                    themeDropdown.classList.remove('show');
+                });
+            });
+        });
+    </script>
     <script>
         let currentPage = 0;
         let currentStatus = 'ALL';
+        let demoToDelete = null;
 
         function loadDemos(status = currentStatus, page = currentPage) {
             currentStatus = status;
             currentPage = page;
 
-            document.querySelectorAll('.btn-group-custom .btn-primary-custom, .btn-group-custom .btn-outline-custom').forEach(btn => {
-                btn.classList.remove('btn-primary-custom');
-                btn.classList.add('btn-outline-custom', 'btn-sm-custom');
-            });
-            event.target.classList.remove('btn-outline-custom', 'btn-sm-custom');
-            event.target.classList.add('btn-primary-custom');
+            // 显示加载状态
+            document.getElementById('demoList').innerHTML = '<tr><td colspan="7" class="text-center" style="text-align: center; padding: 40px; color: var(--text-muted);">加载中...</td></tr>';
+
+            // 更新按钮样式
+            const btnAll = document.getElementById('btnAll');
+            const btnPublished = document.getElementById('btnPublished');
+            const btnDraft = document.getElementById('btnDraft');
+
+            btnAll.className = 'btn-outline-custom btn-sm-custom';
+            btnPublished.className = 'btn-outline-custom btn-sm-custom';
+            btnDraft.className = 'btn-outline-custom btn-sm-custom';
+
+            if (status === 'ALL') {
+                btnAll.className = 'btn-primary-custom';
+            } else if (status === 'PUBLISHED') {
+                btnPublished.className = 'btn-primary-custom';
+            } else if (status === 'DRAFT') {
+                btnDraft.className = 'btn-primary-custom';
+            }
 
             fetch(`/api/admin/demos?status=${status}&page=${page}&size=10`)
                 .then(response => response.json())
@@ -92,6 +244,8 @@
                     if (result.code === 200) {
                         renderDemoList(result.data.content);
                         renderPagination(result.data.totalPages);
+                    } else {
+                        document.getElementById('demoList').innerHTML = '<tr><td colspan="7" class="text-center" style="text-align: center; padding: 40px; color: var(--text-muted);">加载失败</td></tr>';
                     }
                 })
                 .catch(error => {
@@ -111,9 +265,8 @@
                 <tr>
                     <td style="color: var(--text-muted);">${demo.id}</td>
                     <td>
-                        <a href="/demo/${demo.slug}" target="_blank" 
-                           style="color: var(--primary); text-decoration: none; font-weight: 500;"
-                           th:text="${demo.name}">${demo.name}</a>
+                        <a href="/demo/${demo.slug}" target="_blank"
+                           style="color: var(--text-regular); text-decoration: none; font-weight: 500;">${demo.name}</a>
                     </td>
                     <td style="color: var(--text-muted); font-size: 13.5px;">${demo.slug}</td>
                     <td>
@@ -125,12 +278,17 @@
                     <td style="color: var(--text-muted);">${demo.viewCount || 0}</td>
                     <td style="color: var(--text-muted); font-size: 13.5px;">${demo.publishedAt ? new Date(demo.publishedAt).toLocaleDateString('zh-CN') : '-'}</td>
                     <td>
-                        <a href="/admin/demos/${demo.id}/edit" class="btn-outline-custom btn-sm-custom" style="margin-right: 4px;">
-                            <i class="ph-bold ph-pencil"></i> 编辑
-                        </a>
-                        <button onclick="deleteDemo(${demo.id})" class="btn-outline-custom btn-sm-custom" style="border-color: #DC3545; color: #DC3545;">
-                            <i class="ph-bold ph-trash"></i> 删除
-                        </button>
+                        <div style="display: flex; gap: 4px;">
+                            <button class="action-btn" title="查看" onclick="window.open('/demo/${demo.slug}', '_blank')">
+                                <i class="ph-bold ph-eye"></i>
+                            </button>
+                            <button class="action-btn" title="编辑" onclick="window.location.href='/admin/demos/${demo.id}/edit'">
+                                <i class="ph-bold ph-pencil"></i>
+                            </button>
+                            <button class="action-btn delete" title="删除" onclick="showDeleteModal(${demo.id}, '${(demo.name || '未知演示').replace(/'/g, "\\'")}')">
+                                <i class="ph-bold ph-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -151,13 +309,24 @@
             nav.innerHTML = html;
         }
 
-        function deleteDemo(id) {
-            if (confirm('确定要删除这个演示吗？')) {
-                fetch(`/api/admin/demos/${id}`, { method: 'DELETE' })
+        function showDeleteModal(id, name) {
+            demoToDelete = id;
+            document.getElementById('deleteDemoName').textContent = name;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('show');
+            demoToDelete = null;
+        }
+
+        function confirmDelete() {
+            if (demoToDelete) {
+                fetch(`/api/admin/demos/${demoToDelete}`, { method: 'DELETE' })
                     .then(response => response.json())
                     .then(result => {
                         if (result.code === 200) {
-                            alert('删除成功！');
+                            closeDeleteModal();
                             loadDemos(currentStatus, currentPage);
                         } else {
                             alert('删除失败，请重试');

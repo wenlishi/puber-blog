@@ -153,7 +153,7 @@ public class DashboardServiceImpl implements DashboardService {
                         .title(article.getTitle())
                         .status(article.getStatus())
                         .viewCount(article.getViewCount())
-                        .createdAt(article.getCreatedAt().format(DATE_FORMATTER))
+                        .createdAt(article.getCreatedAt() != null ? article.getCreatedAt().format(DATE_FORMATTER) : "")
                         .build())
                 .collect(Collectors.toList());
     }
@@ -168,24 +168,26 @@ public class DashboardServiceImpl implements DashboardService {
                 .map(comment -> {
                     // 获取评论对应的文章标题
                     String articleTitle = "未知文章";
-                    Article article = articleRepository.findById(comment.getArticleId()).orElse(null);
-                    if (article != null) {
-                        articleTitle = article.getTitle();
+                    if (comment.getArticleId() != null) {
+                        Article article = articleRepository.findById(comment.getArticleId()).orElse(null);
+                        if (article != null) {
+                            articleTitle = article.getTitle();
+                        }
                     }
 
                     // 截取评论内容（最多50字）
-                    String content = comment.getContent();
+                    String content = comment.getContent() != null ? comment.getContent() : "";
                     if (content.length() > 50) {
                         content = content.substring(0, 50) + "...";
                     }
 
                     return DashboardVO.CommentItemVO.builder()
                             .id(comment.getId())
-                            .nickname(comment.getNickname())
+                            .nickname(comment.getNickname() != null ? comment.getNickname() : "匿名")
                             .content(content)
                             .status(comment.getStatus())
                             .articleTitle(articleTitle)
-                            .createdAt(comment.getCreatedAt().format(DATE_FORMATTER))
+                            .createdAt(comment.getCreatedAt() != null ? comment.getCreatedAt().format(DATE_FORMATTER) : "")
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -202,8 +204,8 @@ public class DashboardServiceImpl implements DashboardService {
                         .id(article.getId())
                         .title(article.getTitle())
                         .status(article.getStatus())
-                        .viewCount(article.getViewCount())
-                        .createdAt(article.getCreatedAt().format(DATE_FORMATTER))
+                        .viewCount(article.getViewCount() != null ? article.getViewCount() : 0)
+                        .createdAt(article.getCreatedAt() != null ? article.getCreatedAt().format(DATE_FORMATTER) : "")
                         .build())
                 .collect(Collectors.toList());
     }

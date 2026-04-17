@@ -32,12 +32,42 @@
 </head>
 <body>
     <!-- 侧边栏 -->
-    <div th:replace="~{admin/layout :: sidebar('demos')}"></div>
+    <aside th:replace="~{admin/layout :: sidebar(activePage='demos')}"></aside>
 
     <!-- 主内容区 -->
     <main class="main-wrapper">
-        <!-- 顶栏 -->
-        <div th:replace="~{admin/layout :: topbar}"></div>
+        <header class="topbar">
+            <div class="topbar-date">
+                <i class="ph-light ph-calendar-blank"></i>
+                <span id="currentDate">2026 年 4 月 17 日 · 星期五</span>
+            </div>
+            <div class="topbar-right">
+                <button class="topbar-btn" title="查看站点" onclick="window.open('/')"><i class="ph ph-arrow-up-right"></i></button>
+                <button class="topbar-btn" title="通知"><i class="ph ph-bell"></i><span class="notif-dot"></span></button>
+                <div class="theme-menu-wrapper">
+                    <button class="topbar-btn" id="themeSwitchBtn" title="后台配色">
+                        <i class="ph ph-dots-three"></i>
+                    </button>
+                    <div class="theme-dropdown" id="themeDropdown">
+                        <div class="theme-dropdown-header">后台专属配色</div>
+                        <div class="theme-options">
+                            <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
+                                <span class="color-dot" style="background: #059669;"></span> 翡翠绿
+                            </button>
+                            <button class="theme-option" data-color="orange" data-hex="#EA580C" data-rgb="234, 88, 12">
+                                <span class="color-dot" style="background: #EA580C;"></span> 破风橙
+                            </button>
+                            <button class="theme-option" data-color="blue" data-hex="#2563EB" data-rgb="37, 99, 235">
+                                <span class="color-dot" style="background: #2563EB;"></span> 探索蓝
+                            </button>
+                            <button class="theme-option" data-color="beige" data-hex="#C89F70" data-rgb="200, 159, 112">
+                                <span class="color-dot" style="background: #C89F70;"></span> 岁月黄
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
 
         <!-- 页面内容 -->
         <div class="content">
@@ -112,7 +142,42 @@
         </div>
     </main>
 
-    <th:block th:replace="~{admin/layout :: adminScripts}"/>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+            document.getElementById('currentDate').innerText = dateStr;
+
+            const themeSwitchBtn = document.getElementById('themeSwitchBtn');
+            const themeDropdown = document.getElementById('themeDropdown');
+
+            themeSwitchBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                themeDropdown.classList.toggle('show');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
+                    themeDropdown.classList.remove('show');
+                }
+            });
+
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const targetColor = this.getAttribute('data-color');
+                    const targetHex = this.getAttribute('data-hex');
+                    const targetRgb = this.getAttribute('data-rgb');
+                    document.documentElement.setAttribute('data-theme', targetColor);
+                    document.documentElement.style.setProperty('--primary', targetHex);
+                    document.documentElement.style.setProperty('--primary-rgb', targetRgb);
+                    document.documentElement.style.setProperty('--primary-light', `rgba(${targetRgb}, 0.1)`);
+                    document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    themeDropdown.classList.remove('show');
+                });
+            });
+        });
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
@@ -141,9 +206,11 @@
         });
 
         function loadDemoIfNeeded() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const demoId = urlParams.get('id');
-            if (demoId) {
+            // 从 URL 路径中提取 ID: /admin/demos/{id}/edit
+            const pathParts = window.location.pathname.split('/');
+            const demoId = pathParts[3]; // ['', 'admin', 'demos', '123', 'edit']
+
+            if (demoId && demoId !== 'new') {
                 fetch(`/api/admin/demos/${demoId}`)
                     .then(response => response.json())
                     .then(result => {
@@ -153,9 +220,8 @@
                             document.getElementById('name').value = demo.name;
                             document.getElementById('slug').value = demo.slug || '';
                             document.getElementById('description').value = demo.description || '';
-                            editor.setValue(demo.fullHtml || '');
+                            editor.setValue(demo.fullHtmlContent || '');
                             document.getElementById('status').value = demo.status;
-                            document.getElementById('pageTitle').textContent = '编辑演示';
                             updatePreview();
                         }
                     })
@@ -182,7 +248,7 @@
                 name: document.getElementById('name').value,
                 slug: document.getElementById('slug').value,
                 description: document.getElementById('description').value,
-                fullHtml: editor.getValue(),
+                fullHtmlContent: editor.getValue(),
                 status: document.getElementById('status').value
             };
 

@@ -131,72 +131,7 @@
 </head>
 <body>
 
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <a href="/admin/dashboard" class="logo">
-            <div class="logo-icon"><i class="ph-bold ph-feather"></i></div>
-            <div class="logo-text">
-                <span class="logo-title">ZHIZHU.</span>
-                <span class="logo-sub">工作台</span>
-            </div>
-        </a>
-    </div>
-
-    <div class="nav-body">
-        <div class="nav-section-label">创作</div>
-        <a href="/admin/dashboard" class="nav-item">
-            <i class="ph ph-squares-four nav-icon"></i> 概览
-        </a>
-        <a href="/admin/article-form" class="nav-item">
-            <i class="ph ph-pencil-line nav-icon"></i> 写文章
-        </a>
-        <a href="/admin/categories" class="nav-item">
-            <i class="ph ph-folder-open nav-icon"></i> 专栏与分类
-        </a>
-        <a href="#" class="nav-item">
-            <i class="ph ph-image nav-icon"></i> 我的图床
-        </a>
-        
-        <div class="nav-section-label">管理</div>
-        <a href="/admin/demos" class="nav-item">
-            <i class="ph ph-rocket-launch nav-icon"></i> 演示管理
-        </a>
-        <a href="#" class="nav-item">
-            <i class="ph ph-chats-circle nav-icon"></i> 留言板
-        </a>
-        <a href="/admin/comments" class="nav-item">
-            <i class="ph ph-chat-centered-text nav-icon"></i> 评论管理
-        </a>
-        <a href="/admin/friend-links" class="nav-item active">
-            <i class="ph ph-link nav-icon"></i> 友情链接
-        </a>
-
-        <div class="nav-section-label">设置</div>
-        <a href="/admin/settings" class="nav-item">
-            <i class="ph ph-paint-brush nav-icon"></i> 主题外观
-        </a>
-        <a href="/admin/settings" class="nav-item">
-            <i class="ph ph-gear-six nav-icon"></i> 基础设置
-        </a>
-    </div>
-
-    <div class="sidebar-footer">
-        <div class="user-menu-wrapper">
-            <div class="sidebar-user" id="userMenuBtn">
-                <div class="user-profile">
-                    <img src="https://ui-avatars.com/api/?name=Li&background=059669&color=fff&font-size=0.4" alt="头像" class="user-avatar" id="sidebarAvatar">
-                    <div class="user-name" th:text="${#authentication.name}">管理员</div>
-                </div>
-                <i class="ph ph-caret-up user-menu-icon" id="userMenuIcon"></i>
-            </div>
-            <div class="user-dropdown" id="userDropdown">
-                <a href="/admin/profile" class="dropdown-item"><i class="ph ph-user"></i> 个人资料</a>
-                <div class="dropdown-divider"></div>
-                <a href="/logout" class="dropdown-item text-danger"><i class="ph ph-sign-out"></i> 退出登录</a>
-            </div>
-        </div>
-    </div>
-</aside>
+<aside th:replace="~{admin/layout :: sidebar(activePage='friend-links')}"></aside>
 
 <main class="main-wrapper">
     <header class="topbar">

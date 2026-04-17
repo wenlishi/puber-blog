@@ -83,4 +83,16 @@ public class Comment extends BaseEntity {
      */
     @Column
     private Long replyToId;
+
+    /**
+     * 管理员回复内容
+     */
+    @Column(columnDefinition = "TEXT")
+    private String replyContent;
+
+    /**
+     * 管理员回复时间
+     */
+    @Column
+    private java.time.LocalDateTime replyTime;
 }

@@ -50,9 +50,9 @@
             font-size: 12px;
             font-weight: 600;
         }
-        .badge-success { background: #ECFDF5; color: #059669; }
-        .badge-warning { background: #FFF7ED; color: #EA580C; }
-        .badge-secondary { background: #F3F4F6; color: #6B7280; }
+        .badge-success { background: #F3F4F6; color: #6B7280; }
+        .badge-warning { background: var(--primary-light); color: var(--primary); }
+        .badge-secondary { background: var(--primary-light); color: var(--primary); }
         .action-btn {
             background: transparent;
             border: none;
@@ -79,72 +79,7 @@
 </head>
 <body>
 
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <a href="/admin/dashboard" class="logo">
-            <div class="logo-icon"><i class="ph-bold ph-feather"></i></div>
-            <div class="logo-text">
-                <span class="logo-title">ZHIZHU.</span>
-                <span class="logo-sub">工作台</span>
-            </div>
-        </a>
-    </div>
-
-    <div class="nav-body">
-        <div class="nav-section-label">创作</div>
-        <a href="/admin/dashboard" class="nav-item">
-            <i class="ph ph-squares-four nav-icon"></i> 概览
-        </a>
-        <a href="/admin/article-form" class="nav-item">
-            <i class="ph ph-pencil-line nav-icon"></i> 写文章
-        </a>
-        <a href="/admin/categories" class="nav-item">
-            <i class="ph ph-folder-open nav-icon"></i> 专栏与分类
-        </a>
-        <a href="#" class="nav-item">
-            <i class="ph ph-image nav-icon"></i> 我的图床
-        </a>
-        
-        <div class="nav-section-label">管理</div>
-        <a href="/admin/demos" class="nav-item">
-            <i class="ph ph-rocket-launch nav-icon"></i> 演示管理
-        </a>
-        <a href="#" class="nav-item">
-            <i class="ph ph-chats-circle nav-icon"></i> 留言板
-        </a>
-        <a href="/admin/comments" class="nav-item">
-            <i class="ph ph-chat-centered-text nav-icon"></i> 评论管理
-        </a>
-        <a href="/admin/friend-links" class="nav-item">
-            <i class="ph ph-link nav-icon"></i> 友情链接
-        </a>
-
-        <div class="nav-section-label">设置</div>
-        <a href="/admin/settings" class="nav-item">
-            <i class="ph ph-paint-brush nav-icon"></i> 主题外观
-        </a>
-        <a href="/admin/settings" class="nav-item">
-            <i class="ph ph-gear-six nav-icon"></i> 基础设置
-        </a>
-    </div>
-
-    <div class="sidebar-footer">
-        <div class="user-menu-wrapper">
-            <div class="sidebar-user" id="userMenuBtn">
-                <div class="user-profile">
-                    <img src="https://ui-avatars.com/api/?name=Li&background=059669&color=fff&font-size=0.4" alt="头像" class="user-avatar" id="sidebarAvatar">
-                    <div class="user-name" th:text="${#authentication.name}">管理员</div>
-                </div>
-                <i class="ph ph-caret-up user-menu-icon" id="userMenuIcon"></i>
-            </div>
-            <div class="user-dropdown" id="userDropdown">
-                <a href="/admin/profile" class="dropdown-item"><i class="ph ph-user"></i> 个人资料</a>
-                <div class="dropdown-divider"></div>
-                <a href="/logout" class="dropdown-item text-danger"><i class="ph ph-sign-out"></i> 退出登录</a>
-            </div>
-        </div>
-    </div>
-</aside>
+<aside th:replace="~{admin/layout :: sidebar(activePage='articles')}"></aside>
 
 <main class="main-wrapper">
     <header class="topbar">
@@ -191,8 +126,8 @@
         <div class="card animate-fade-up delay-1">
             <div class="card-header">
                 <div class="card-title-text">文章列表</div>
-                <a class="btn-primary-custom" href="/admin/article-form">
-                    <i class="ph-bold ph-plus"></i> 新增文章
+                <a href="/admin/articles/new" class="btn-primary-custom" style="padding: 6px 16px; font-size: 14px;">
+                    <i class="ph ph-pencil-line" style="margin-right: 4px;"></i> 写文章
                 </a>
             </div>
             <div class="card-body">
@@ -219,7 +154,6 @@
                 <table class="table-custom" id="articleTable" style="display:none;">
                     <thead>
                         <tr>
-                            <th width="50">ID</th>
                             <th>标题</th>
                             <th width="80">状态</th>
                             <th width="60">置顶</th>
@@ -351,16 +285,16 @@ function loadArticles(keyword = '') {
     document.getElementById('emptyMessage').style.display = 'none';
     document.getElementById('pagination').style.display = 'none';
 
-    fetch(`/admin/articles/api?status=${currentFilter}&page=${currentPage}&keyword=${encodeURIComponent(keyword)}`)
+    fetch(`/api/admin/articles?status=${currentFilter}&page=${currentPage - 1}&keyword=${encodeURIComponent(keyword)}`)
         .then(response => response.json())
         .then(data => {
             document.getElementById('loadingSpinner').style.display = 'none';
-            totalPages = data.totalPages || 1;
-            
-            if (data.articles && data.articles.length > 0) {
-                renderTable(data.articles);
+            totalPages = data.data.totalPages || 1;
+
+            if (data.data.content && data.data.content.length > 0) {
+                renderTable(data.data.content);
                 document.getElementById('articleTable').style.display = 'table';
-                renderPagination(data.currentPage, data.totalPages);
+                renderPagination(data.data.number + 1, data.data.totalPages);
                 document.getElementById('pagination').style.display = 'block';
             } else {
                 document.getElementById('emptyMessage').style.display = 'block';
@@ -377,23 +311,22 @@ function renderTable(articles) {
     const tbody = document.getElementById('articleTableBody');
     tbody.innerHTML = articles.map(article => `
         <tr>
-            <td style="color: var(--text-muted);">${article.id}</td>
             <td>
                 <div style="font-weight: 500; color: var(--text-main);">${article.title || '无标题'}</div>
                 ${article.summary ? `<div style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">${article.summary.substring(0, 60)}...</div>` : ''}
             </td>
-            <td>
+            <td style="white-space: nowrap;">
                 <span class="badge ${article.status === 'PUBLISHED' ? 'badge-success' : 'badge-secondary'}">
                     ${article.status === 'PUBLISHED' ? '已发布' : '草稿'}
                 </span>
             </td>
-            <td style="text-align: center;">
-                ${article.sticky ? '<i class="ph-bold ph-pin" style="color: var(--primary);"></i>' : ''}
+            <td style="white-space: nowrap; text-align: center;">
+                ${article.isTop ? '<span style="color: var(--primary); font-weight: 500;">置顶</span>' : '-'}
             </td>
-            <td style="color: var(--text-muted);">${article.views || 0}</td>
+            <td style="color: var(--text-muted);">${article.viewCount || 0}</td>
             <td style="color: var(--text-regular);">${article.categoryName || '-'}</td>
-            <td style="color: var(--text-regular);">${article.tags ? article.tags.split(',').slice(0, 2).join(', ') : '-'}</td>
-            <td style="color: var(--text-muted); font-size: 13px;">${article.publishTime ? new Date(article.publishTime).toLocaleDateString('zh-CN') : '-'}</td>
+            <td style="color: var(--text-regular);">${article.tagNames ? article.tagNames.split(',').slice(0, 2).join(', ') : '-'}</td>
+            <td style="color: var(--text-muted); font-size: 13px;">${article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('zh-CN') : '-'}</td>
             <td>
                 <div style="display: flex; gap: 4px;">
                     <button class="action-btn" title="编辑" onclick="editArticle(${article.id})">
@@ -416,13 +349,13 @@ function renderPagination(current, total) {
     const list = document.getElementById('paginationList');
     let html = '';
     if (current > 1) {
-        html += `<li><button class="btn-outline-custom btn-sm-custom" onclick="goToPage(${current - 1})">上一页</button></li>`;
+        html += `<button class="btn-outline-custom btn-sm-custom" onclick="goToPage(${current - 1})">上一页</button>`;
     }
-    for (let i = Math.max(1, current - 2); i <= Math.min(total, current + 2); i++) {
-        html += `<li><button class="${i === current ? 'btn-primary-custom' : 'btn-outline-custom btn-sm-custom'}" onclick="goToPage(${i})">${i}</button></li>`;
-    }
+    html += `<span style="color: var(--text-muted); font-size: 14px; padding: 0 8px;">共 ${total} 页</span>`;
+    html += `<input type="number" min="1" max="${total}" value="${current}" style="width: 50px; padding: 4px 8px; border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 14px; text-align: center;" onchange="goToPage(parseInt(this.value))">`;
+    html += `<span style="color: var(--text-muted); font-size: 14px; padding: 0 8px;">页</span>`;
     if (current < total) {
-        html += `<li><button class="btn-outline-custom btn-sm-custom" onclick="goToPage(${current + 1})">下一页</button></li>`;
+        html += `<button class="btn-outline-custom btn-sm-custom" onclick="goToPage(${current + 1})">下一页</button>`;
     }
     list.innerHTML = html;
 }
@@ -433,7 +366,7 @@ function goToPage(page) {
 }
 
 function editArticle(id) {
-    window.location.href = `/admin/article-form?id=${id}`;
+    window.location.href = `/admin/articles/${id}/edit`;
 }
 
 function viewArticle(id) {
@@ -453,7 +386,7 @@ function closeDeleteModal() {
 
 function confirmDelete() {
     if (articleToDelete) {
-        fetch(`/admin/articles/${articleToDelete}`, { method: 'DELETE' })
+        fetch(`/api/admin/articles/${articleToDelete}`, { method: 'DELETE' })
             .then(response => {
                 if (response.ok) {
                     closeDeleteModal();

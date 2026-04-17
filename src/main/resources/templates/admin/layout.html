@@ -4,520 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>后台布局模板</title>
-    
+
     <!-- CSRF Token Meta 标签 -->
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-    
+
     <!-- 此文件是布局模板，不直接使用 -->
 </head>
 <body>
 
-<!-- 后台公共样式 Fragment -->
+<!-- 后台公共样式 Fragment - 简化版本 -->
 <th:block th:fragment="adminStyles">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://fastly.jsdelivr.net/npm/@phosphor-icons/web"></script>
-    <script src="https://fastly.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* 基础中性灰白体系（不随主题改变） */
-        :root {
-            --bg-body: #F9FAFB; 
-            --bg-surface: #FFFFFF;
-            
-            --bg-sidebar: #111827; 
-            --bg-sidebar-hover: #1F2937;
-            --sidebar-border: rgba(255, 255, 255, 0.04);
-            --sidebar-text: #9CA3AF;
-            --sidebar-text-active: #FFFFFF;
-
-            --border-light: rgba(0, 0, 0, 0.06);
-            --border-strong: rgba(0, 0, 0, 0.12);
-            
-            --text-main: #111827;
-            --text-regular: #4B5563;
-            --text-muted: #6B7280;
-
-            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
-            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
-            --shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.02);
-
-            --radius-lg: 12px;
-            --radius-md: 8px;
-            --radius-sm: 6px;
-
-            --sidebar-width: 240px; 
-            --topbar-height: 60px;
-        }
-
-        /* 🟢 主题一：翡翠绿 (默认) */
-        :root[data-theme="emerald"], :root {
-            --primary: #059669; 
-            --primary-hover: #047857;
-            --primary-light: #ECFDF5;
-            --bg-sidebar-active: rgba(5, 150, 105, 0.12);
-        }
-
-        /* 🟠 主题二：破风橙 */
-        :root[data-theme="orange"] {
-            --primary: #EA580C; 
-            --primary-hover: #C2410C;
-            --primary-light: #FFF7ED;
-            --bg-sidebar-active: rgba(234, 88, 12, 0.12);
-        }
-
-        /* 🔵 主题三：探索蓝 */
-        :root[data-theme="blue"] {
-            --primary: #2563EB; 
-            --primary-hover: #1D4ED8;
-            --primary-light: #EFF6FF;
-            --bg-sidebar-active: rgba(37, 99, 235, 0.12);
-        }
-
-        /* 🟡 主题四：雅致米黄 */
-        :root[data-theme="beige"] {
-            --primary: #C89F70; 
-            --primary-hover: #B58A5B;
-            --primary-light: #FDF9F5;
-            --bg-sidebar-active: rgba(200, 159, 112, 0.12);
-        }
-
-        * {
-            margin: 0; padding: 0; box-sizing: border-box;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Noto Serif SC', 'Songti SC', serif;
-            font-variant-numeric: tabular-nums;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        body {
-            background-color: var(--bg-body); color: var(--text-regular);
-            display: flex; height: 100vh; overflow: hidden; font-size: 14px;
-        }
-
-        /* ============ ANIMATIONS ============ */
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(10px); filter: blur(2px); }
-            to { opacity: 1; transform: translateY(0); filter: blur(0); }
-        }
-        .animate-fade-up { opacity: 0; animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .delay-1 { animation-delay: 0.04s; }
-        .delay-2 { animation-delay: 0.08s; }
-        .delay-3 { animation-delay: 0.12s; }
-
-        /* ============ SIDEBAR ============ */
-        .sidebar {
-            width: var(--sidebar-width); background: var(--bg-sidebar);
-            display: flex; flex-direction: column; z-index: 20; flex-shrink: 0;
-            border-right: 1px solid var(--sidebar-border);
-        }
-
-        .sidebar-header {
-            padding: 24px 20px 16px; display: flex; align-items: center;
-        }
-
-        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .logo-icon {
-            width: 28px; height: 28px; border-radius: 4px;
-            background: var(--primary); color: #FFFFFF; transition: background 0.3s;
-            display: flex; align-items: center; justify-content: center; font-size: 16px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
-        }
-        .logo-text { display: flex; flex-direction: column; gap: 2px; }
-        .logo-title { font-size: 15px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.02em; font-family: 'Inter', sans-serif;}
-        .logo-sub { font-size: 10px; color: #6B7280; letter-spacing: 0.05em; font-weight: 500; }
-
-        .nav-body { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
-        .nav-section-label {
-            font-size: 11px; color: #6B7280; padding: 16px 12px 8px;
-            font-weight: 600; letter-spacing: 0.05em;
-        }
-
-        .nav-item {
-            display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-            color: var(--sidebar-text); text-decoration: none; border-radius: var(--radius-sm);
-            transition: all 0.2s ease; font-weight: 500; font-size: 13.5px;
-        }
-        .nav-item .nav-icon { font-size: 18px; color: var(--sidebar-text); transition: color 0.2s ease; }
-        .nav-item:hover { background: var(--bg-sidebar-hover); color: #FFFFFF; }
-        .nav-item:hover .nav-icon { color: #FFFFFF; }
-        .nav-item.active { background: var(--bg-sidebar-active); color: var(--sidebar-text-active); font-weight: 600;}
-        .nav-item.active .nav-icon { color: var(--primary); transition: color 0.3s; }
-
-        /* ============ USER MENU ============ */
-        .sidebar-footer { padding: 16px; position: relative; }
-        .user-menu-wrapper { position: relative; }
-        .sidebar-user {
-            display: flex; align-items: center; justify-content: space-between; padding: 8px 12px;
-            cursor: pointer; transition: all 0.2s; border-radius: var(--radius-sm);
-        }
-        .sidebar-user:hover { background: var(--bg-sidebar-hover); }
-        .user-profile { display: flex; align-items: center; gap: 10px; }
-        .user-avatar {
-            width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
-            border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s;
-        }
-        .user-name { font-size: 13.5px; font-weight: 500; color: #E5E7EB; }
-        .user-menu-icon { color: #6B7280; font-size: 16px; transition: transform 0.3s, color 0.2s; }
-        .sidebar-user:hover .user-menu-icon { color: #9CA3AF; }
-        .menu-open-icon { transform: rotate(180deg); color: #FFFFFF !important; }
-
-        .user-dropdown {
-            position: absolute; bottom: calc(100% + 8px); left: 0; width: 100%;
-            background: #1F2937; border: 1px solid rgba(255,255,255,0.05);
-            border-radius: var(--radius-md); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
-            padding: 6px; display: flex; flex-direction: column; gap: 2px;
-            opacity: 0; visibility: hidden; transform: translateY(10px);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); z-index: 50;
-        }
-        .user-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
-        .dropdown-item {
-            display: flex; align-items: center; gap: 8px; padding: 8px 12px;
-            color: #D1D5DB; text-decoration: none; font-size: 13px; border-radius: var(--radius-sm);
-            transition: all 0.2s; font-weight: 500;
-        }
-        .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #FFFFFF; }
-        .dropdown-item i { font-size: 16px; color: #9CA3AF; transition: color 0.2s; }
-        .dropdown-item:hover i { color: #FFFFFF; }
-        .dropdown-divider { height: 1px; background: rgba(255,255,255,0.05); margin: 4px 0; }
-        .text-danger:hover { background: rgba(239, 68, 68, 0.1); color: #F87171; }
-        .text-danger:hover i { color: #F87171; }
-
-        /* ============ MAIN & TOPBAR ============ */
-        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; min-width: 0; }
-
-        .topbar {
-            height: var(--topbar-height); background: rgba(255, 255, 255, 0.85); 
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between;
-            padding: 0 40px; position: sticky; top: 0; z-index: 10;
-        }
-        .topbar-date { font-family: 'Noto Serif SC', serif; font-size: 13.5px; color: var(--text-muted); letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; }
-        .topbar-date i { font-size: 16px; color: var(--primary); opacity: 0.8; transition: color 0.3s; }
-
-        .topbar-right { display: flex; align-items: center; gap: 16px; }
-        .topbar-btn {
-            background: transparent; border: none; color: var(--text-muted); font-size: 20px; 
-            cursor: pointer; transition: color 0.2s; position: relative; display: flex; align-items: center;
-        }
-        .topbar-btn:hover { color: var(--primary); }
-        .topbar-btn .notif-dot {
-            position: absolute; top: 0px; right: -2px; width: 6px; height: 6px;
-            border-radius: 50%; background: var(--primary); transition: background 0.3s;
-        }
-
-        /* 🎨 主题切换下拉菜单样式 */
-        .theme-menu-wrapper { position: relative; }
-        .theme-dropdown {
-            position: absolute; top: calc(100% + 16px); right: 0; width: 160px;
-            background: var(--bg-surface); border: 1px solid var(--border-light);
-            border-radius: var(--radius-md); box-shadow: var(--shadow-hover);
-            padding: 8px; display: flex; flex-direction: column; gap: 4px;
-            opacity: 0; visibility: hidden; transform: translateY(-10px);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); z-index: 50;
-        }
-        .theme-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
-        .theme-dropdown-header {
-            font-size: 11px; color: var(--text-muted); padding: 4px 8px 8px;
-            font-weight: 600; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-light);
-            margin-bottom: 4px;
-        }
-        .theme-option {
-            display: flex; align-items: center; gap: 10px; padding: 8px;
-            background: transparent; border: none; border-radius: var(--radius-sm);
-            cursor: pointer; width: 100%; text-align: left;
-            font-size: 13px; color: var(--text-regular); transition: all 0.2s;
-        }
-        .theme-option:hover { background: var(--bg-body); color: var(--text-main); }
-        .theme-option.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
-        .color-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); }
-
-        /* ============ CONTENT ============ */
-        .content { padding: 24px 40px; max-width: 1400px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 24px; }
-        .page-header { display: flex; flex-direction: column; gap: 6px; margin-bottom: 0; }
-        .page-header h1 { font-family: 'Noto Serif SC', serif; font-size: 26px; color: var(--text-main); font-weight: 700; letter-spacing: 0.02em; }
-        .page-header p { font-size: 14px; color: var(--text-muted); font-weight: 400; }
-
-        .card {
-            background: var(--bg-surface); border-radius: var(--radius-lg);
-            border: 1px solid var(--border-light); box-shadow: var(--shadow-card);
-            display: flex; flex-direction: column; transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        .card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-hover); }
-        .card-header { padding: 18px 24px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; }
-        .card-title-text { font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 700; color: var(--text-main); letter-spacing: 0.02em; }
-        .card-body { padding: 20px 24px; flex: 1; display: flex; flex-direction: column; }
-
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-        
-        .stat-card {
-            background: var(--bg-surface); border-radius: var(--radius-lg); border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-sm); padding: 20px 24px; display: flex; flex-direction: column; transition: all 0.3s;
-        }
-        .stat-card:hover { border-color: var(--border-strong); transform: translateY(-2px); box-shadow: var(--shadow-hover); }
-        .stat-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-        
-        .icon-box { font-size: 22px; color: var(--primary); opacity: 0.9; transition: color 0.3s; }
-        .stat-info { display: flex; flex-direction: column; }
-        .stat-title { font-size: 12.5px; color: var(--text-muted); font-weight: 500; margin-bottom: 6px; }
-        
-        .stat-value { font-family: 'Inter', sans-serif; font-size: 32px; font-weight: 600; color: var(--text-main); line-height: 1; letter-spacing: -0.04em; }
-        
-        .stat-footer { font-size: 12.5px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; margin-top: 16px; }
-        .trend-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 600; }
-        
-        /* 主题色与静默灰色的切换 */
-        .trend-primary { color: var(--primary); transition: color 0.3s; }
-        .trend-neutral { color: var(--text-muted); }
-
-        .bento-layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 3fr); gap: 20px; align-items: stretch; }
-        .left-panel, .right-panel { display: flex; flex-direction: column; }
-        .bento-layout .card { flex: 1; }
-
-        .chart-header-data { display: flex; align-items: baseline; gap: 12px; padding: 24px 24px 0; }
-        .chart-big-num { font-family: 'Inter', sans-serif; font-size: 36px; font-weight: 600; color: var(--text-main); letter-spacing: -0.04em; }
-        .chart-sub-num { font-size: 13px; color: var(--text-muted); font-weight: 500;}
-        .chart-area { position: relative; flex: 1; min-height: 260px; padding: 12px 24px 24px; }
-        .select-sm {
-            border: 1px solid var(--border-light); padding: 6px 12px; border-radius: 4px;
-            outline: none; font-size: 12.5px; background: var(--bg-surface); cursor: pointer; color: var(--text-main); font-weight: 500; transition: all 0.2s;
-        }
-        .select-sm:hover { border-color: var(--primary); color: var(--primary); }
-
-        .feed-list { display: flex; flex-direction: column; height: 100%; justify-content: space-between; }
-        .feed-item { 
-            display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px dashed var(--border-strong); 
-            transition: padding-left 0.3s ease, border-color 0.3s; 
-        }
-        .feed-item:hover { padding-left: 6px; border-bottom-style: solid; border-bottom-color: var(--primary); } 
-        .feed-item:last-child { border-bottom: none; padding-bottom: 0; }
-        
-        .rank-num { font-family: 'Inter', sans-serif; font-size: 18px; letter-spacing: -0.05em; width: 28px; text-align: left; transition: color 0.3s; font-weight: 300; color: #D1D5DB; }
-        .rank-1 { color: var(--primary); font-weight: 700; transition: color 0.3s; }
-        .rank-2, .rank-3 { color: var(--text-main); font-weight: 600; }
-        .feed-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-        .feed-title { display: block; font-weight: 500; color: var(--text-main); text-decoration: none; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.2s; }
-        .feed-item:hover .feed-title { color: var(--primary); }
-        .feed-meta { font-family: 'Inter', sans-serif; font-size: 12.5px; color: var(--text-muted); }
-
-        /* ============ 加粗悬浮滚动条 ============ */
-        ::-webkit-scrollbar { width: 14px; height: 14px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background-color: rgba(0, 0, 0, 0.15); border-radius: 12px; border: 4px solid transparent; background-clip: padding-box; }
-        ::-webkit-scrollbar-thumb:hover { background-color: rgba(0, 0, 0, 0.3); border-width: 3px; }
-        .nav-body::-webkit-scrollbar { width: 16px; }
-        .nav-body::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.25); border-width: 3px; }
-        .nav-body::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.4); border-width: 2px; }
-
-        /* ============ 通用组件 ============ */
-        .btn-primary-custom {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: var(--radius-sm);
-            font-size: 13.5px;
-            font-weight: 500;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .btn-primary-custom:hover {
-            background: var(--primary-hover);
-            color: white;
-        }
-
-        .table-custom {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .table-custom thead th {
-            padding: 14px 16px;
-            text-align: left;
-            font-size: 12.5px;
-            font-weight: 600;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border-light);
-        }
-        .table-custom tbody td {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border-light);
-            font-size: 14px;
-            color: var(--text-regular);
-        }
-        .table-custom tbody tr:hover {
-            background-color: var(--primary-light);
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .badge-primary {
-            background: var(--primary-light);
-            color: var(--primary);
-        }
-        .badge-success {
-            background: #ECFDF5;
-            color: #059669;
-        }
-        .badge-warning {
-            background: #FFF7ED;
-            color: #EA580C;
-        }
-        .badge-danger {
-            background: #FEF2F2;
-            color: #DC2626;
-        }
-    </style>
+    <script src="/js/phosphor-web-loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
 </th:block>
+
+<!-- 后台侧边栏 Fragment -->
+<aside class="sidebar" id="sidebar" th:fragment="sidebar(activePage)">
+    <div class="sidebar-header">
+        <a href="/admin/dashboard" class="logo">
+            <div class="logo-icon"><i class="ph-bold ph-feather"></i></div>
+            <div class="logo-text">
+                <span class="logo-title">ZHIZHU.</span>
+                <span class="logo-sub">工作台</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="nav-body">
+        <div class="nav-section-label">创作</div>
+        <a href="/admin/dashboard" class="nav-item" th:classappend="${activePage == 'dashboard'} ? 'active'">
+            <i class="ph ph-squares-four nav-icon"></i> 概览
+        </a>
+        <a href="/admin/categories" class="nav-item" th:classappend="${activePage == 'categories'} ? 'active'">
+            <i class="ph ph-folder-open nav-icon"></i> 专栏与分类
+        </a>
+        <a href="#" class="nav-item">
+            <i class="ph ph-image nav-icon"></i> 我的图床
+        </a>
+
+        <div class="nav-section-label">管理</div>
+        <a href="/admin/articles" class="nav-item" th:classappend="${activePage == 'articles'} ? 'active'">
+            <i class="ph ph-file-text nav-icon"></i> 文章管理
+        </a>
+        <a href="/admin/demos" class="nav-item" th:classappend="${activePage == 'demos'} ? 'active'">
+            <i class="ph ph-rocket-launch nav-icon"></i> 演示管理
+        </a>
+        <a href="#" class="nav-item">
+            <i class="ph ph-chats-circle nav-icon"></i> 留言板
+        </a>
+        <a href="/admin/comments" class="nav-item" th:classappend="${activePage == 'comments'} ? 'active'">
+            <i class="ph ph-chat-centered-text nav-icon"></i> 评论管理
+        </a>
+        <a href="/admin/friend-links" class="nav-item" th:classappend="${activePage == 'friend-links'} ? 'active'">
+            <i class="ph ph-link nav-icon"></i> 友情链接
+        </a>
+
+        <div class="nav-section-label">设置</div>
+        <a href="/admin/settings" class="nav-item" th:classappend="${activePage == 'settings'} ? 'active'">
+            <i class="ph ph-paint-brush nav-icon"></i> 主题外观
+        </a>
+        <a href="/admin/profile" class="nav-item" th:classappend="${activePage == 'profile'} ? 'active'">
+            <i class="ph ph-gear-six nav-icon"></i> 基础设置
+        </a>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="user-menu-wrapper">
+            <div class="sidebar-user" id="userMenuBtn">
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Li&background=059669&color=fff&font-size=0.4" alt="头像" class="user-avatar" id="sidebarAvatar">
+                    <div class="user-name" th:text="${#authentication.name}">管理员</div>
+                </div>
+                <i class="ph ph-caret-up user-menu-icon" id="userMenuIcon"></i>
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="/admin/profile" class="dropdown-item"><i class="ph ph-user"></i> 个人资料</a>
+                <div class="dropdown-divider"></div>
+                <a href="/logout" class="dropdown-item text-danger"><i class="ph ph-sign-out"></i> 退出登录</a>
+            </div>
+        </div>
+    </div>
+</aside>
 
 <!-- 后台公共布局 Fragment -->
 <th:block th:fragment="adminLayout(title, activePage)">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://fastly.jsdelivr.net/npm/@phosphor-icons/web"></script>
-    <style>
-        :root {
-            --bg-body: #F9FAFB; 
-            --bg-surface: #FFFFFF;
-            --bg-sidebar: #111827; 
-            --bg-sidebar-hover: #1F2937;
-            --sidebar-border: rgba(255, 255, 255, 0.04);
-            --sidebar-text: #9CA3AF;
-            --sidebar-text-active: #FFFFFF;
-            --border-light: rgba(0, 0, 0, 0.06);
-            --border-strong: rgba(0, 0, 0, 0.12);
-            --text-main: #111827;
-            --text-regular: #4B5563;
-            --text-muted: #6B7280;
-            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
-            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
-            --shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.02);
-            --radius-lg: 12px;
-            --radius-md: 8px;
-            --radius-sm: 6px;
-            --sidebar-width: 240px; 
-            --topbar-height: 60px;
-        }
-        :root[data-theme="emerald"], :root {
-            --primary: #059669; 
-            --primary-hover: #047857;
-            --primary-light: #ECFDF5;
-            --bg-sidebar-active: rgba(5, 150, 105, 0.12);
-        }
-        :root[data-theme="orange"] {
-            --primary: #EA580C; 
-            --primary-hover: #C2410C;
-            --primary-light: #FFF7ED;
-            --bg-sidebar-active: rgba(234, 88, 12, 0.12);
-        }
-        :root[data-theme="blue"] {
-            --primary: #2563EB; 
-            --primary-hover: #1D4ED8;
-            --primary-light: #EFF6FF;
-            --bg-sidebar-active: rgba(37, 99, 235, 0.12);
-        }
-        :root[data-theme="beige"] {
-            --primary: #C89F70; 
-            --primary-hover: #B58A5B;
-            --primary-light: #FDF9F5;
-            --bg-sidebar-active: rgba(200, 159, 112, 0.12);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Noto Serif SC', 'Songti SC', serif; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-        body { background-color: var(--bg-body); color: var(--text-regular); display: flex; height: 100vh; overflow: hidden; font-size: 14px; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); filter: blur(2px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
-        .animate-fade-up { opacity: 0; animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .delay-1 { animation-delay: 0.04s; }
-        .delay-2 { animation-delay: 0.08s; }
-        .delay-3 { animation-delay: 0.12s; }
-        .sidebar { width: var(--sidebar-width); background: var(--bg-sidebar); display: flex; flex-direction: column; z-index: 20; flex-shrink: 0; border-right: 1px solid var(--sidebar-border); }
-        .sidebar-header { padding: 24px 20px 16px; display: flex; align-items: center; }
-        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .logo-icon { width: 28px; height: 28px; border-radius: 4px; background: var(--primary); color: #FFFFFF; transition: background 0.3s; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .logo-text { display: flex; flex-direction: column; gap: 2px; }
-        .logo-title { font-size: 15px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.02em; font-family: 'Inter', sans-serif;}
-        .logo-sub { font-size: 10px; color: #6B7280; letter-spacing: 0.05em; font-weight: 500; }
-        .nav-body { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
-        .nav-section-label { font-size: 11px; color: #6B7280; padding: 16px 12px 8px; font-weight: 600; letter-spacing: 0.05em; }
-        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: var(--sidebar-text); text-decoration: none; border-radius: var(--radius-sm); transition: all 0.2s ease; font-weight: 500; font-size: 13.5px; }
-        .nav-item .nav-icon { font-size: 18px; color: var(--sidebar-text); transition: color 0.2s ease; }
-        .nav-item:hover { background: var(--bg-sidebar-hover); color: #FFFFFF; }
-        .nav-item:hover .nav-icon { color: #FFFFFF; }
-        .nav-item.active { background: var(--bg-sidebar-active); color: var(--sidebar-text-active); font-weight: 600;}
-        .nav-item.active .nav-icon { color: var(--primary); transition: color 0.3s; }
-        .sidebar-footer { padding: 16px; position: relative; }
-        .user-menu-wrapper { position: relative; }
-        .sidebar-user { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; cursor: pointer; transition: all 0.2s; border-radius: var(--radius-sm); }
-        .sidebar-user:hover { background: var(--bg-sidebar-hover); }
-        .user-profile { display: flex; align-items: center; gap: 10px; }
-        .user-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s; }
-        .user-name { font-size: 13.5px; font-weight: 500; color: #E5E7EB; }
-        .user-menu-icon { color: #6B7280; font-size: 16px; transition: transform 0.3s, color 0.2s; }
-        .sidebar-user:hover .user-menu-icon { color: #9CA3AF; }
-        .menu-open-icon { transform: rotate(180deg); color: #FFFFFF !important; }
-        .user-dropdown { position: absolute; bottom: calc(100% + 8px); left: 0; width: 100%; background: #1F2937; border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-md); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); padding: 6px; display: flex; flex-direction: column; gap: 2px; opacity: 0; visibility: hidden; transform: translateY(10px); transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); z-index: 50; }
-        .user-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
-        .dropdown-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #D1D5DB; text-decoration: none; font-size: 13px; border-radius: var(--radius-sm); transition: all 0.2s; font-weight: 500; }
-        .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #FFFFFF; }
-        .dropdown-item i { font-size: 16px; color: #9CA3AF; transition: color 0.2s; }
-        .dropdown-item:hover i { color: #FFFFFF; }
-        .dropdown-divider { height: 1px; background: rgba(255,255,255,0.05); margin: 4px 0; }
-        .text-danger:hover { background: rgba(239, 68, 68, 0.1); color: #F87171; }
-        .text-danger:hover i { color: #F87171; }
-        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; min-width: 0; }
-        .topbar { height: var(--topbar-height); background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; position: sticky; top: 0; z-index: 10; }
-        .topbar-date { font-family: 'Noto Serif SC', serif; font-size: 13.5px; color: var(--text-muted); letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; }
-        .topbar-date i { font-size: 16px; color: var(--primary); opacity: 0.8; transition: color 0.3s; }
-        .topbar-right { display: flex; align-items: center; gap: 16px; }
-        .topbar-btn { background: transparent; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; transition: color 0.2s; position: relative; display: flex; align-items: center; }
-        .topbar-btn:hover { color: var(--primary); }
-        .topbar-btn .notif-dot { position: absolute; top: 0px; right: -2px; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); transition: background 0.3s; }
-        .theme-menu-wrapper { position: relative; }
-        .theme-dropdown { position: absolute; top: calc(100% + 16px); right: 0; width: 160px; background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: var(--radius-md); box-shadow: var(--shadow-hover); padding: 8px; display: flex; flex-direction: column; gap: 4px; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); z-index: 50; }
-        .theme-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
-        .theme-dropdown-header { font-size: 11px; color: var(--text-muted); padding: 4px 8px 8px; font-weight: 600; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-light); margin-bottom: 4px; }
-        .theme-option { display: flex; align-items: center; gap: 10px; padding: 8px; background: transparent; border: none; border-radius: var(--radius-sm); cursor: pointer; width: 100%; text-align: left; font-size: 13px; color: var(--text-regular); transition: all 0.2s; }
-        .theme-option:hover { background: var(--bg-body); color: var(--text-main); }
-        .theme-option.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
-        .color-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); }
-        .content { padding: 24px 40px; max-width: 1400px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 24px; }
-        .page-header { display: flex; flex-direction: column; gap: 6px; margin-bottom: 0; }
-        .page-header h1 { font-family: 'Noto Serif SC', serif; font-size: 26px; color: var(--text-main); font-weight: 700; letter-spacing: 0.02em; }
-        .page-header p { font-size: 14px; color: var(--text-muted); font-weight: 400; }
-        .card { background: var(--bg-surface); border-radius: var(--radius-lg); border: 1px solid var(--border-light); box-shadow: var(--shadow-card); display: flex; flex-direction: column; transition: border-color 0.3s, box-shadow 0.3s; }
-        .card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-hover); }
-        .card-header { padding: 18px 24px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; }
-        .card-title-text { font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 700; color: var(--text-main); letter-spacing: 0.02em; }
-        .card-body { padding: 20px 24px; flex: 1; display: flex; flex-direction: column; }
-        ::-webkit-scrollbar { width: 14px; height: 14px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background-color: rgba(0, 0, 0, 0.15); border-radius: 12px; border: 4px solid transparent; background-clip: padding-box; }
-        ::-webkit-scrollbar-thumb:hover { background-color: rgba(0, 0, 0, 0.3); border-width: 3px; }
-        .nav-body::-webkit-scrollbar { width: 16px; }
-        .nav-body::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.25); border-width: 3px; }
-        .nav-body::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.4); border-width: 2px; }
-        .btn-primary-custom { background: var(--primary); color: white; border: none; padding: 8px 20px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; cursor: pointer; }
-        .btn-primary-custom:hover { background: var(--primary-hover); color: white; }
-        .table-custom { width: 100%; border-collapse: collapse; }
-        .table-custom thead th { padding: 14px 16px; text-align: left; font-size: 12.5px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border-light); }
-        .table-custom tbody td { padding: 14px 16px; border-bottom: 1px solid var(--border-light); font-size: 14px; color: var(--text-regular); }
-        .table-custom tbody tr:hover { background-color: var(--primary-light); }
-        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-        .badge-primary { background: var(--primary-light); color: var(--primary); }
-        .badge-success { background: #ECFDF5; color: #059669; }
-        .badge-warning { background: #FFF7ED; color: #EA580C; }
-        .badge-danger { background: #FEF2F2; color: #DC2626; }
-    </style>
-    
+    <script src="/js/phosphor-web-loader.js"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <a href="/admin/dashboard" class="logo">
@@ -534,16 +113,13 @@
             <a href="/admin/dashboard" class="nav-item" th:classappend="${activePage == 'dashboard'} ? 'active'">
                 <i class="ph ph-squares-four nav-icon"></i> 概览
             </a>
-            <a href="/admin/article-form" class="nav-item" th:classappend="${activePage == 'article-form'} ? 'active'">
-                <i class="ph ph-pencil-line nav-icon"></i> 写文章
-            </a>
             <a href="/admin/categories" class="nav-item" th:classappend="${activePage == 'categories'} ? 'active'">
                 <i class="ph ph-folder-open nav-icon"></i> 专栏与分类
             </a>
             <a href="#" class="nav-item">
                 <i class="ph ph-image nav-icon"></i> 我的图床
             </a>
-            
+
             <div class="nav-section-label">管理</div>
             <a href="/admin/demos" class="nav-item" th:classappend="${activePage == 'demos'} ? 'active'">
                 <i class="ph ph-rocket-launch nav-icon"></i> 演示管理
@@ -591,11 +167,11 @@
                 <i class="ph-light ph-calendar-blank"></i>
                 <span id="currentDate">2026 年 4 月 17 日 · 星期五</span>
             </div>
-            
+
             <div class="topbar-right">
                 <button class="topbar-btn" title="查看站点" onclick="window.open('/')"><i class="ph ph-arrow-up-right"></i></button>
                 <button class="topbar-btn" title="通知"><i class="ph ph-bell"></i><span class="notif-dot"></span></button>
-                
+
                 <div class="theme-menu-wrapper">
                     <button class="topbar-btn" id="themeSwitchBtn" title="后台配色">
                         <i class="ph ph-dots-three"></i>
@@ -639,21 +215,21 @@
             const userMenuBtn = document.getElementById('userMenuBtn');
             const userDropdown = document.getElementById('userDropdown');
             const userMenuIcon = document.getElementById('userMenuIcon');
-            
+
             const themeSwitchBtn = document.getElementById('themeSwitchBtn');
             const themeDropdown = document.getElementById('themeDropdown');
             const sidebarAvatar = document.getElementById('sidebarAvatar');
 
             userMenuBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); 
-                themeDropdown.classList.remove('show'); 
+                e.stopPropagation();
+                themeDropdown.classList.remove('show');
                 userDropdown.classList.toggle('show');
                 userMenuIcon.classList.toggle('menu-open-icon');
             });
 
             themeSwitchBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                userDropdown.classList.remove('show'); 
+                userDropdown.classList.remove('show');
                 userMenuIcon.classList.remove('menu-open-icon');
                 themeDropdown.classList.toggle('show');
             });
@@ -698,7 +274,7 @@
                             myChart.update();
                         }
                     }
-                    
+
                     themeDropdown.classList.remove('show');
                 });
             });
