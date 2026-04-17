@@ -3,336 +3,550 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>友链管理 - 知筑后台</title>
-    <th:block th:replace="~{admin/layout :: adminStyles}"/>
+    <title>友情链接 - 知筑后台</title>
+    <style th:replace="~{admin/layout :: adminStyles}"></style>
     <style>
-        .table-custom img.logo-preview { width: 40px; height: 40px; object-fit: cover; border-radius: var(--radius-sm); }
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;
+        .btn-outline-custom {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-regular);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .modal-content-custom {
-            background: white; border-radius: var(--radius-lg); padding: 24px;
-            max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;
+        .btn-outline-custom:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
         }
-        .form-group { margin-bottom: 20px; }
-        .form-label {
-            display: block; font-size: 13.5px; font-weight: 600;
-            color: var(--text-main); margin-bottom: 8px;
+        .btn-sm-custom {
+            padding: 6px 12px;
+            font-size: 13px;
         }
         .form-control, .form-select {
-            width: 100%; padding: 10px 14px; border: 1px solid var(--border-strong);
-            border-radius: var(--radius-sm); outline: none; font-size: 14px;
-            background: var(--bg-surface); color: var(--text-regular);
-            transition: border-color 0.2s;
+            width: 100%; padding: 10px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            outline: none;
+            font-size: 14px;
+            background: var(--bg-surface);
+            color: var(--text-regular);
+            transition: all 0.2s;
         }
-        .form-control:focus, .form-select:focus { border-color: var(--primary); }
-        .form-help { font-size: 12.5px; color: var(--text-muted); margin-top: 6px; }
-        .radio-group { display: flex; gap: 16px; }
-        .radio-label {
-            display: flex; align-items: center; gap: 6px;
-            font-size: 14px; color: var(--text-regular); cursor: pointer;
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
         }
-        .radio-label input[type="radio"] { accent-color: var(--primary); }
-        .btn-group-custom { display: flex; gap: 8px; margin-top: 24px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+        .form-help {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+        .action-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        .action-btn:hover { background: var(--primary-light); color: var(--primary); }
+        .action-btn.delete:hover { background: #FEF2F2; color: #DC2626; }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: white; border-radius: var(--radius-lg);
+            padding: 24px; max-width: 500px; width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            max-height: 90vh; overflow-y: auto;
+        }
+        .link-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.2s;
+        }
+        .link-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-hover);
+        }
+        .link-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            object-fit: cover;
+            background: var(--bg-body);
+        }
+        .link-info { flex: 1; }
+        .link-name {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 15px;
+        }
+        .link-url {
+            font-size: 13px;
+            color: var(--primary);
+            text-decoration: none;
+            margin-top: 2px;
+            display: block;
+        }
+        .link-url:hover { text-decoration: underline; }
+        .link-description {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-success { background: #ECFDF5; color: #059669; }
+        .badge-secondary { background: #F3F4F6; color: #6B7280; }
     </style>
 </head>
 <body>
-    <!-- 侧边栏 -->
-    <div th:replace="~{admin/layout :: sidebar('friend-links')}"></div>
 
-    <!-- 主内容区 -->
-    <main class="main-wrapper">
-        <!-- 顶栏 -->
-        <div th:replace="~{admin/layout :: topbar}"></div>
-
-        <!-- 页面内容 -->
-        <div class="content">
-            <div class="page-header">
-                <h1>友情链接。</h1>
-                <p>管理合作伙伴链接，促进网站间交流。</p>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a href="/admin/dashboard" class="logo">
+            <div class="logo-icon"><i class="ph-bold ph-feather"></i></div>
+            <div class="logo-text">
+                <span class="logo-title">ZHIZHU.</span>
+                <span class="logo-sub">工作台</span>
             </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title-text">友链列表</div>
-                    <button type="button" class="btn-primary-custom" onclick="showAddModal()">
-                        <i class="ph-bold ph-plus"></i> 新增友链
-                    </button>
-                </div>
-                <div class="card-body">
-                    <table class="table-custom">
-                        <thead>
-                            <tr>
-                                <th width="50">ID</th>
-                                <th width="80">Logo</th>
-                                <th width="150">名称</th>
-                                <th>URL</th>
-                                <th width="200">描述</th>
-                                <th width="80">排序</th>
-                                <th width="80">状态</th>
-                                <th width="180">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="friendLinksTableBody">
-                            <tr th:each="link : ${friendLinks}">
-                                <td style="color: var(--text-muted);" th:text="${link.id}">1</td>
-                                <td>
-                                    <img th:if="${link.logo != null and link.logo != ''}"
-                                         th:src="${link.logo}"
-                                         class="logo-preview"
-                                         alt="Logo">
-                                    <span th:unless="${link.logo != null and link.logo != ''}"
-                                          style="color: var(--text-muted); font-size: 13px;">无 Logo</span>
-                                </td>
-                                <td>
-                                    <span style="font-weight: 500; color: var(--text-main);" th:text="${link.name}">友链名称</span>
-                                </td>
-                                <td>
-                                    <a th:href="${link.url}" target="_blank" 
-                                       style="color: var(--primary); text-decoration: none; font-size: 13.5px;"
-                                       th:text="${link.url}">URL</a>
-                                </td>
-                                <td style="color: var(--text-regular); font-size: 13.5px;" th:text="${link.description}">描述</td>
-                                <td style="color: var(--text-muted);" th:text="${link.sortOrder}">0</td>
-                                <td>
-                                    <span th:if="${link.status == 'ACTIVE'}" class="badge badge-success">启用</span>
-                                    <span th:if="${link.status == 'INACTIVE'}" class="badge badge-secondary">禁用</span>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn-outline-custom btn-sm-custom"
-                                            th:onclick="'editFriendLink(' + ${link.id} + ')'"
-                                            style="margin-right: 4px;">
-                                        <i class="ph-bold ph-pencil"></i> 编辑
-                                    </button>
-                                    <button type="button" class="btn-outline-custom btn-sm-custom"
-                                            th:if="${link.status == 'INACTIVE'}"
-                                            th:onclick="'activateFriendLink(' + ${link.id} + ')'"
-                                            style="margin-right: 4px; border-color: #28A745; color: #28A745;">
-                                        <i class="ph-bold ph-check"></i> 启用
-                                    </button>
-                                    <button type="button" class="btn-outline-custom btn-sm-custom"
-                                            th:if="${link.status == 'ACTIVE'}"
-                                            th:onclick="'deactivateFriendLink(' + ${link.id} + ')'"
-                                            style="margin-right: 4px; border-color: #DC3545; color: #DC3545;">
-                                        <i class="ph-bold ph-x"></i> 禁用
-                                    </button>
-                                    <button type="button" class="btn-outline-custom btn-sm-custom"
-                                            th:onclick="'deleteFriendLink(' + ${link.id} + ')'"
-                                            style="border-color: #DC3545; color: #DC3545;">
-                                        <i class="ph-bold ph-trash"></i> 删除
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr th:if="${#lists.isEmpty(friendLinks)}">
-                                <td colspan="8" class="text-center text-muted py-4" style="text-align: center; padding: 40px;">
-                                    <i class="ph ph-inbox" style="font-size: 48px; color: #ccc;"></i><br>
-                                    <span style="color: var(--text-muted); margin-top: 16px; display: block;">暂无友链数据</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- 新增/编辑模态框 -->
-    <div id="friendLinkModal" class="modal-overlay">
-        <div class="modal-content-custom">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);">
-                <h5 id="modalTitle" style="color: var(--text-main); font-size: 16px; font-weight: 600; margin: 0;">
-                    <i class="ph-bold ph-plus" style="color: var(--primary);"></i> 新增友链
-                </h5>
-                <button type="button" onclick="closeModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
-            </div>
-            <form id="friendLinkForm">
-                <input type="hidden" id="friendLinkId">
-
-                <div class="form-group">
-                    <label for="name" class="form-label">名称 <span style="color: var(--primary);">*</span></label>
-                    <input type="text" class="form-control" id="name" name="name" required placeholder="请输入友链名称">
-                </div>
-
-                <div class="form-group">
-                    <label for="url" class="form-label">URL <span style="color: var(--primary);">*</span></label>
-                    <input type="url" class="form-control" id="url" name="url" required placeholder="https://example.com">
-                </div>
-
-                <div class="form-group">
-                    <label for="description" class="form-label">描述</label>
-                    <textarea class="form-control" id="description" name="description" rows="2" placeholder="简要描述该网站"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="logo" class="form-label">Logo URL</label>
-                    <input type="url" class="form-control" id="logo" name="logo" placeholder="https://example.com/logo.png">
-                    <div class="form-help">建议尺寸：100x100 像素</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="sortOrder" class="form-label">排序</label>
-                    <input type="number" class="form-control" id="sortOrder" name="sortOrder" value="0">
-                    <div class="form-help">数字越小越靠前</div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">状态</label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="status" id="statusActive" value="ACTIVE" checked>
-                            启用
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="status" id="statusInactive" value="INACTIVE">
-                            禁用
-                        </label>
-                    </div>
-                </div>
-
-                <div class="btn-group-custom">
-                    <button type="submit" class="btn-primary-custom" style="flex: 1; justify-content: center;">
-                        <i class="ph-bold ph-check"></i> 保存
-                    </button>
-                    <button type="button" class="btn-outline-custom btn-sm-custom" onclick="closeModal()">
-                        取消
-                    </button>
-                </div>
-            </form>
-        </div>
+        </a>
     </div>
 
-    <th:block th:replace="~{admin/layout :: adminScripts}"/>
-    <script>
-        function showAddModal() {
-            document.getElementById('modalTitle').innerHTML = '<i class="ph-bold ph-plus" style="color: var(--primary);"></i> 新增友链';
-            document.getElementById('friendLinkId').value = '';
-            document.getElementById('friendLinkForm').reset();
-            document.getElementById('friendLinkModal').style.display = 'flex';
-        }
+    <div class="nav-body">
+        <div class="nav-section-label">创作</div>
+        <a href="/admin/dashboard" class="nav-item">
+            <i class="ph ph-squares-four nav-icon"></i> 概览
+        </a>
+        <a href="/admin/article-form" class="nav-item">
+            <i class="ph ph-pencil-line nav-icon"></i> 写文章
+        </a>
+        <a href="/admin/categories" class="nav-item">
+            <i class="ph ph-folder-open nav-icon"></i> 专栏与分类
+        </a>
+        <a href="#" class="nav-item">
+            <i class="ph ph-image nav-icon"></i> 我的图床
+        </a>
+        
+        <div class="nav-section-label">管理</div>
+        <a href="/admin/demos" class="nav-item">
+            <i class="ph ph-rocket-launch nav-icon"></i> 演示管理
+        </a>
+        <a href="#" class="nav-item">
+            <i class="ph ph-chats-circle nav-icon"></i> 留言板
+        </a>
+        <a href="/admin/comments" class="nav-item">
+            <i class="ph ph-chat-centered-text nav-icon"></i> 评论管理
+        </a>
+        <a href="/admin/friend-links" class="nav-item active">
+            <i class="ph ph-link nav-icon"></i> 友情链接
+        </a>
 
-        function closeModal() {
-            document.getElementById('friendLinkModal').style.display = 'none';
-        }
+        <div class="nav-section-label">设置</div>
+        <a href="/admin/settings" class="nav-item">
+            <i class="ph ph-paint-brush nav-icon"></i> 主题外观
+        </a>
+        <a href="/admin/settings" class="nav-item">
+            <i class="ph ph-gear-six nav-icon"></i> 基础设置
+        </a>
+    </div>
 
-        function editFriendLink(id) {
-            fetch(`/admin/friend-links/api/${id}`)
-                .then(response => response.json())
-                .then(link => {
-                    document.getElementById('modalTitle').innerHTML = '<i class="ph-bold ph-pencil" style="color: var(--primary);"></i> 编辑友链';
-                    document.getElementById('friendLinkId').value = link.id;
-                    document.getElementById('name').value = link.name;
-                    document.getElementById('url').value = link.url;
-                    document.getElementById('description').value = link.description || '';
-                    document.getElementById('logo').value = link.logo || '';
-                    document.getElementById('sortOrder').value = link.sortOrder || 0;
-                    document.getElementById(link.status === 'ACTIVE' ? 'statusActive' : 'statusInactive').checked = true;
-                    document.getElementById('friendLinkModal').style.display = 'flex';
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('获取友链信息失败');
-                });
-        }
+    <div class="sidebar-footer">
+        <div class="user-menu-wrapper">
+            <div class="sidebar-user" id="userMenuBtn">
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Li&background=059669&color=fff&font-size=0.4" alt="头像" class="user-avatar" id="sidebarAvatar">
+                    <div class="user-name" th:text="${#authentication.name}">管理员</div>
+                </div>
+                <i class="ph ph-caret-up user-menu-icon" id="userMenuIcon"></i>
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="/admin/profile" class="dropdown-item"><i class="ph ph-user"></i> 个人资料</a>
+                <div class="dropdown-divider"></div>
+                <a href="/logout" class="dropdown-item text-danger"><i class="ph ph-sign-out"></i> 退出登录</a>
+            </div>
+        </div>
+    </div>
+</aside>
 
-        function activateFriendLink(id) {
-            if (confirm('确定要启用这个友链吗？')) {
-                updateFriendLinkStatus(id, 'ACTIVE');
-            }
-        }
-
-        function deactivateFriendLink(id) {
-            if (confirm('确定要禁用这个友链吗？')) {
-                updateFriendLinkStatus(id, 'INACTIVE');
-            }
-        }
-
-        function updateFriendLinkStatus(id, status) {
-            fetch(`/admin/friend-links/${id}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-                },
-                body: JSON.stringify({ status: status })
-            })
-            .then(response => {
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    alert('操作失败，请重试');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('操作失败，请重试');
-            });
-        }
-
-        function deleteFriendLink(id) {
-            if (confirm('确定要删除这个友链吗？')) {
-                fetch(`/admin/friend-links/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        alert('删除失败，请重试');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('删除失败，请重试');
-                });
-            }
-        }
-
-        document.getElementById('friendLinkForm').addEventListener('submit', function(event) {
-            event.preventDefault();
+<main class="main-wrapper">
+    <header class="topbar">
+        <div class="topbar-date">
+            <i class="ph-light ph-calendar-blank"></i>
+            <span id="currentDate">2026 年 4 月 17 日 · 星期五</span>
+        </div>
+        
+        <div class="topbar-right">
+            <button class="topbar-btn" title="查看站点" onclick="window.open('/')"><i class="ph ph-arrow-up-right"></i></button>
+            <button class="topbar-btn" title="通知"><i class="ph ph-bell"></i><span class="notif-dot"></span></button>
             
-            const id = document.getElementById('friendLinkId').value;
-            const formData = {
-                name: document.getElementById('name').value,
-                url: document.getElementById('url').value,
-                description: document.getElementById('description').value,
-                logo: document.getElementById('logo').value,
-                sortOrder: parseInt(document.getElementById('sortOrder').value),
-                status: document.querySelector('input[name="status"]:checked').value
-            };
+            <div class="theme-menu-wrapper">
+                <button class="topbar-btn" id="themeSwitchBtn" title="后台配色">
+                    <i class="ph ph-dots-three"></i>
+                </button>
+                <div class="theme-dropdown" id="themeDropdown">
+                    <div class="theme-dropdown-header">后台专属配色</div>
+                    <div class="theme-options">
+                        <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
+                            <span class="color-dot" style="background: #059669;"></span> 翡翠绿
+                        </button>
+                        <button class="theme-option" data-color="orange" data-hex="#EA580C" data-rgb="234, 88, 12">
+                            <span class="color-dot" style="background: #EA580C;"></span> 破风橙
+                        </button>
+                        <button class="theme-option" data-color="blue" data-hex="#2563EB" data-rgb="37, 99, 235">
+                            <span class="color-dot" style="background: #2563EB;"></span> 探索蓝
+                        </button>
+                        <button class="theme-option" data-color="beige" data-hex="#C89F70" data-rgb="200, 159, 112">
+                            <span class="color-dot" style="background: #C89F70;"></span> 岁月黄
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-            const url = id ? `/admin/friend-links/${id}` : '/admin/friend-links';
-            const method = id ? 'PUT' : 'POST';
+    <div class="content">
+        <div class="page-header animate-fade-up">
+            <h1>友情链接。</h1>
+            <p>管理合作伙伴链接，促进网站间交流。</p>
+        </div>
 
-            fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-                },
-                body: JSON.stringify(formData)
-            })
+        <div class="card animate-fade-up delay-1">
+            <div class="card-header">
+                <div class="card-title-text">友链列表</div>
+                <button type="button" class="btn-primary-custom" onclick="showAddModal()">
+                    <i class="ph-bold ph-plus"></i> 新增友链
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="loadingSpinner" style="text-align: center; padding: 40px;">
+                    <i class="ph-bold ph-spinner" style="font-size: 40px; color: var(--primary); animation: spin 1s linear infinite;"></i>
+                    <p style="margin-top: 16px; color: var(--text-muted);">加载中...</p>
+                </div>
+
+                <div id="friendLinksList" style="display: flex; flex-direction: column; gap: 12px;"></div>
+
+                <div id="emptyMessage" style="display:none; text-align: center; padding: 40px;">
+                    <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
+                    <p style="margin-top: 16px; color: var(--text-muted);">暂无友情链接</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="modal-overlay" id="linkModal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);">
+            <h5 style="color: var(--text-main); font-size: 16px; font-weight: 600;" id="modalTitle">新增友链</h5>
+            <button type="button" onclick="closeModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <form id="linkForm" onsubmit="saveLink(event)">
+            <input type="hidden" id="linkId">
+            <div class="form-group">
+                <label class="form-label">网站名称</label>
+                <input type="text" class="form-control" id="linkName" required placeholder="输入网站名称">
+            </div>
+            <div class="form-group">
+                <label class="form-label">网站 URL</label>
+                <input type="url" class="form-control" id="linkUrl" required placeholder="https://example.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Logo URL</label>
+                <input type="url" class="form-control" id="linkLogo" placeholder="https://example.com/logo.png">
+                <div class="form-help">可选，建议尺寸 100x100 像素</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">描述</label>
+                <textarea class="form-control" id="linkDescription" rows="3" placeholder="简要描述这个网站" style="resize: none;"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">排序</label>
+                <input type="number" class="form-control" id="linkSort" value="0" min="0">
+                <div class="form-help">数字越小越靠前</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">状态</label>
+                <div style="display: flex; gap: 16px;">
+                    <label class="radio-label" style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" name="linkStatus" value="ACTIVE" checked>
+                        <span style="color: var(--text-regular);">启用</span>
+                    </label>
+                    <label class="radio-label" style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" name="linkStatus" value="INACTIVE">
+                        <span style="color: var(--text-regular);">禁用</span>
+                    </label>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px;">
+                <button type="button" class="btn-outline-custom btn-sm-custom" onclick="closeModal()">取消</button>
+                <button type="submit" class="btn-primary-custom">
+                    <i class="ph-bold ph-check"></i> 保存
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);">
+            <h5 style="color: var(--text-main); font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-warning" style="color: var(--primary);"></i> 删除确认
+            </h5>
+            <button type="button" onclick="closeDeleteModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <div style="margin-bottom: 20px;">
+            <p style="color: var(--text-regular);">确定要删除这个友情链接吗？</p>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 8px 0 0 0;">删除后无法恢复</p>
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button type="button" class="btn-outline-custom btn-sm-custom" onclick="closeDeleteModal()">取消</button>
+            <button type="button" class="btn-primary-custom" onclick="confirmDelete()" style="background: #DC2626;">
+                <i class="ph-bold ph-trash"></i> 确认删除
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+<script>
+let linkToDelete = null;
+let editingLinkId = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    document.getElementById('currentDate').innerText = dateStr.replace(/星期/, '· 星期');
+    loadLinks();
+    initThemeSwitcher();
+});
+
+function initThemeSwitcher() {
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    const userMenuIcon = document.getElementById('userMenuIcon');
+    const themeSwitchBtn = document.getElementById('themeSwitchBtn');
+    const themeDropdown = document.getElementById('themeDropdown');
+    const sidebarAvatar = document.getElementById('sidebarAvatar');
+
+    userMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        themeDropdown.classList.remove('show');
+        userDropdown.classList.toggle('show');
+        userMenuIcon.classList.toggle('menu-open-icon');
+    });
+
+    themeSwitchBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.remove('show');
+        userMenuIcon.classList.remove('menu-open-icon');
+        themeDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+            userDropdown.classList.remove('show');
+            userMenuIcon.classList.remove('menu-open-icon');
+        }
+        if (!themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
+            themeDropdown.classList.remove('show');
+        }
+    });
+
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const targetTheme = this.getAttribute('data-color');
+            const targetHex = this.getAttribute('data-hex');
+            document.documentElement.setAttribute('data-theme', targetTheme);
+            document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            sidebarAvatar.src = `https://ui-avatars.com/api/?name=Li&background=${targetHex.substring(1)}&color=fff&font-size=0.4`;
+            themeDropdown.classList.remove('show');
+        });
+    });
+}
+
+function loadLinks() {
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('friendLinksList').style.display = 'none';
+    document.getElementById('emptyMessage').style.display = 'none';
+
+    fetch('/admin/friend-links/api')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            
+            if (data.links && data.links.length > 0) {
+                renderLinks(data.links);
+                document.getElementById('friendLinksList').style.display = 'flex';
+            } else {
+                document.getElementById('emptyMessage').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('emptyMessage').style.display = 'block';
+        });
+}
+
+function renderLinks(links) {
+    const list = document.getElementById('friendLinksList');
+    list.innerHTML = links.map(link => `
+        <div class="link-card">
+            <img class="link-logo" 
+                 src="${link.logo || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(link.name || 'Link') + '&background=random&color=fff'}" 
+                 alt="${link.name || '友链'}">
+            <div class="link-info">
+                <div class="link-name">${link.name || '未命名'}</div>
+                <a class="link-url" href="${link.url}" target="_blank">${link.url}</a>
+                ${link.description ? `<div class="link-description">${link.description}</div>` : ''}
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <span style="font-size: 13px; color: var(--text-muted);">排序：${link.sortOrder || 0}</span>
+                <span class="badge ${link.status === 'ACTIVE' ? 'badge-success' : 'badge-secondary'}">
+                    ${link.status === 'ACTIVE' ? '启用' : '禁用'}
+                </span>
+                <div style="display: flex; gap: 4px;">
+                    <button class="action-btn" title="编辑" onclick="editLink(${link.id})">
+                        <i class="ph-bold ph-pencil"></i>
+                    </button>
+                    <button class="action-btn delete" title="删除" onclick="showDeleteModal(${link.id})">
+                        <i class="ph-bold ph-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showAddModal() {
+    document.getElementById('modalTitle').textContent = '新增友链';
+    document.getElementById('linkForm').reset();
+    document.getElementById('linkId').value = '';
+    document.getElementById('linkModal').classList.add('show');
+}
+
+function editLink(id) {
+    editingLinkId = id;
+    fetch(`/admin/friend-links/${id}`)
+        .then(response => response.json())
+        .then(link => {
+            document.getElementById('modalTitle').textContent = '编辑友链';
+            document.getElementById('linkId').value = link.id;
+            document.getElementById('linkName').value = link.name || '';
+            document.getElementById('linkUrl').value = link.url || '';
+            document.getElementById('linkLogo').value = link.logo || '';
+            document.getElementById('linkDescription').value = link.description || '';
+            document.getElementById('linkSort').value = link.sortOrder || 0;
+            document.querySelectorAll('input[name="linkStatus"]').forEach(radio => {
+                radio.checked = radio.value === link.status;
+            });
+            document.getElementById('linkModal').classList.add('show');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('加载失败，请重试');
+        });
+}
+
+function closeModal() {
+    document.getElementById('linkModal').classList.remove('show');
+    editingLinkId = null;
+}
+
+function saveLink(event) {
+    event.preventDefault();
+    
+    const data = {
+        name: document.getElementById('linkName').value,
+        url: document.getElementById('linkUrl').value,
+        logo: document.getElementById('linkLogo').value,
+        description: document.getElementById('linkDescription').value,
+        sortOrder: parseInt(document.getElementById('linkSort').value),
+        status: document.querySelector('input[name="linkStatus"]:checked').value
+    };
+
+    const id = document.getElementById('linkId').value;
+    const url = id ? `/admin/friend-links/${id}` : '/admin/friend-links';
+    const method = id ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (response.ok) {
+            closeModal();
+            loadLinks();
+        } else {
+            alert('保存失败，请重试');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('保存失败，请重试');
+    });
+}
+
+function showDeleteModal(id) {
+    linkToDelete = id;
+    document.getElementById('deleteModal').classList.add('show');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('show');
+    linkToDelete = null;
+}
+
+function confirmDelete() {
+    if (linkToDelete) {
+        fetch(`/admin/friend-links/${linkToDelete}`, { method: 'DELETE' })
             .then(response => {
                 if (response.ok) {
-                    closeModal();
-                    location.reload();
+                    closeDeleteModal();
+                    loadLinks();
                 } else {
-                    alert('保存失败，请重试');
+                    alert('删除失败，请重试');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('保存失败，请重试');
+                alert('删除失败，请重试');
             });
-        });
-
-        // 点击模态框外部关闭
-        document.getElementById('friendLinkModal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
-    </script>
+    }
+}
+</script>
 </body>
 </html>
