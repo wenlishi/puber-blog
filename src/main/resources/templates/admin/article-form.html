@@ -402,7 +402,7 @@ function initThemeSwitcher() {
 }
 
 function loadCategories() {
-    fetch('/admin/categories/api')
+    fetch('/admin/api/categories')
         .then(response => response.json())
         .then(data => {
             const select = document.getElementById('categoryId');
@@ -419,7 +419,7 @@ function loadCategories() {
 }
 
 function loadTags() {
-    fetch('/admin/tags/api')
+    fetch('/admin/api/tags')
         .then(response => response.json())
         .then(data => {
             const container = document.getElementById('tagCheckboxes');
@@ -436,7 +436,7 @@ function loadTags() {
 }
 
 function loadArticle(id) {
-    fetch(`/admin/articles/api/${id}`)
+    fetch(`/admin/api/articles/${id}`)
         .then(response => response.json())
         .then(article => {
             document.getElementById('title').value = article.title || '';
@@ -522,7 +522,7 @@ function addNewTag() {
     const name = document.getElementById('newTagInput').value.trim();
     if (!name) return;
 
-    fetch('/admin/tags', {
+    fetch('/admin/api/tags', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
@@ -556,7 +556,7 @@ function uploadCover() {
 
         document.getElementById('upload-progress').style.display = 'flex';
         
-        fetch('/admin/upload/image', {
+        fetch('/admin/api/upload/image', {
             method: 'POST',
             body: formData
         })
