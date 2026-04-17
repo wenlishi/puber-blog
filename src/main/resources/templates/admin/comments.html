@@ -4,166 +4,532 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>评论管理 - 知筑后台</title>
-    <th:block th:replace="~{admin/layout :: adminStyles}"/>
+    <style th:replace="~{admin/layout :: adminStyles}"></style>
+    <style>
+        .btn-outline-custom {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-regular);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline-custom:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+        .btn-sm-custom {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-success { background: #ECFDF5; color: #059669; }
+        .badge-warning { background: #FFF7ED; color: #EA580C; }
+        .action-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        .action-btn:hover { background: var(--primary-light); color: var(--primary); }
+        .action-btn.delete:hover { background: #FEF2F2; color: #DC2626; }
+        .action-btn.approve:hover { background: #ECFDF5; color: #059669; }
+        .comment-content {
+            max-width: 600px;
+            color: var(--text-regular);
+            line-height: 1.6;
+        }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: white; border-radius: var(--radius-lg);
+            padding: 24px; max-width: 500px; width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .reply-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            outline: none;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+        .reply-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+    </style>
 </head>
 <body>
-    <!-- 侧边栏 -->
-    <div th:replace="~{admin/layout :: sidebar('comments')}"></div>
 
-    <!-- 主内容区 -->
-    <main class="main-wrapper">
-        <!-- 顶栏 -->
-        <div th:replace="~{admin/layout :: topbar}"></div>
-
-        <!-- 页面内容 -->
-        <div class="content">
-            <div class="page-header">
-                <h1>评论管理。</h1>
-                <p>审核和管理用户评论，维护良好的互动环境。</p>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a href="/admin/dashboard" class="logo">
+            <div class="logo-icon"><i class="ph-bold ph-feather"></i></div>
+            <div class="logo-text">
+                <span class="logo-title">ZHIZHU.</span>
+                <span class="logo-sub">工作台</span>
             </div>
+        </a>
+    </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title-text">评论列表</div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('ALL')">全部</button>
-                        <button class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('PENDING')">待审核</button>
-                        <button class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('APPROVED')">已通过</button>
-                        <button class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('REJECTED')">已拒绝</button>
-                    </div>
+    <div class="nav-body">
+        <div class="nav-section-label">创作</div>
+        <a href="/admin/dashboard" class="nav-item">
+            <i class="ph ph-squares-four nav-icon"></i> 概览
+        </a>
+        <a href="/admin/article-form" class="nav-item">
+            <i class="ph ph-pencil-line nav-icon"></i> 写文章
+        </a>
+        <a href="/admin/categories" class="nav-item">
+            <i class="ph ph-folder-open nav-icon"></i> 专栏与分类
+        </a>
+        <a href="#" class="nav-item">
+            <i class="ph ph-image nav-icon"></i> 我的图床
+        </a>
+        
+        <div class="nav-section-label">管理</div>
+        <a href="/admin/demos" class="nav-item">
+            <i class="ph ph-rocket-launch nav-icon"></i> 演示管理
+        </a>
+        <a href="#" class="nav-item">
+            <i class="ph ph-chats-circle nav-icon"></i> 留言板
+        </a>
+        <a href="/admin/comments" class="nav-item active">
+            <i class="ph ph-chat-centered-text nav-icon"></i> 评论管理
+        </a>
+        <a href="/admin/friend-links" class="nav-item">
+            <i class="ph ph-link nav-icon"></i> 友情链接
+        </a>
+
+        <div class="nav-section-label">设置</div>
+        <a href="/admin/settings" class="nav-item">
+            <i class="ph ph-paint-brush nav-icon"></i> 主题外观
+        </a>
+        <a href="/admin/settings" class="nav-item">
+            <i class="ph ph-gear-six nav-icon"></i> 基础设置
+        </a>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="user-menu-wrapper">
+            <div class="sidebar-user" id="userMenuBtn">
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Li&background=059669&color=fff&font-size=0.4" alt="头像" class="user-avatar" id="sidebarAvatar">
+                    <div class="user-name" th:text="${#authentication.name}">管理员</div>
                 </div>
-                <div class="card-body">
-                    <table class="table-custom" th:if="${comments != null and comments.size() > 0}">
-                        <thead>
-                            <tr>
-                                <th width="50">ID</th>
-                                <th>昵称</th>
-                                <th>内容</th>
-                                <th width="100">文章</th>
-                                <th width="80">状态</th>
-                                <th width="120">时间</th>
-                                <th width="180">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="comment : ${comments}">
-                                <td style="color: var(--text-muted);" th:text="${comment.id}">1</td>
-                                <td style="font-weight: 500; color: var(--text-main);" th:text="${comment.nickname}">用户</td>
-                                <td style="color: var(--text-regular);" th:text="${comment.content}">评论内容</td>
-                                <td>
-                                    <a th:href="@{/articles/{id}(id=${comment.articleId})}" 
-                                       style="color: var(--primary); text-decoration: none; font-size: 13px;"
-                                       th:text="${comment.articleTitle}">文章标题</a>
-                                </td>
-                                <td>
-                                    <span th:if="${comment.status == 'APPROVED'}" class="badge badge-success">已批准</span>
-                                    <span th:if="${comment.status == 'PENDING'}" class="badge badge-warning">待审核</span>
-                                    <span th:if="${comment.status == 'REJECTED'}" class="badge badge-danger">已拒绝</span>
-                                </td>
-                                <td style="color: var(--text-muted); font-size: 13px;" 
-                                    th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd')}">2024-01-01</td>
-                                <td>
-                                    <button th:if="${comment.status != 'APPROVED'}" 
-                                            th:onclick="'approveComment(' + ${comment.id} + ')'" 
-                                            class="btn-outline-custom btn-sm-custom" 
-                                            style="margin-right: 4px; border-color: #28A745; color: #28A745;">
-                                        <i class="ph-bold ph-check"></i> 通过
-                                    </button>
-                                    <button th:if="${comment.status != 'REJECTED'}" 
-                                            th:onclick="'rejectComment(' + ${comment.id} + ')'" 
-                                            class="btn-outline-custom btn-sm-custom"
-                                            style="margin-right: 4px; border-color: #DC3545; color: #DC3545;">
-                                        <i class="ph-bold ph-x"></i> 拒绝
-                                    </button>
-                                    <button th:onclick="'deleteComment(' + ${comment.id} + ')'" 
-                                            class="btn-outline-custom btn-sm-custom"
-                                            style="border-color: #DC3545; color: #DC3545;">
-                                        <i class="ph-bold ph-trash"></i> 删除
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div th:if="${comments == null or comments.size() == 0}" class="text-center py-4" style="text-align: center; padding: 40px;">
-                        <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
-                        <p style="margin-top: 16px; color: var(--text-muted);">暂无评论</p>
+                <i class="ph ph-caret-up user-menu-icon" id="userMenuIcon"></i>
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="/admin/profile" class="dropdown-item"><i class="ph ph-user"></i> 个人资料</a>
+                <div class="dropdown-divider"></div>
+                <a href="/logout" class="dropdown-item text-danger"><i class="ph ph-sign-out"></i> 退出登录</a>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<main class="main-wrapper">
+    <header class="topbar">
+        <div class="topbar-date">
+            <i class="ph-light ph-calendar-blank"></i>
+            <span id="currentDate">2026 年 4 月 17 日 · 星期五</span>
+        </div>
+        
+        <div class="topbar-right">
+            <button class="topbar-btn" title="查看站点" onclick="window.open('/')"><i class="ph ph-arrow-up-right"></i></button>
+            <button class="topbar-btn" title="通知"><i class="ph ph-bell"></i><span class="notif-dot"></span></button>
+            
+            <div class="theme-menu-wrapper">
+                <button class="topbar-btn" id="themeSwitchBtn" title="后台配色">
+                    <i class="ph ph-dots-three"></i>
+                </button>
+                <div class="theme-dropdown" id="themeDropdown">
+                    <div class="theme-dropdown-header">后台专属配色</div>
+                    <div class="theme-options">
+                        <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
+                            <span class="color-dot" style="background: #059669;"></span> 翡翠绿
+                        </button>
+                        <button class="theme-option" data-color="orange" data-hex="#EA580C" data-rgb="234, 88, 12">
+                            <span class="color-dot" style="background: #EA580C;"></span> 破风橙
+                        </button>
+                        <button class="theme-option" data-color="blue" data-hex="#2563EB" data-rgb="37, 99, 235">
+                            <span class="color-dot" style="background: #2563EB;"></span> 探索蓝
+                        </button>
+                        <button class="theme-option" data-color="beige" data-hex="#C89F70" data-rgb="200, 159, 112">
+                            <span class="color-dot" style="background: #C89F70;"></span> 岁月黄
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-    </main>
+    </header>
 
-    <th:block th:replace="~{admin/layout :: adminScripts}"/>
-    <script>
-        function filterByStatus(status) {
-            window.location.href = `/admin/comments?status=${status}`;
+    <div class="content">
+        <div class="page-header animate-fade-up">
+            <h1>评论管理。</h1>
+            <p>审核和管理用户评论，维护良好的互动环境。</p>
+        </div>
+
+        <div class="stats-grid animate-fade-up delay-1" style="margin-bottom: 8px;">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-info">
+                        <span class="stat-title">待审核</span>
+                        <span class="stat-value" id="pendingCount" style="color: var(--primary);">0</span>
+                    </div>
+                    <div class="icon-box"><i class="ph-light ph-clock"></i></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-info">
+                        <span class="stat-title">已通过</span>
+                        <span class="stat-value" id="approvedCount">0</span>
+                    </div>
+                    <div class="icon-box"><i class="ph-light ph-check-circle"></i></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-info">
+                        <span class="stat-title">总计</span>
+                        <span class="stat-value" id="totalCount">0</span>
+                    </div>
+                    <div class="icon-box"><i class="ph-light ph-chat-centered-text"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card animate-fade-up delay-2">
+            <div class="card-header">
+                <div class="card-title-text">评论列表</div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('ALL')">
+                        <i class="ph-bold ph-list"></i> 全部
+                    </button>
+                    <button class="btn-primary-custom" onclick="filterByStatus('PENDING')">
+                        <i class="ph-bold ph-clock"></i> 待审核
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="loadingSpinner" style="text-align: center; padding: 40px;">
+                    <i class="ph-bold ph-spinner" style="font-size: 40px; color: var(--primary); animation: spin 1s linear infinite;"></i>
+                    <p style="margin-top: 16px; color: var(--text-muted);">加载中...</p>
+                </div>
+
+                <div id="commentList" style="display: flex; flex-direction: column; gap: 16px;"></div>
+
+                <div id="emptyMessage" style="display:none; text-align: center; padding: 40px;">
+                    <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
+                    <p style="margin-top: 16px; color: var(--text-muted);">暂无评论数据</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="modal-overlay" id="replyModal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);">
+            <h5 style="color: var(--text-main); font-size: 16px; font-weight: 600;">回复评论</h5>
+            <button type="button" onclick="closeReplyModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <div style="margin-bottom: 20px;">
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 8px;">原评论：</p>
+            <div style="background: var(--bg-body); padding: 12px; border-radius: var(--radius-md); margin-bottom: 16px; color: var(--text-regular);">
+                <p id="replyOriginalComment" style="margin: 0;"></p>
+            </div>
+            <textarea class="reply-input" id="replyContent" placeholder="输入回复内容..."></textarea>
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button type="button" class="btn-outline-custom btn-sm-custom" onclick="closeReplyModal()">取消</button>
+            <button type="button" class="btn-primary-custom" onclick="submitReply()">
+                <i class="ph-bold ph-paper-plane-right"></i> 发送回复
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);">
+            <h5 style="color: var(--text-main); font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-warning" style="color: var(--primary);"></i> 删除确认
+            </h5>
+            <button type="button" onclick="closeDeleteModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <div style="margin-bottom: 20px;">
+            <p style="color: var(--text-regular);">确定要删除这条评论吗？</p>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 8px 0 0 0;">删除后无法恢复</p>
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button type="button" class="btn-outline-custom btn-sm-custom" onclick="closeDeleteModal()">取消</button>
+            <button type="button" class="btn-primary-custom" onclick="confirmDelete()" style="background: #DC2626;">
+                <i class="ph-bold ph-trash"></i> 确认删除
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+<script>
+let currentFilter = 'PENDING';
+let commentToReply = null;
+let commentToDelete = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    document.getElementById('currentDate').innerText = dateStr.replace(/星期/, '· 星期');
+    loadComments();
+    loadStats();
+    initThemeSwitcher();
+});
+
+function initThemeSwitcher() {
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    const userMenuIcon = document.getElementById('userMenuIcon');
+    const themeSwitchBtn = document.getElementById('themeSwitchBtn');
+    const themeDropdown = document.getElementById('themeDropdown');
+    const sidebarAvatar = document.getElementById('sidebarAvatar');
+
+    userMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        themeDropdown.classList.remove('show');
+        userDropdown.classList.toggle('show');
+        userMenuIcon.classList.toggle('menu-open-icon');
+    });
+
+    themeSwitchBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.remove('show');
+        userMenuIcon.classList.remove('menu-open-icon');
+        themeDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+            userDropdown.classList.remove('show');
+            userMenuIcon.classList.remove('menu-open-icon');
         }
+        if (!themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
+            themeDropdown.classList.remove('show');
+        }
+    });
 
-        function approveComment(id) {
-            if (confirm('确定要通过这条评论吗？')) {
-                fetch(`/admin/comments/${id}/approve`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        alert('操作失败，请重试');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('操作失败，请重试');
-                });
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const targetTheme = this.getAttribute('data-color');
+            const targetHex = this.getAttribute('data-hex');
+            document.documentElement.setAttribute('data-theme', targetTheme);
+            document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            sidebarAvatar.src = `https://ui-avatars.com/api/?name=Li&background=${targetHex.substring(1)}&color=fff&font-size=0.4`;
+            themeDropdown.classList.remove('show');
+        });
+    });
+}
+
+function loadStats() {
+    fetch('/admin/comments/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('pendingCount').textContent = data.pending || 0;
+            document.getElementById('approvedCount').textContent = data.approved || 0;
+            document.getElementById('totalCount').textContent = data.total || 0;
+        })
+        .catch(error => console.error('Error loading stats:', error));
+}
+
+function filterByStatus(status) {
+    currentFilter = status;
+    loadComments();
+}
+
+function loadComments() {
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('commentList').style.display = 'none';
+    document.getElementById('emptyMessage').style.display = 'none';
+
+    fetch(`/admin/comments/api?status=${currentFilter}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            
+            if (data.comments && data.comments.length > 0) {
+                renderComments(data.comments);
+                document.getElementById('commentList').style.display = 'flex';
+            } else {
+                document.getElementById('emptyMessage').style.display = 'block';
             }
-        }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('emptyMessage').style.display = 'block';
+        });
+}
 
-        function rejectComment(id) {
-            if (confirm('确定要拒绝这条评论吗？')) {
-                fetch(`/admin/comments/${id}/reject`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        alert('操作失败，请重试');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('操作失败，请重试');
-                });
-            }
-        }
+function renderComments(comments) {
+    const list = document.getElementById('commentList');
+    list.innerHTML = comments.map(comment => `
+        <div class="card" style="border: 1px solid var(--border-light);">
+            <div class="card-body" style="padding: 16px 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(comment.nickname || 'User')}&background=random&color=fff" 
+                             style="width: 36px; height: 36px; border-radius: 50%;" alt="avatar">
+                        <div>
+                            <div style="font-weight: 600; color: var(--text-main);">${comment.nickname || '匿名'}</div>
+                            <div style="font-size: 12.5px; color: var(--text-muted);">
+                                ${comment.email ? comment.email : ''}
+                                ${comment.createTime ? ' · ' + new Date(comment.createTime).toLocaleString('zh-CN') : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <span class="badge ${comment.status === 'APPROVED' ? 'badge-success' : 'badge-warning'}">
+                        ${comment.status === 'APPROVED' ? '已通过' : '待审核'}
+                    </span>
+                </div>
+                <div class="comment-content" style="margin-bottom: 12px;">
+                    <p style="margin: 0;">${comment.content || ''}</p>
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+                    <i class="ph-bold ph-article"></i> 评论于：${comment.articleTitle || '未知文章'}
+                </div>
+                ${comment.replyContent ? `
+                    <div style="background: var(--primary-light); padding: 12px; border-radius: var(--radius-md); margin-top: 12px;">
+                        <div style="font-size: 12.5px; color: var(--primary); font-weight: 600; margin-bottom: 4px;">
+                            <i class="ph-bold ph-reply"></i> 管理员回复
+                        </div>
+                        <p style="margin: 0; color: var(--text-regular);">${comment.replyContent}</p>
+                    </div>
+                ` : ''}
+                <div style="display: flex; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-light);">
+                    ${comment.status === 'PENDING' ? `
+                        <button class="action-btn approve" title="通过" onclick="approveComment(${comment.id})">
+                            <i class="ph-bold ph-check"></i> 通过
+                        </button>
+                    ` : ''}
+                    <button class="action-btn" title="回复" onclick="showReplyModal(${comment.id}, '${(comment.content || '').replace(/'/g, "\\'")}')">
+                        <i class="ph-bold ph-chat-centered-text"></i> 回复
+                    </button>
+                    <button class="action-btn delete" title="删除" onclick="showDeleteModal(${comment.id})">
+                        <i class="ph-bold ph-trash"></i> 删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
 
-        function deleteComment(id) {
-            if (confirm('确定要删除这条评论吗？')) {
-                fetch(`/admin/comments/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        alert('操作失败，请重试');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('操作失败，请重试');
-                });
+function approveComment(id) {
+    fetch(`/admin/comments/${id}/approve`, { method: 'POST' })
+        .then(response => {
+            if (response.ok) {
+                loadComments();
+                loadStats();
+            } else {
+                alert('操作失败，请重试');
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作失败，请重试');
+        });
+}
+
+function showReplyModal(id, content) {
+    commentToReply = id;
+    document.getElementById('replyOriginalComment').textContent = content;
+    document.getElementById('replyContent').value = '';
+    document.getElementById('replyModal').classList.add('show');
+}
+
+function closeReplyModal() {
+    document.getElementById('replyModal').classList.remove('show');
+    commentToReply = null;
+}
+
+function submitReply() {
+    const content = document.getElementById('replyContent').value.trim();
+    if (!content) {
+        alert('请输入回复内容');
+        return;
+    }
+    
+    fetch(`/admin/comments/${commentToReply}/reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+    })
+    .then(response => {
+        if (response.ok) {
+            closeReplyModal();
+            loadComments();
+        } else {
+            alert('回复失败，请重试');
         }
-    </script>
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('回复失败，请重试');
+    });
+}
+
+function showDeleteModal(id) {
+    commentToDelete = id;
+    document.getElementById('deleteModal').classList.add('show');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('show');
+    commentToDelete = null;
+}
+
+function confirmDelete() {
+    if (commentToDelete) {
+        fetch(`/admin/comments/${commentToDelete}`, { method: 'DELETE' })
+            .then(response => {
+                if (response.ok) {
+                    closeDeleteModal();
+                    loadComments();
+                    loadStats();
+                } else {
+                    alert('删除失败，请重试');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('删除失败，请重试');
+            });
+    }
+}
+</script>
 </body>
 </html>

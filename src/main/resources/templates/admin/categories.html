@@ -4,303 +4,512 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>分类管理 - 知筑后台</title>
-    <th:block th:replace="~{admin/layout :: adminStyles}"/>
+    <style th:replace="~{admin/layout :: adminStyles}"></style>
+    <style>
+        .btn-outline-custom {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-regular);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline-custom:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+        .btn-sm-custom {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        .form-control {
+            padding: 8px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            outline: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .action-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        .action-btn:hover { background: var(--primary-light); color: var(--primary); }
+        .action-btn.delete:hover { background: #FEF2F2; color: #DC2626; }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: white; border-radius: var(--radius-lg);
+            padding: 24px; max-width: 450px; width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+        .category-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+        }
+        .category-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-hover);
+        }
+        .category-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+        .category-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--primary);
+        }
+        .category-stats {
+            display: flex;
+            gap: 16px;
+            margin-left: auto;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 0 12px;
+            border-left: 1px solid var(--border-light);
+        }
+        .stat-item:first-child { border-left: none; }
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+    </style>
 </head>
 <body>
-    <!-- 侧边栏 -->
-    <div th:replace="~{admin/layout :: sidebar('categories')}"></div>
 
-    <!-- 主内容区 -->
-    <main class="main-wrapper">
-        <!-- 顶栏 -->
-        <div th:replace="~{admin/layout :: topbar}"></div>
-
-        <!-- 页面内容 -->
-        <div class="content">
-            <div class="page-header">
-                <h1>分类与标签。</h1>
-                <p>管理文章分类和标签，组织内容结构。</p>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a href="/admin/dashboard" class="logo">
+            <div class="logo-icon"><i class="ph-bold ph-feather"></i></div>
+            <div class="logo-text">
+                <span class="logo-title">ZHIZHU.</span>
+                <span class="logo-sub">工作台</span>
             </div>
+        </a>
+    </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                <!-- 分类管理 -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title-text">分类管理</div>
-                        <button class="btn-primary-custom" onclick="showCategoryModal()">
-                            <i class="ph-bold ph-plus"></i> 新增分类
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <table class="table-custom" th:if="${categories != null and categories.size() > 0}">
-                            <thead>
-                                <tr>
-                                    <th width="50">ID</th>
-                                    <th>名称</th>
-                                    <th width="80">文章数</th>
-                                    <th width="120">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="category : ${categories}">
-                                    <td style="color: var(--text-muted);" th:text="${category.id}">1</td>
-                                    <td>
-                                        <span style="font-weight: 500; color: var(--text-main);" th:text="${category.name}">分类名称</span>
-                                    </td>
-                                    <td style="color: var(--text-muted);" th:text="${category.articleCount}">0</td>
-                                    <td>
-                                        <button th:onclick="'showEditCategoryModal(' + ${category.id} + ', \'' + ${category.name} + '\')'" 
-                                                class="btn-outline-custom btn-sm-custom" style="margin-right: 4px;">
-                                            <i class="ph-bold ph-pencil"></i> 编辑
-                                        </button>
-                                        <button th:onclick="'deleteCategory(' + ${category.id} + ')'" 
-                                                class="btn-outline-custom btn-sm-custom" style="border-color: #DC3545; color: #DC3545;">
-                                            <i class="ph-bold ph-trash"></i> 删除
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div th:if="${categories == null or categories.size() == 0}" class="text-center py-4" style="text-align: center; padding: 40px;">
-                            <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
-                            <p style="margin-top: 16px; color: var(--text-muted);">暂无分类</p>
-                        </div>
-                    </div>
+    <div class="nav-body">
+        <div class="nav-section-label">创作</div>
+        <a href="/admin/dashboard" class="nav-item">
+            <i class="ph ph-squares-four nav-icon"></i> 概览
+        </a>
+        <a href="/admin/article-form" class="nav-item">
+            <i class="ph ph-pencil-line nav-icon"></i> 写文章
+        </a>
+        <a href="/admin/categories" class="nav-item active">
+            <i class="ph ph-folder-open nav-icon"></i> 专栏与分类
+        </a>
+        <a href="#" class="nav-item">
+            <i class="ph ph-image nav-icon"></i> 我的图床
+        </a>
+        
+        <div class="nav-section-label">管理</div>
+        <a href="/admin/demos" class="nav-item">
+            <i class="ph ph-rocket-launch nav-icon"></i> 演示管理
+        </a>
+        <a href="#" class="nav-item">
+            <i class="ph ph-chats-circle nav-icon"></i> 留言板
+        </a>
+        <a href="/admin/comments" class="nav-item">
+            <i class="ph ph-chat-centered-text nav-icon"></i> 评论管理
+        </a>
+        <a href="/admin/friend-links" class="nav-item">
+            <i class="ph ph-link nav-icon"></i> 友情链接
+        </a>
+
+        <div class="nav-section-label">设置</div>
+        <a href="/admin/settings" class="nav-item">
+            <i class="ph ph-paint-brush nav-icon"></i> 主题外观
+        </a>
+        <a href="/admin/settings" class="nav-item">
+            <i class="ph ph-gear-six nav-icon"></i> 基础设置
+        </a>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="user-menu-wrapper">
+            <div class="sidebar-user" id="userMenuBtn">
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Li&background=059669&color=fff&font-size=0.4" alt="头像" class="user-avatar" id="sidebarAvatar">
+                    <div class="user-name" th:text="${#authentication.name}">管理员</div>
                 </div>
+                <i class="ph ph-caret-up user-menu-icon" id="userMenuIcon"></i>
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="/admin/profile" class="dropdown-item"><i class="ph ph-user"></i> 个人资料</a>
+                <div class="dropdown-divider"></div>
+                <a href="/logout" class="dropdown-item text-danger"><i class="ph ph-sign-out"></i> 退出登录</a>
+            </div>
+        </div>
+    </div>
+</aside>
 
-                <!-- 标签管理 -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title-text">标签管理</div>
-                        <button class="btn-primary-custom" onclick="showTagModal()">
-                            <i class="ph-bold ph-plus"></i> 新增标签
+<main class="main-wrapper">
+    <header class="topbar">
+        <div class="topbar-date">
+            <i class="ph-light ph-calendar-blank"></i>
+            <span id="currentDate">2026 年 4 月 17 日 · 星期五</span>
+        </div>
+        
+        <div class="topbar-right">
+            <button class="topbar-btn" title="查看站点" onclick="window.open('/')"><i class="ph ph-arrow-up-right"></i></button>
+            <button class="topbar-btn" title="通知"><i class="ph ph-bell"></i><span class="notif-dot"></span></button>
+            
+            <div class="theme-menu-wrapper">
+                <button class="topbar-btn" id="themeSwitchBtn" title="后台配色">
+                    <i class="ph ph-dots-three"></i>
+                </button>
+                <div class="theme-dropdown" id="themeDropdown">
+                    <div class="theme-dropdown-header">后台专属配色</div>
+                    <div class="theme-options">
+                        <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
+                            <span class="color-dot" style="background: #059669;"></span> 翡翠绿
                         </button>
-                    </div>
-                    <div class="card-body">
-                        <table class="table-custom" th:if="${tags != null and tags.size() > 0}">
-                            <thead>
-                                <tr>
-                                    <th width="50">ID</th>
-                                    <th>名称</th>
-                                    <th width="80">文章数</th>
-                                    <th width="120">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="tag : ${tags}">
-                                    <td style="color: var(--text-muted);" th:text="${tag.id}">1</td>
-                                    <td>
-                                        <span style="font-weight: 500; color: var(--text-main);" th:text="${tag.name}">标签名称</span>
-                                    </td>
-                                    <td style="color: var(--text-muted);" th:text="${tag.articleCount}">0</td>
-                                    <td>
-                                        <button th:onclick="'showEditTagModal(' + ${tag.id} + ', \'' + ${tag.name} + '\')'" 
-                                                class="btn-outline-custom btn-sm-custom" style="margin-right: 4px;">
-                                            <i class="ph-bold ph-pencil"></i> 编辑
-                                        </button>
-                                        <button th:onclick="'deleteTag(' + ${tag.id} + ')'" 
-                                                class="btn-outline-custom btn-sm-custom" style="border-color: #DC3545; color: #DC3545;">
-                                            <i class="ph-bold ph-trash"></i> 删除
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div th:if="${tags == null or tags.size() == 0}" class="text-center py-4" style="text-align: center; padding: 40px;">
-                            <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
-                            <p style="margin-top: 16px; color: var(--text-muted);">暂无标签</p>
-                        </div>
+                        <button class="theme-option" data-color="orange" data-hex="#EA580C" data-rgb="234, 88, 12">
+                            <span class="color-dot" style="background: #EA580C;"></span> 破风橙
+                        </button>
+                        <button class="theme-option" data-color="blue" data-hex="#2563EB" data-rgb="37, 99, 235">
+                            <span class="color-dot" style="background: #2563EB;"></span> 探索蓝
+                        </button>
+                        <button class="theme-option" data-color="beige" data-hex="#C89F70" data-rgb="200, 159, 112">
+                            <span class="color-dot" style="background: #C89F70;"></span> 岁月黄
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-    </main>
+    </header>
 
-    <!-- 分类模态框 -->
-    <div id="categoryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: white; border-radius: var(--radius-lg); padding: 24px; max-width: 400px; width: 90%;">
-            <h5 style="margin-bottom: 16px; color: var(--text-main); font-size: 16px; font-weight: 600;" id="categoryModalTitle">新增分类</h5>
+    <div class="content">
+        <div class="page-header animate-fade-up">
+            <h1>分类管理。</h1>
+            <p>管理文章分类和专栏，组织内容结构。</p>
+        </div>
+
+        <div class="card animate-fade-up delay-1">
+            <div class="card-header">
+                <div class="card-title-text">分类列表</div>
+                <button class="btn-primary-custom" onclick="showAddModal()">
+                    <i class="ph-bold ph-plus"></i> 新增分类
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="loadingSpinner" style="text-align: center; padding: 40px;">
+                    <i class="ph-bold ph-spinner" style="font-size: 40px; color: var(--primary); animation: spin 1s linear infinite;"></i>
+                    <p style="margin-top: 16px; color: var(--text-muted);">加载中...</p>
+                </div>
+
+                <div id="categoryList" style="display: flex; flex-direction: column; gap: 12px;"></div>
+
+                <div id="emptyMessage" style="display:none; text-align: center; padding: 40px;">
+                    <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
+                    <p style="margin-top: 16px; color: var(--text-muted);">暂无分类数据</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="modal-overlay" id="categoryModal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);">
+            <h5 style="color: var(--text-main); font-size: 16px; font-weight: 600;" id="modalTitle">新增分类</h5>
+            <button type="button" onclick="closeModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <form id="categoryForm" onsubmit="saveCategory(event)">
             <input type="hidden" id="categoryId">
-            <input type="text" id="categoryName" placeholder="分类名称" 
-                   style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); outline: none; font-size: 14px; margin-bottom: 16px;">
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <button onclick="closeCategoryModal()" class="btn-outline-custom btn-sm-custom">取消</button>
-                <button onclick="saveCategory()" class="btn-primary-custom">保存</button>
+            <div class="form-group">
+                <label class="form-label">分类名称</label>
+                <input type="text" class="form-control" id="categoryName" required placeholder="输入分类名称" style="width: 100%;">
             </div>
+            <div class="form-group">
+                <label class="form-label">分类描述</label>
+                <textarea class="form-control" id="categoryDescription" rows="3" placeholder="简要描述这个分类" style="width: 100%; resize: none;"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">图标</label>
+                <select class="form-control" id="categoryIcon" style="width: 100%;">
+                    <option value="ph-folder">📁 文件夹</option>
+                    <option value="ph-book-open">📖 书籍</option>
+                    <option value="ph-code">💻 代码</option>
+                    <option value="ph-paint-brush">🎨 设计</option>
+                    <option value="ph-camera">📷 摄影</option>
+                    <option value="ph-music-note">🎵 音乐</option>
+                    <option value="ph-game-controller">🎮 游戏</option>
+                    <option value="ph-briefcase">💼 工作</option>
+                    <option value="ph-heart">❤️ 生活</option>
+                    <option value="ph-lightbulb">💡 想法</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px;">
+                <button type="button" class="btn-outline-custom btn-sm-custom" onclick="closeModal()">取消</button>
+                <button type="submit" class="btn-primary-custom">
+                    <i class="ph-bold ph-check"></i> 保存
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);">
+            <h5 style="color: var(--text-main); font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-warning" style="color: var(--primary);"></i> 删除确认
+            </h5>
+            <button type="button" onclick="closeDeleteModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <div style="margin-bottom: 20px;">
+            <p style="color: var(--text-regular);">确定要删除这个分类吗？</p>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 8px 0 0 0;">删除后该分类下的文章将失去分类关联</p>
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button type="button" class="btn-outline-custom btn-sm-custom" onclick="closeDeleteModal()">取消</button>
+            <button type="button" class="btn-primary-custom" onclick="confirmDelete()" style="background: #DC2626;">
+                <i class="ph-bold ph-trash"></i> 确认删除
+            </button>
         </div>
     </div>
+</div>
 
-    <!-- 标签模态框 -->
-    <div id="tagModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: white; border-radius: var(--radius-lg); padding: 24px; max-width: 400px; width: 90%;">
-            <h5 style="margin-bottom: 16px; color: var(--text-main); font-size: 16px; font-weight: 600;" id="tagModalTitle">新增标签</h5>
-            <input type="hidden" id="tagId">
-            <input type="text" id="tagName" placeholder="标签名称" 
-                   style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); outline: none; font-size: 14px; margin-bottom: 16px;">
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <button onclick="closeTagModal()" class="btn-outline-custom btn-sm-custom">取消</button>
-                <button onclick="saveTag()" class="btn-primary-custom">保存</button>
-            </div>
-        </div>
-    </div>
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+<script>
+let categoryToDelete = null;
+let editingCategoryId = null;
 
-    <th:block th:replace="~{admin/layout :: adminScripts}"/>
-    <script>
-        function showCategoryModal() {
-            document.getElementById('categoryModalTitle').textContent = '新增分类';
-            document.getElementById('categoryId').value = '';
-            document.getElementById('categoryName').value = '';
-            document.getElementById('categoryModal').style.display = 'flex';
+document.addEventListener('DOMContentLoaded', function() {
+    const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    document.getElementById('currentDate').innerText = dateStr.replace(/星期/, '· 星期');
+    loadCategories();
+    initThemeSwitcher();
+});
+
+function initThemeSwitcher() {
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    const userMenuIcon = document.getElementById('userMenuIcon');
+    const themeSwitchBtn = document.getElementById('themeSwitchBtn');
+    const themeDropdown = document.getElementById('themeDropdown');
+    const sidebarAvatar = document.getElementById('sidebarAvatar');
+
+    userMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        themeDropdown.classList.remove('show');
+        userDropdown.classList.toggle('show');
+        userMenuIcon.classList.toggle('menu-open-icon');
+    });
+
+    themeSwitchBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.remove('show');
+        userMenuIcon.classList.remove('menu-open-icon');
+        themeDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+            userDropdown.classList.remove('show');
+            userMenuIcon.classList.remove('menu-open-icon');
         }
-
-        function closeCategoryModal() {
-            document.getElementById('categoryModal').style.display = 'none';
+        if (!themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
+            themeDropdown.classList.remove('show');
         }
+    });
 
-        function showEditCategoryModal(id, name) {
-            document.getElementById('categoryModalTitle').textContent = '编辑分类';
-            document.getElementById('categoryId').value = id;
-            document.getElementById('categoryName').value = name;
-            document.getElementById('categoryModal').style.display = 'flex';
-        }
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const targetTheme = this.getAttribute('data-color');
+            const targetHex = this.getAttribute('data-hex');
+            document.documentElement.setAttribute('data-theme', targetTheme);
+            document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            sidebarAvatar.src = `https://ui-avatars.com/api/?name=Li&background=${targetHex.substring(1)}&color=fff&font-size=0.4`;
+            themeDropdown.classList.remove('show');
+        });
+    });
+}
 
-        function saveCategory() {
-            const id = document.getElementById('categoryId').value;
-            const name = document.getElementById('categoryName').value;
+function loadCategories() {
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('categoryList').style.display = 'none';
+    document.getElementById('emptyMessage').style.display = 'none';
+
+    fetch('/admin/categories/api')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loadingSpinner').style.display = 'none';
             
-            if (!name.trim()) {
-                alert('请输入分类名称');
-                return;
+            if (data.categories && data.categories.length > 0) {
+                renderCategories(data.categories);
+                document.getElementById('categoryList').style.display = 'flex';
+            } else {
+                document.getElementById('emptyMessage').style.display = 'block';
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('emptyMessage').style.display = 'block';
+        });
+}
 
-            const url = id ? `/admin/categories/${id}` : '/admin/categories';
-            const method = id ? 'PUT' : 'POST';
-            
-            fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-                },
-                body: JSON.stringify({ name: name })
-            })
+function renderCategories(categories) {
+    const list = document.getElementById('categoryList');
+    list.innerHTML = categories.map(category => `
+        <div class="category-card">
+            <div class="category-info">
+                <div class="category-icon">
+                    <i class="ph-bold ${category.icon || 'ph-folder'}"></i>
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: var(--text-main); font-size: 15px;">${category.name || '未命名'}</div>
+                    <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">${category.description || '暂无描述'}</div>
+                </div>
+            </div>
+            <div class="category-stats">
+                <div class="stat-item">
+                    <div class="stat-value">${category.articleCount || 0}</div>
+                    <div class="stat-label">文章</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 4px; margin-left: 16px;">
+                <button class="action-btn" title="编辑" onclick="editCategory(${category.id}, '${(category.name || '').replace(/'/g, "\\'")}', '${(category.description || '').replace(/'/g, "\\'")}', '${category.icon || 'ph-folder'}')">
+                    <i class="ph-bold ph-pencil"></i>
+                </button>
+                <button class="action-btn delete" title="删除" onclick="showDeleteModal(${category.id})">
+                    <i class="ph-bold ph-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showAddModal() {
+    document.getElementById('modalTitle').textContent = '新增分类';
+    document.getElementById('categoryForm').reset();
+    document.getElementById('categoryId').value = '';
+    document.getElementById('categoryModal').classList.add('show');
+}
+
+function editCategory(id, name, description, icon) {
+    document.getElementById('modalTitle').textContent = '编辑分类';
+    document.getElementById('categoryId').value = id;
+    document.getElementById('categoryName').value = name;
+    document.getElementById('categoryDescription').value = description;
+    document.getElementById('categoryIcon').value = icon;
+    document.getElementById('categoryModal').classList.add('show');
+}
+
+function closeModal() {
+    document.getElementById('categoryModal').classList.remove('show');
+}
+
+function saveCategory(event) {
+    event.preventDefault();
+    
+    const id = document.getElementById('categoryId').value;
+    const data = {
+        name: document.getElementById('categoryName').value,
+        description: document.getElementById('categoryDescription').value,
+        icon: document.getElementById('categoryIcon').value
+    };
+
+    const url = id ? `/admin/categories/${id}` : '/admin/categories';
+    const method = id ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (response.ok) {
+            closeModal();
+            loadCategories();
+        } else {
+            alert('保存失败，请重试');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('保存失败，请重试');
+    });
+}
+
+function showDeleteModal(id) {
+    categoryToDelete = id;
+    document.getElementById('deleteModal').classList.add('show');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('show');
+    categoryToDelete = null;
+}
+
+function confirmDelete() {
+    if (categoryToDelete) {
+        fetch(`/admin/categories/${categoryToDelete}`, { method: 'DELETE' })
             .then(response => {
                 if (response.ok) {
-                    closeCategoryModal();
-                    location.reload();
+                    closeDeleteModal();
+                    loadCategories();
                 } else {
-                    alert('保存失败，请重试');
+                    alert('删除失败，请重试');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('保存失败，请重试');
+                alert('删除失败，请重试');
             });
-        }
-
-        function deleteCategory(id) {
-            if (confirm('确定要删除这个分类吗？')) {
-                fetch(`/admin/categories/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        alert('删除失败，请重试');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('删除失败，请重试');
-                });
-            }
-        }
-
-        function showTagModal() {
-            document.getElementById('tagModalTitle').textContent = '新增标签';
-            document.getElementById('tagId').value = '';
-            document.getElementById('tagName').value = '';
-            document.getElementById('tagModal').style.display = 'flex';
-        }
-
-        function closeTagModal() {
-            document.getElementById('tagModal').style.display = 'none';
-        }
-
-        function showEditTagModal(id, name) {
-            document.getElementById('tagModalTitle').textContent = '编辑标签';
-            document.getElementById('tagId').value = id;
-            document.getElementById('tagName').value = name;
-            document.getElementById('tagModal').style.display = 'flex';
-        }
-
-        function saveTag() {
-            const id = document.getElementById('tagId').value;
-            const name = document.getElementById('tagName').value;
-            
-            if (!name.trim()) {
-                alert('请输入标签名称');
-                return;
-            }
-
-            const url = id ? `/admin/tags/${id}` : '/admin/tags';
-            const method = id ? 'PUT' : 'POST';
-            
-            fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-                },
-                body: JSON.stringify({ name: name })
-            })
-            .then(response => {
-                if (response.ok) {
-                    closeTagModal();
-                    location.reload();
-                } else {
-                    alert('保存失败，请重试');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('保存失败，请重试');
-            });
-        }
-
-        function deleteTag(id) {
-            if (confirm('确定要删除这个标签吗？')) {
-                fetch(`/admin/tags/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        alert('删除失败，请重试');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('删除失败，请重试');
-                });
-            }
-        }
-
-        // 点击模态框外部关闭
-        document.getElementById('categoryModal').addEventListener('click', function(e) {
-            if (e.target === this) closeCategoryModal();
-        });
-        document.getElementById('tagModal').addEventListener('click', function(e) {
-            if (e.target === this) closeTagModal();
-        });
-    </script>
+    }
+}
+</script>
 </body>
 </html>

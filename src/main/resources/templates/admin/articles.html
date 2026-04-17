@@ -4,276 +4,470 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文章管理 - 知筑后台</title>
-    <th:block th:replace="~{admin/layout :: adminStyles}"/>
+    <style th:replace="~{admin/layout :: adminStyles}"></style>
+    <style>
+        .btn-outline-custom {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-regular);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline-custom:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+        .btn-sm-custom {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        .form-control {
+            padding: 8px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            outline: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .table-custom tbody tr {
+            transition: all 0.2s;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-success { background: #ECFDF5; color: #059669; }
+        .badge-warning { background: #FFF7ED; color: #EA580C; }
+        .badge-secondary { background: #F3F4F6; color: #6B7280; }
+        .action-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        .action-btn:hover { background: var(--primary-light); color: var(--primary); }
+        .action-btn.delete:hover { background: #FEF2F2; color: #DC2626; }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: white; border-radius: var(--radius-lg);
+            padding: 24px; max-width: 400px; width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+    </style>
 </head>
 <body>
-    <!-- 侧边栏 -->
-    <div th:replace="~{admin/layout :: sidebar('articles')}"></div>
 
-    <!-- 主内容区 -->
-    <main class="main-wrapper">
-        <!-- 顶栏 -->
-        <div th:replace="~{admin/layout :: topbar}"></div>
-
-        <!-- 页面内容 -->
-        <div class="content">
-            <div class="page-header">
-                <h1>文章管理。</h1>
-                <p>管理所有文章，包括发布、编辑、删除等操作。</p>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a href="/admin/dashboard" class="logo">
+            <div class="logo-icon"><i class="ph-bold ph-feather"></i></div>
+            <div class="logo-text">
+                <span class="logo-title">ZHIZHU.</span>
+                <span class="logo-sub">工作台</span>
             </div>
+        </a>
+    </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title-text">文章列表</div>
-                    <a class="btn-primary-custom" href="/admin/articles/new">
-                        <i class="ph-bold ph-plus"></i> 新增文章
-                    </a>
+    <div class="nav-body">
+        <div class="nav-section-label">创作</div>
+        <a href="/admin/dashboard" class="nav-item">
+            <i class="ph ph-squares-four nav-icon"></i> 概览
+        </a>
+        <a href="/admin/article-form" class="nav-item">
+            <i class="ph ph-pencil-line nav-icon"></i> 写文章
+        </a>
+        <a href="/admin/categories" class="nav-item">
+            <i class="ph ph-folder-open nav-icon"></i> 专栏与分类
+        </a>
+        <a href="#" class="nav-item">
+            <i class="ph ph-image nav-icon"></i> 我的图床
+        </a>
+        
+        <div class="nav-section-label">管理</div>
+        <a href="/admin/demos" class="nav-item">
+            <i class="ph ph-rocket-launch nav-icon"></i> 演示管理
+        </a>
+        <a href="#" class="nav-item">
+            <i class="ph ph-chats-circle nav-icon"></i> 留言板
+        </a>
+        <a href="/admin/comments" class="nav-item">
+            <i class="ph ph-chat-centered-text nav-icon"></i> 评论管理
+        </a>
+        <a href="/admin/friend-links" class="nav-item">
+            <i class="ph ph-link nav-icon"></i> 友情链接
+        </a>
+
+        <div class="nav-section-label">设置</div>
+        <a href="/admin/settings" class="nav-item">
+            <i class="ph ph-paint-brush nav-icon"></i> 主题外观
+        </a>
+        <a href="/admin/settings" class="nav-item">
+            <i class="ph ph-gear-six nav-icon"></i> 基础设置
+        </a>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="user-menu-wrapper">
+            <div class="sidebar-user" id="userMenuBtn">
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Li&background=059669&color=fff&font-size=0.4" alt="头像" class="user-avatar" id="sidebarAvatar">
+                    <div class="user-name" th:text="${#authentication.name}">管理员</div>
                 </div>
-                <div class="card-body">
-                    <!-- 状态筛选和搜索 -->
-                    <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: center;">
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn-primary-custom" onclick="filterByStatus('ALL')">全部</button>
-                            <button type="button" class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('PUBLISHED')">已发布</button>
-                            <button type="button" class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('DRAFT')">草稿</button>
-                        </div>
-                        <div style="flex: 1; display: flex; gap: 8px;">
-                            <input type="text" class="form-control" id="searchKeyword" placeholder="搜索文章标题..." 
-                                   style="flex: 1; padding: 8px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); outline: none; font-size: 14px;">
-                            <button class="btn-outline-custom btn-sm-custom" onclick="searchArticles()">
-                                <i class="ph-bold ph-magnifying-glass"></i> 搜索
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 加载提示 -->
-                    <div id="loadingSpinner" class="text-center py-4" style="text-align: center; padding: 40px;">
-                        <div class="spinner-border" style="color: var(--primary); width: 40px; height: 40px; border-width: 3px;" role="status"></div>
-                        <p style="margin-top: 16px; color: var(--text-muted);">加载中...</p>
-                    </div>
-
-                    <!-- 文章表格 -->
-                    <table class="table-custom" id="articleTable" style="display:none;">
-                        <thead>
-                            <tr>
-                                <th width="50">ID</th>
-                                <th>标题</th>
-                                <th width="80">状态</th>
-                                <th width="60">置顶</th>
-                                <th width="80">浏览量</th>
-                                <th width="120">分类</th>
-                                <th width="150">标签</th>
-                                <th width="120">发布时间</th>
-                                <th width="150">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="articleTableBody"></tbody>
-                    </table>
-
-                    <!-- 空数据提示 -->
-                    <div id="emptyMessage" class="text-center py-4" style="display:none; text-align: center; padding: 40px;">
-                        <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
-                        <p style="margin-top: 16px; color: var(--text-muted);">暂无文章数据</p>
-                    </div>
-
-                    <!-- 分页 -->
-                    <nav id="pagination" style="display:none; margin-top: 20px;">
-                        <ul class="pagination justify-content-center" id="paginationList" 
-                            style="display: flex; list-style: none; gap: 8px; justify-content: center; padding: 0; margin: 0;"></ul>
-                    </nav>
-                </div>
+                <i class="ph ph-caret-up user-menu-icon" id="userMenuIcon"></i>
             </div>
-        </div>
-    </main>
-
-    <!-- 删除确认对话框 -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div class="modal-dialog" style="background: white; border-radius: var(--radius-lg); padding: 24px; max-width: 400px; width: 90%;">
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);">
-                <h5 class="modal-title" style="color: var(--text-main); font-size: 16px; font-weight: 600;">
-                    <i class="ph-bold ph-warning" style="color: var(--primary);"></i> 删除确认
-                </h5>
-                <button type="button" class="btn-close" onclick="closeDeleteModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
-            </div>
-            <div class="modal-body" style="margin-bottom: 20px;">
-                <p style="color: var(--text-regular); margin-bottom: 8px;">确定要删除文章 <strong id="deleteArticleTitle" style="color: var(--primary);"></strong> 吗？</p>
-                <p style="color: var(--text-muted); font-size: 13px; margin: 0;">删除后无法恢复</p>
-            </div>
-            <div class="modal-footer" style="display: flex; gap: 8px; justify-content: flex-end;">
-                <button type="button" class="btn-outline-custom btn-sm-custom" onclick="closeDeleteModal()">取消</button>
-                <button type="button" class="btn-primary-custom" onclick="confirmDelete()" style="background: #DC3545;">
-                    <i class="ph-bold ph-trash"></i> 确认删除
-                </button>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="/admin/profile" class="dropdown-item"><i class="ph ph-user"></i> 个人资料</a>
+                <div class="dropdown-divider"></div>
+                <a href="/logout" class="dropdown-item text-danger"><i class="ph ph-sign-out"></i> 退出登录</a>
             </div>
         </div>
     </div>
+</aside>
 
-    <th:block th:replace="~{admin/layout :: adminScripts}"/>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // 文章管理相关 JavaScript
-        let currentFilter = 'ALL';
-        let currentPage = 1;
-        let totalPages = 1;
-        let articleToDelete = null;
-
-        function filterByStatus(status) {
-            currentFilter = status;
-            currentPage = 1;
-            loadArticles();
+<main class="main-wrapper">
+    <header class="topbar">
+        <div class="topbar-date">
+            <i class="ph-light ph-calendar-blank"></i>
+            <span id="currentDate">2026 年 4 月 17 日 · 星期五</span>
+        </div>
+        
+        <div class="topbar-right">
+            <button class="topbar-btn" title="查看站点" onclick="window.open('/')"><i class="ph ph-arrow-up-right"></i></button>
+            <button class="topbar-btn" title="通知"><i class="ph ph-bell"></i><span class="notif-dot"></span></button>
             
-            // 更新按钮状态
-            document.querySelectorAll('.btn-group button').forEach(btn => {
-                btn.classList.remove('btn-primary-custom');
-                btn.classList.add('btn-outline-custom', 'btn-sm-custom');
-            });
-            event.target.classList.remove('btn-outline-custom', 'btn-sm-custom');
-            event.target.classList.add('btn-primary-custom');
-        }
-
-        function searchArticles() {
-            const keyword = document.getElementById('searchKeyword').value;
-            loadArticles(keyword);
-        }
-
-        function loadArticles(keyword = '') {
-            document.getElementById('loadingSpinner').style.display = 'block';
-            document.getElementById('articleTable').style.display = 'none';
-            document.getElementById('emptyMessage').style.display = 'none';
-            document.getElementById('pagination').style.display = 'none';
-
-            const url = `/admin/articles/api?status=${currentFilter}&page=${currentPage}&keyword=${encodeURIComponent(keyword)}`;
-            
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('loadingSpinner').style.display = 'none';
-                    
-                    if (data.articles && data.articles.length > 0) {
-                        renderArticles(data.articles);
-                        document.getElementById('articleTable').style.display = 'table';
-                        if (data.totalPages > 1) {
-                            renderPagination(data.currentPage, data.totalPages);
-                            document.getElementById('pagination').style.display = 'block';
-                        }
-                    } else {
-                        document.getElementById('emptyMessage').style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('loadingSpinner').style.display = 'none';
-                    document.getElementById('emptyMessage').style.display = 'block';
-                });
-        }
-
-        function renderArticles(articles) {
-            const tbody = document.getElementById('articleTableBody');
-            tbody.innerHTML = articles.map(article => `
-                <tr>
-                    <td style="color: var(--text-muted);">${article.id}</td>
-                    <td>
-                        <a href="/admin/articles/${article.id}/edit" style="color: var(--text-main); font-weight: 500; text-decoration: none;">
-                            ${article.title}
-                        </a>
-                    </td>
-                    <td>
-                        ${article.status === 'PUBLISHED' 
-                            ? '<span class="badge badge-success"><i class="ph-bold ph-check"></i> 已发布</span>'
-                            : '<span class="badge badge-secondary"><i class="ph-bold ph-file"></i> 草稿</span>'
-                        }
-                    </td>
-                    <td>
-                        ${article.pinned 
-                            ? '<span class="badge badge-info"><i class="ph-bold ph-push-pin"></i></span>'
-                            : '<span style="color: var(--text-muted);">-</span>'
-                        }
-                    </td>
-                    <td style="color: var(--text-muted);">${article.viewCount || 0}</td>
-                    <td style="color: var(--text-muted);">${article.categoryName || '-'}</td>
-                    <td style="color: var(--text-muted);">${article.tags ? article.tags.map(t => t.name).join(', ') : '-'}</td>
-                    <td style="color: var(--text-muted);">${article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('zh-CN') : '-'}</td>
-                    <td>
-                        <a href="/admin/articles/${article.id}/edit" class="btn-outline-custom btn-sm-custom" style="margin-right: 4px;">
-                            <i class="ph-bold ph-pencil"></i> 编辑
-                        </a>
-                        <button onclick="showDeleteModal(${article.id}, '${article.title}')" class="btn-outline-custom btn-sm-custom" style="border-color: #DC3545; color: #DC3545;">
-                            <i class="ph-bold ph-trash"></i> 删除
+            <div class="theme-menu-wrapper">
+                <button class="topbar-btn" id="themeSwitchBtn" title="后台配色">
+                    <i class="ph ph-dots-three"></i>
+                </button>
+                <div class="theme-dropdown" id="themeDropdown">
+                    <div class="theme-dropdown-header">后台专属配色</div>
+                    <div class="theme-options">
+                        <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
+                            <span class="color-dot" style="background: #059669;"></span> 翡翠绿
                         </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
+                        <button class="theme-option" data-color="orange" data-hex="#EA580C" data-rgb="234, 88, 12">
+                            <span class="color-dot" style="background: #EA580C;"></span> 破风橙
+                        </button>
+                        <button class="theme-option" data-color="blue" data-hex="#2563EB" data-rgb="37, 99, 235">
+                            <span class="color-dot" style="background: #2563EB;"></span> 探索蓝
+                        </button>
+                        <button class="theme-option" data-color="beige" data-hex="#C89F70" data-rgb="200, 159, 112">
+                            <span class="color-dot" style="background: #C89F70;"></span> 岁月黄
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-        function renderPagination(current, total) {
-            const paginationList = document.getElementById('paginationList');
-            let html = '';
+    <div class="content">
+        <div class="page-header animate-fade-up">
+            <h1>文章管理。</h1>
+            <p>管理所有文章，包括发布、编辑、删除等操作。</p>
+        </div>
+
+        <div class="card animate-fade-up delay-1">
+            <div class="card-header">
+                <div class="card-title-text">文章列表</div>
+                <a class="btn-primary-custom" href="/admin/article-form">
+                    <i class="ph-bold ph-plus"></i> 新增文章
+                </a>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: center;">
+                    <div class="btn-group" role="group" style="display: flex; gap: 8px;">
+                        <button type="button" class="btn-primary-custom" onclick="filterByStatus('ALL')">全部</button>
+                        <button type="button" class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('PUBLISHED')">已发布</button>
+                        <button type="button" class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('DRAFT')">草稿</button>
+                    </div>
+                    <div style="flex: 1; display: flex; gap: 8px;">
+                        <input type="text" class="form-control" id="searchKeyword" placeholder="搜索文章标题..." 
+                               style="flex: 1;" onkeypress="if(event.keyCode===13) searchArticles()">
+                        <button class="btn-outline-custom btn-sm-custom" onclick="searchArticles()">
+                            <i class="ph-bold ph-magnifying-glass"></i> 搜索
+                        </button>
+                    </div>
+                </div>
+
+                <div id="loadingSpinner" style="text-align: center; padding: 40px;">
+                    <i class="ph-bold ph-spinner" style="font-size: 40px; color: var(--primary); animation: spin 1s linear infinite;"></i>
+                    <p style="margin-top: 16px; color: var(--text-muted);">加载中...</p>
+                </div>
+
+                <table class="table-custom" id="articleTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th width="50">ID</th>
+                            <th>标题</th>
+                            <th width="80">状态</th>
+                            <th width="60">置顶</th>
+                            <th width="80">浏览</th>
+                            <th width="120">分类</th>
+                            <th width="150">标签</th>
+                            <th width="120">发布时间</th>
+                            <th width="150">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="articleTableBody"></tbody>
+                </table>
+
+                <div id="emptyMessage" style="display:none; text-align: center; padding: 40px;">
+                    <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
+                    <p style="margin-top: 16px; color: var(--text-muted);">暂无文章数据</p>
+                </div>
+
+                <nav id="pagination" style="display:none; margin-top: 20px;">
+                    <ul id="paginationList" style="display: flex; list-style: none; gap: 8px; justify-content: center; padding: 0; margin: 0;"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);">
+            <h5 style="color: var(--text-main); font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-warning" style="color: var(--primary);"></i> 删除确认
+            </h5>
+            <button type="button" onclick="closeDeleteModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <div style="margin-bottom: 20px;">
+            <p style="color: var(--text-regular); margin-bottom: 8px;">确定要删除文章 <strong id="deleteArticleTitle" style="color: var(--primary);"></strong> 吗？</p>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0;">删除后无法恢复</p>
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button type="button" class="btn-outline-custom btn-sm-custom" onclick="closeDeleteModal()">取消</button>
+            <button type="button" class="btn-primary-custom" onclick="confirmDelete()" style="background: #DC2626;">
+                <i class="ph-bold ph-trash"></i> 确认删除
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+<script>
+let currentFilter = 'ALL';
+let currentPage = 1;
+let totalPages = 1;
+let articleToDelete = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    document.getElementById('currentDate').innerText = dateStr.replace(/星期/, '· 星期');
+    loadArticles();
+    initThemeSwitcher();
+});
+
+function initThemeSwitcher() {
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    const userMenuIcon = document.getElementById('userMenuIcon');
+    const themeSwitchBtn = document.getElementById('themeSwitchBtn');
+    const themeDropdown = document.getElementById('themeDropdown');
+    const sidebarAvatar = document.getElementById('sidebarAvatar');
+
+    userMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        themeDropdown.classList.remove('show');
+        userDropdown.classList.toggle('show');
+        userMenuIcon.classList.toggle('menu-open-icon');
+    });
+
+    themeSwitchBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.remove('show');
+        userMenuIcon.classList.remove('menu-open-icon');
+        themeDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+            userDropdown.classList.remove('show');
+            userMenuIcon.classList.remove('menu-open-icon');
+        }
+        if (!themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
+            themeDropdown.classList.remove('show');
+        }
+    });
+
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const targetTheme = this.getAttribute('data-color');
+            const targetHex = this.getAttribute('data-hex');
+            document.documentElement.setAttribute('data-theme', targetTheme);
+            document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            sidebarAvatar.src = `https://ui-avatars.com/api/?name=Li&background=${targetHex.substring(1)}&color=fff&font-size=0.4`;
+            themeDropdown.classList.remove('show');
+        });
+    });
+}
+
+function filterByStatus(status) {
+    currentFilter = status;
+    currentPage = 1;
+    loadArticles();
+    document.querySelectorAll('.btn-group button').forEach(btn => {
+        btn.classList.remove('btn-primary-custom');
+        btn.classList.add('btn-outline-custom', 'btn-sm-custom');
+    });
+    event.target.classList.remove('btn-outline-custom', 'btn-sm-custom');
+    event.target.classList.add('btn-primary-custom');
+}
+
+function searchArticles() {
+    const keyword = document.getElementById('searchKeyword').value;
+    currentPage = 1;
+    loadArticles(keyword);
+}
+
+function loadArticles(keyword = '') {
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('articleTable').style.display = 'none';
+    document.getElementById('emptyMessage').style.display = 'none';
+    document.getElementById('pagination').style.display = 'none';
+
+    fetch(`/admin/articles/api?status=${currentFilter}&page=${currentPage}&keyword=${encodeURIComponent(keyword)}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            totalPages = data.totalPages || 1;
             
-            if (current > 1) {
-                html += `<li><button class="btn-outline-custom btn-sm-custom" onclick="goToPage(${current - 1})">上一页</button></li>`;
+            if (data.articles && data.articles.length > 0) {
+                renderTable(data.articles);
+                document.getElementById('articleTable').style.display = 'table';
+                renderPagination(data.currentPage, data.totalPages);
+                document.getElementById('pagination').style.display = 'block';
+            } else {
+                document.getElementById('emptyMessage').style.display = 'block';
             }
-            
-            for (let i = Math.max(1, current - 2); i <= Math.min(total, current + 2); i++) {
-                html += `<li><button class="btn-sm-custom ${i === current ? 'btn-primary-custom' : 'btn-outline-custom'}" onclick="goToPage(${i})">${i}</button></li>`;
-            }
-            
-            if (current < total) {
-                html += `<li><button class="btn-outline-custom btn-sm-custom" onclick="goToPage(${current + 1})">下一页</button></li>`;
-            }
-            
-            paginationList.innerHTML = html;
-        }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('emptyMessage').style.display = 'block';
+        });
+}
 
-        function goToPage(page) {
-            currentPage = page;
-            loadArticles(document.getElementById('searchKeyword').value);
-        }
+function renderTable(articles) {
+    const tbody = document.getElementById('articleTableBody');
+    tbody.innerHTML = articles.map(article => `
+        <tr>
+            <td style="color: var(--text-muted);">${article.id}</td>
+            <td>
+                <div style="font-weight: 500; color: var(--text-main);">${article.title || '无标题'}</div>
+                ${article.summary ? `<div style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">${article.summary.substring(0, 60)}...</div>` : ''}
+            </td>
+            <td>
+                <span class="badge ${article.status === 'PUBLISHED' ? 'badge-success' : 'badge-secondary'}">
+                    ${article.status === 'PUBLISHED' ? '已发布' : '草稿'}
+                </span>
+            </td>
+            <td style="text-align: center;">
+                ${article.sticky ? '<i class="ph-bold ph-pin" style="color: var(--primary);"></i>' : ''}
+            </td>
+            <td style="color: var(--text-muted);">${article.views || 0}</td>
+            <td style="color: var(--text-regular);">${article.categoryName || '-'}</td>
+            <td style="color: var(--text-regular);">${article.tags ? article.tags.split(',').slice(0, 2).join(', ') : '-'}</td>
+            <td style="color: var(--text-muted); font-size: 13px;">${article.publishTime ? new Date(article.publishTime).toLocaleDateString('zh-CN') : '-'}</td>
+            <td>
+                <div style="display: flex; gap: 4px;">
+                    <button class="action-btn" title="编辑" onclick="editArticle(${article.id})">
+                        <i class="ph-bold ph-pencil"></i>
+                    </button>
+                    <button class="action-btn" title="查看" onclick="viewArticle(${article.id})">
+                        <i class="ph-bold ph-eye"></i>
+                    </button>
+                    <button class="action-btn delete" title="删除" onclick="showDeleteModal(${article.id}, '${(article.title || '无标题').replace(/'/g, "\\'")}')">
+                        <i class="ph-bold ph-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
 
-        function showDeleteModal(id, title) {
-            articleToDelete = id;
-            document.getElementById('deleteArticleTitle').textContent = title;
-            document.getElementById('deleteModal').style.display = 'flex';
-        }
+function renderPagination(current, total) {
+    if (total <= 1) return;
+    const list = document.getElementById('paginationList');
+    let html = '';
+    if (current > 1) {
+        html += `<li><button class="btn-outline-custom btn-sm-custom" onclick="goToPage(${current - 1})">上一页</button></li>`;
+    }
+    for (let i = Math.max(1, current - 2); i <= Math.min(total, current + 2); i++) {
+        html += `<li><button class="${i === current ? 'btn-primary-custom' : 'btn-outline-custom btn-sm-custom'}" onclick="goToPage(${i})">${i}</button></li>`;
+    }
+    if (current < total) {
+        html += `<li><button class="btn-outline-custom btn-sm-custom" onclick="goToPage(${current + 1})">下一页</button></li>`;
+    }
+    list.innerHTML = html;
+}
 
-        function closeDeleteModal() {
-            articleToDelete = null;
-            document.getElementById('deleteModal').style.display = 'none';
-        }
+function goToPage(page) {
+    currentPage = page;
+    loadArticles(document.getElementById('searchKeyword').value);
+}
 
-        function confirmDelete() {
-            if (articleToDelete) {
-                fetch(`/admin/articles/${articleToDelete}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        closeDeleteModal();
-                        loadArticles();
-                    } else {
-                        alert('删除失败，请重试');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
+function editArticle(id) {
+    window.location.href = `/admin/article-form?id=${id}`;
+}
+
+function viewArticle(id) {
+    window.open(`/article/${id}`, '_blank');
+}
+
+function showDeleteModal(id, title) {
+    articleToDelete = id;
+    document.getElementById('deleteArticleTitle').textContent = title;
+    document.getElementById('deleteModal').classList.add('show');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('show');
+    articleToDelete = null;
+}
+
+function confirmDelete() {
+    if (articleToDelete) {
+        fetch(`/admin/articles/${articleToDelete}`, { method: 'DELETE' })
+            .then(response => {
+                if (response.ok) {
+                    closeDeleteModal();
+                    loadArticles();
+                } else {
                     alert('删除失败，请重试');
-                });
-            }
-        }
-
-        // 页面加载时获取文章列表
-        document.addEventListener('DOMContentLoaded', function() {
-            loadArticles();
-        });
-
-        // 点击模态框外部关闭
-        document.getElementById('deleteModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeDeleteModal();
-            }
-        });
-    </script>
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('删除失败，请重试');
+            });
+    }
+}
+</script>
 </body>
 </html>
