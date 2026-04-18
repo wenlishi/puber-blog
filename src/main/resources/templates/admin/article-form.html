@@ -3,533 +3,567 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文章编辑 - puber-blog后台</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- EasyMDE Markdown Editor -->
+    <title>写文章 - 知筑后台</title>
+    <style th:replace="~{admin/layout :: adminStyles}"></style>
     <link href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" rel="stylesheet">
-    <!-- Highlight.js for code syntax highlighting -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; }
-        .EasyMDEContainer { max-width: 100%; }
-        .editor-toolbar { border-color: #dee2e6; }
-        .cover-preview { max-width: 300px; margin-top: 10px; }
-        .tag-checkbox { margin-right: 10px; }
-        /* 预览区样式优化 */
+        .editor-main { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+        .editor-left { display: flex; flex-direction: column; }
+        .editor-right { display: flex; flex-direction: column; }
+        .editor-right-cards { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+        .form-label { display: block; font-size: 13.5px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
+        .card-body { padding: 18px; }
+        .form-control, .form-select {
+            width: 100%; padding: 10px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            outline: none; font-size: 14px;
+            background: var(--bg-surface);
+            color: var(--text-regular);
+            transition: all 0.2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .form-text { font-size: 12.5px; color: var(--text-muted); margin-top: 6px; }
+        .cover-preview { max-width: 300px; margin-top: 10px; border-radius: var(--radius-md); }
+        .EasyMDEContainer { border: 1px solid var(--border-light); border-radius: var(--radius-sm); overflow: hidden; }
+        .EasyMDEContainer .editor-toolbar {
+            border-bottom: 1px solid var(--border-light); background: var(--bg-body);
+        }
+        .EasyMDEContainer .editor-toolbar button {
+            color: var(--text-regular) !important;
+        }
+        .EasyMDEContainer .editor-toolbar button:hover {
+            background: var(--primary-light); border-color: var(--primary);
+        }
+        .EasyMDEContainer .CodeMirror {
+            min-height: 500px; font-family: 'Consolas', 'Courier New', monospace; font-size: 14px;
+            border: none; background: var(--bg-surface);
+        }
         .EasyMDEContainer .editor-preview {
-            padding: 20px;
-            background: #fff;
+            background: var(--bg-surface); padding: 20px;
         }
-        .EasyMDEContainer .editor-preview pre {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 16px;
-            border-radius: 4px;
-            overflow-x: auto;
+        .tag-checkbox {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 12px; background: var(--bg-body); border-radius: var(--radius-sm);
+            margin-right: 8px; margin-bottom: 8px; font-size: 13.5px; cursor: pointer;
+            transition: all 0.2s;
         }
-        .EasyMDEContainer .editor-preview code {
-            font-family: 'Consolas', 'Courier New', monospace;
+        .tag-checkbox:hover { background: var(--primary-light); }
+        .tag-checkbox input[type="checkbox"] { accent-color: var(--primary); }
+        .upload-status {
+            position: fixed; top: 20px; right: 20px; z-index: 1000;
+            padding: 12px 20px; background: var(--bg-surface); border-radius: var(--radius-md);
+            box-shadow: var(--shadow-hover); display: none; align-items: center; gap: 8px;
+            font-size: 13.5px; color: var(--text-regular);
         }
+        .auto-save-status { font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+
+        /* 按钮样式 - 来自仪表37.html */
+        .btn {
+            padding: 10px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary {
+            background: var(--primary); color: #FFFFFF;
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover); transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--bg-sidebar-active);
+        }
+        .btn-secondary {
+            background: var(--bg-body); color: var(--text-main);
+            border: 1px solid var(--border-strong);
+        }
+        .btn-secondary:hover {
+            background: var(--border-light);
+        }
+
+        .toast {
+            position: fixed; bottom: 24px; right: 24px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            box-shadow: var(--shadow-hover);
+            display: flex; align-items: center; gap: 12px;
+            z-index: 2000;
+            opacity: 0; transform: translateY(20px);
+            transition: all 0.3s;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { border-left: 4px solid #059669; }
+        .toast.error { border-left: 4px solid #DC2626; }
     </style>
 </head>
 <body>
-    <!-- 导航栏 -->
-    <div th:replace="~{admin/fragments :: navbar('articles')}"></div>
 
-    <!-- 主内容 -->
-    <div class="container mt-4">
-        <!-- 上传进度提示 -->
-        <div id="upload-progress" class="alert alert-info" style="display:none; position:fixed; top:20px; right:20px; z-index:9999;">
-            <i class="bi bi-upload"></i> <span id="upload-status">上传中...</span>
+<aside th:replace="~{admin/layout :: sidebar(activePage='articles')}"></aside>
+
+<main class="main-wrapper">
+    <header class="topbar">
+        <div class="topbar-date">
+            <i class="ph-light ph-calendar-blank"></i>
+            <span id="currentDate">2026 年 4 月 17 日 · 星期五</span>
         </div>
-
-        <!-- 自动保存状态指示器 -->
-        <div id="auto-save-indicator" class="text-muted small mb-2" style="display:block;">
-            <i class="bi bi-cloud-check"></i> <span id="save-status">自动保存已开启</span>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0" id="pageTitle"><i class="bi bi-file-text"></i> 新增文章</h5>
+        
+        <div class="topbar-right">
+            <button class="topbar-btn" title="查看站点" onclick="window.open('/')"><i class="ph ph-arrow-up-right"></i></button>
+            <button class="topbar-btn" title="通知"><i class="ph ph-bell"></i><span class="notif-dot"></span></button>
+            
+            <div class="theme-menu-wrapper">
+                <button class="topbar-btn" id="themeSwitchBtn" title="后台配色">
+                    <i class="ph ph-dots-three"></i>
+                </button>
+                <div class="theme-dropdown" id="themeDropdown">
+                    <div class="theme-dropdown-header">后台专属配色</div>
+                    <div class="theme-options">
+                        <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
+                            <span class="color-dot" style="background: #059669;"></span> 翡翠绿
+                        </button>
+                        <button class="theme-option" data-color="orange" data-hex="#EA580C" data-rgb="234, 88, 12">
+                            <span class="color-dot" style="background: #EA580C;"></span> 破风橙
+                        </button>
+                        <button class="theme-option" data-color="blue" data-hex="#2563EB" data-rgb="37, 99, 235">
+                            <span class="color-dot" style="background: #2563EB;"></span> 探索蓝
+                        </button>
+                        <button class="theme-option" data-color="beige" data-hex="#C89F70" data-rgb="200, 159, 112">
+                            <span class="color-dot" style="background: #C89F70;"></span> 岁月黄
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <form id="articleForm">
-                    <input type="hidden" id="articleId">
+        </div>
+    </header>
 
-                    <!-- 文章标题 -->
-                    <div class="mb-3">
-                        <label for="title" class="form-label">文章标题 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="title" required>
-                    </div>
+    <div class="content">
+        <div id="upload-progress" class="upload-status">
+            <i class="ph-bold ph-upload-simple" style="color: var(--primary);"></i>
+            <span id="upload-status">上传中...</span>
+        </div>
 
-                    <!-- 文章别名（slug） -->
-                    <div class="mb-3">
-                        <label for="slug" class="form-label">别名（Slug）</label>
-                        <input type="text" class="form-control" id="slug">
-                        <div class="form-text">如果不填写，系统会自动根据标题生成</div>
-                    </div>
-
-                    <!-- 封面图片 -->
-                    <div class="mb-3">
-                        <label for="coverImage" class="form-label">封面图片</label>
-                        <input type="file" class="form-control" id="coverImageFile" accept="image/*" onchange="uploadCoverImage()">
-                        <input type="hidden" id="coverImage">
-                        <img id="coverImagePreview" class="cover-preview" style="display:none;">
-                    </div>
-
-                    <!-- 文章摘要 -->
-                    <div class="mb-3">
-                        <label for="summary" class="form-label">文章摘要</label>
-                        <textarea class="form-control" id="summary" rows="2"></textarea>
-                        <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="generateSummary()">自动生成摘要</button>
-                    </div>
-
-                    <!-- Markdown编辑器 -->
-                    <div class="mb-3">
-                        <label for="content" class="form-label">文章内容（Markdown） <span class="text-danger">*</span></label>
-                        <textarea id="content"></textarea>
-                    </div>
-
-                    <!-- 分类选择 -->
-                    <div class="mb-3">
-                        <label for="categoryId" class="form-label">分类</label>
-                        <select class="form-select" id="categoryId">
-                            <option value="">无分类</option>
-                        </select>
-                    </div>
-
-                    <!-- 标签选择 -->
-                    <div class="mb-3">
-                        <label class="form-label">标签</label>
-                        <div id="tagContainer"></div>
-                    </div>
-
-                    <!-- 文章状态 -->
-                    <div class="mb-3">
-                        <label class="form-label">文章状态</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="status" id="statusDraft" value="DRAFT">
-                            <label class="form-check-label" for="statusDraft">草稿</label>
+        <div class="editor-main">
+            <!-- 左侧：编辑器 -->
+            <div class="editor-left animate-fade-up delay-1">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-3" style="margin-bottom: 20px;">
+                            <label for="title" class="form-label">文章标题 <span style="color: var(--primary);">*</span></label>
+                            <input type="text" class="form-control" id="title" required placeholder="请输入文章标题" style="font-size: 16px; font-weight: 600;">
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="status" id="statusPublished" value="PUBLISHED" checked>
-                            <label class="form-check-label" for="statusPublished">发布</label>
+
+                        <div class="mb-3" style="margin-bottom: 20px;">
+                            <label for="slug" class="form-label">别名（Slug）</label>
+                            <input type="text" class="form-control" id="slug" placeholder="可选，用于 URL">
+                            <div class="form-text">如果不填写，系统会自动根据标题生成</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="content" class="form-label">文章内容（Markdown） <span style="color: var(--primary);">*</span></label>
+                            <div class="auto-save-status" style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                <i class="ph-bold ph-cloud-check" style="color: var(--primary);"></i>
+                                <span id="save-status">自动保存已开启</span>
+                            </div>
+                            <textarea id="content"></textarea>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- 置顶设置 -->
-                    <div class="mb-3 form-check">
-                        <input class="form-check-input" type="checkbox" id="isTop">
-                        <label class="form-check-label" for="isTop">置顶文章</label>
+            <!-- 右侧：设置 -->
+            <div class="editor-right animate-fade-up delay-2">
+                <div class="editor-right-cards">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-text">发布设置</div>
+                        </div>
+                        <div class="card-body" style="display: flex; flex-direction: column; gap: 16px;">
+                            <div>
+                                <label for="categoryId" class="form-label">分类</label>
+                                <select class="form-select" id="categoryId">
+                                    <option value="">无分类</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">标签</label>
+                                <div id="tagCheckboxes" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                    <div class="form-text">暂无标签</div>
+                                </div>
+                                <div style="margin-top: 12px; display: flex; gap: 8px;">
+                                    <input type="text" class="form-control" id="newTagInput" placeholder="输入新标签" style="flex: 1;">
+                                    <button type="button" class="btn-primary-custom" onclick="addNewTag()">
+                                        <i class="ph-bold ph-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="sticky" class="form-label">置顶</label>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="sticky" style="accent-color: var(--primary);">
+                                    <span style="color: var(--text-regular); font-size: 14px;">将此文章置顶显示</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- 评论设置 -->
-                    <div class="mb-3 form-check">
-                        <input class="form-check-input" type="checkbox" id="isCommentEnabled" checked>
-                        <label class="form-check-label" for="isCommentEnabled">允许评论</label>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-text">封面图</div>
+                        </div>
+                        <div class="card-body" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: flex; gap: 8px;">
+                                <input type="url" class="form-control" id="coverUrl" placeholder="封面图 URL" style="flex: 1;">
+                                <button type="button" class="btn-outline-custom" onclick="uploadCover()">
+                                    <i class="ph-bold ph-upload-simple"></i> 上传
+                                </button>
+                            </div>
+                            <img id="coverPreview" class="cover-preview" style="display: none;" alt="封面预览">
+                        </div>
                     </div>
 
-                    <!-- 操作按钮 -->
-                    <div class="mb-3">
-                        <button type="button" class="btn btn-secondary" onclick="saveDraft()"><i class="bi bi-save"></i> 保存草稿</button>
-                        <button type="button" class="btn btn-primary" onclick="publishArticle()"><i class="bi bi-send"></i> 发布文章</button>
-                        <a class="btn btn-outline-secondary" href="/admin/articles"><i class="bi bi-arrow-left"></i> 返回列表</a>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-text">SEO 设置</div>
+                        </div>
+                        <div class="card-body" style="display: flex; flex-direction: column; gap: 16px;">
+                            <div>
+                                <label for="metaDescription" class="form-label">Meta 描述</label>
+                                <textarea class="form-control" id="metaDescription" rows="2" placeholder="用于搜索引擎优化"></textarea>
+                            </div>
+                            <div>
+                                <label for="metaKeywords" class="form-label">Meta 关键词</label>
+                                <input type="text" class="form-control" id="metaKeywords" placeholder="多个关键词用逗号分隔">
+                            </div>
+                        </div>
                     </div>
-                </form>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="saveArticle('DRAFT')">
+                        <i class="ph ph-floppy-disk"></i> 保存草稿
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveArticle('PUBLISHED')">
+                        <i class="ph ph-paper-plane-tilt"></i> 发布文章
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+</main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Marked.js for Markdown rendering -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- EasyMDE Markdown Editor -->
-    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
-    <!-- Highlight.js for code syntax highlighting -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>
-        let articleId = null;
-        let easyMDE;
-        let autoSaveTimer;
-        let lastContentHash = '';
-        let hasUnsavedChangesFlag = false;
+<div class="toast" id="toast">
+    <i class="ph-bold ph-check-circle" style="font-size: 20px; color: #059669;"></i>
+    <span id="toastMessage" style="color: var(--text-regular);">文章已保存</span>
+</div>
 
-        // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 初始化Markdown编辑器
-            easyMDE = new EasyMDE({
-                element: document.getElementById('content'),
-                spellChecker: false,
-                autosave: { enabled: false },
-                placeholder: "在此编写文章内容（支持Markdown格式）...",
-                uploadImage: true,
-                imageUploadFunction: function(file, onSuccess, onError) {
-                    // 显示上传提示
-                    showUploadProgress('上传中...');
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+let editor;
+let articleId = null;
+let autoSaveTimer = null;
 
-                    const formData = new FormData();
-                    formData.append('file', file);
+document.addEventListener('DOMContentLoaded', function() {
+    const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    document.getElementById('currentDate').innerText = dateStr.replace(/星期/, '· 星期');
+    
+    initEditor();
+    loadCategories();
+    loadTags();
+    initThemeSwitcher();
 
-                    fetch('/api/admin/articles/upload-image', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.code === 200) {
-                            onSuccess(data.data);
-                            showUploadProgress('上传成功');
-                            setTimeout(() => hideUploadProgress(), 2000);
-                        } else {
-                            onError(data.message || '上传失败');
-                            showUploadProgress('上传失败：' + (data.message || '未知错误'));
-                            setTimeout(() => hideUploadProgress(), 3000);
-                        }
-                    })
-                    .catch(error => {
-                        onError('网络错误');
-                        showUploadProgress('上传失败：网络错误');
-                        setTimeout(() => hideUploadProgress(), 3000);
-                    });
-                },
-                previewRender: function(plainText, preview) {
-                    // 使用 EasyMDE 内置的渲染器（如果 marked 不可用则使用默认）
-                    let renderedHtml;
-                    try {
-                        // EasyMDE 内置了 marked，尝试使用
-                        if (typeof marked !== 'undefined') {
-                            renderedHtml = marked.parse(plainText);
-                        } else {
-                            // 使用 EasyMDE 默认渲染器
-                            renderedHtml = this.editor ? this.editor.markdown(plainText) : plainText;
-                        }
-                    } catch (e) {
-                        // 如果出错，返回原始文本
-                        renderedHtml = '<pre>' + plainText + '</pre>';
-                    }
+    // 从 URL 路径中提取 ID: /admin/articles/{id}/edit
+    const pathParts = window.location.pathname.split('/');
+    const id = pathParts[3]; // ['', 'admin', 'articles', '123', 'edit']
+    if (id && id !== 'new') {
+        articleId = id;
+        loadArticle(id);
+    }
+});
 
-                    // 应用代码高亮
-                    setTimeout(() => {
-                        preview.querySelectorAll('pre code').forEach((block) => {
-                            try {
-                                hljs.highlightElement(block);
-                            } catch (e) {
-                                console.error('代码高亮失败:', e);
-                            }
-                        });
-                    }, 10);
+function initEditor() {
+    // 从 URL 路径中提取 ID: /admin/articles/{id}/edit 或 /admin/articles/new
+    const pathParts = window.location.pathname.split('/');
+    const id = pathParts[3]; // ['', 'admin', 'articles', '123', 'edit'] 或 ['', 'admin', 'articles', 'new']
 
-                    return renderedHtml;
-                },
-                toolbar: [
-                    "bold", "italic", "heading", "|",
-                    "quote", "unordered-list", "ordered-list", "|",
-                    "link", "image", "code", "|",
-                    "preview", "side-by-side", "fullscreen", "|",
-                    "guide"
-                ]
-            });
+    editor = new EasyMDE({
+        element: document.getElementById('content'),
+        spellChecker: false,
+        autosave: {
+            enabled: id && id !== 'new', // 只在编辑已有文章时启用自动保存
+            uniqueId: id && id !== 'new' ? `article-editor-${id}` : 'article-editor-new',
+            delay: 10000
+        },
+        toolbar: ['bold', 'italic', 'heading', '|', 'quote', 'code', 'link', 'image', '|', 'unordered-list', 'ordered-list', '|', 'preview', 'side-by-side', 'fullscreen'],
+        promptURLs: true,
+        renderingConfig: {
+            highlightFunction: (code, lang) => hljs.highlight(code, { language: lang || 'plaintext' }).value
+        }
+    });
 
-            // 加载分类和标签列表
-            loadCategories();
-            loadTags();
+    editor.codemirror.on('change', () => {
+        document.getElementById('save-status').textContent = '未保存的更改...';
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(autoSave, 5000);
+    });
+}
 
-            // 检查URL中的文章ID（编辑模式）
-            const urlPath = window.location.pathname;
-            const match = urlPath.match(/\/admin\/articles\/(\d+)\/edit/);
-            if (match) {
-                articleId = match[1];
-                document.getElementById('pageTitle').innerHTML = '<i class="bi bi-pencil"></i> 编辑文章';
-                loadArticleData(articleId);
-            }
+function initThemeSwitcher() {
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    const userMenuIcon = document.getElementById('userMenuIcon');
+    const themeSwitchBtn = document.getElementById('themeSwitchBtn');
+    const themeDropdown = document.getElementById('themeDropdown');
+    const sidebarAvatar = document.getElementById('sidebarAvatar');
 
-            // 启动自动保存
-            startAutoSave();
+    userMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        themeDropdown.classList.remove('show');
+        userDropdown.classList.toggle('show');
+        userMenuIcon.classList.toggle('menu-open-icon');
+    });
 
-            // 监听页面离开事件
-            window.addEventListener('beforeunload', function(e) {
-                if (hasUnsavedChanges()) {
-                    e.preventDefault();
-                    e.returnValue = '有未保存的内容，确定离开吗？';
-                }
-            });
+    themeSwitchBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.remove('show');
+        userMenuIcon.classList.remove('menu-open-icon');
+        themeDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+            userDropdown.classList.remove('show');
+            userMenuIcon.classList.remove('menu-open-icon');
+        }
+        if (!themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
+            themeDropdown.classList.remove('show');
+        }
+    });
+
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const targetTheme = this.getAttribute('data-color');
+            const targetHex = this.getAttribute('data-hex');
+            document.documentElement.setAttribute('data-theme', targetTheme);
+            document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            sidebarAvatar.src = `https://ui-avatars.com/api/?name=Li&background=${targetHex.substring(1)}&color=fff&font-size=0.4`;
+            themeDropdown.classList.remove('show');
         });
+    });
+}
 
-        // 加载分类列表
-        function loadCategories() {
-            fetch('/api/admin/categories')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.code === 200 && data.data) {
-                        const select = document.getElementById('categoryId');
-                        data.data.forEach(category => {
-                            const option = document.createElement('option');
-                            option.value = category.id;
-                            option.textContent = category.name;
-                            select.appendChild(option);
-                        });
-                    }
+function loadCategories() {
+    fetch('/api/admin/categories')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('categoryId');
+            if (data.categories && data.categories.length > 0) {
+                data.categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.name;
+                    select.appendChild(option);
                 });
-        }
-
-        // 加载标签列表
-        function loadTags() {
-            fetch('/api/admin/tags')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.code === 200 && data.data) {
-                        const container = document.getElementById('tagContainer');
-                        container.innerHTML = data.data.map(tag => `
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input tag-checkbox" type="checkbox" id="tag_${tag.id}" value="${tag.id}">
-                                <label class="form-check-label" for="tag_${tag.id}">${tag.name}</label>
-                            </div>
-                        `).join('');
-                    }
-                });
-        }
-
-        // 加载文章数据（编辑模式）
-        function loadArticleData(id) {
-            fetch(`/api/admin/articles/${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.code === 200 && data.data) {
-                        const article = data.data;
-                        document.getElementById('articleId').value = article.id;
-                        document.getElementById('title').value = article.title;
-                        document.getElementById('slug').value = article.slug;
-                        document.getElementById('summary').value = article.summary || '';
-                        document.getElementById('coverImage').value = article.coverImage || '';
-
-                        // 设置封面图片预览
-                        if (article.coverImage) {
-                            document.getElementById('coverImagePreview').src = article.coverImage;
-                            document.getElementById('coverImagePreview').style.display = 'block';
-                        }
-
-                        // 设置Markdown内容
-                        easyMDE.value(article.contentMarkdown);
-
-                        // 设置分类
-                        if (article.category) {
-                            document.getElementById('categoryId').value = article.category.id;
-                        }
-
-                        // 设置标签
-                        if (article.tags) {
-                            article.tags.forEach(tag => {
-                                const checkbox = document.getElementById(`tag_${tag.id}`);
-                                if (checkbox) checkbox.checked = true;
-                            });
-                        }
-
-                        // 设置状态
-                        document.getElementById('statusPublished').checked = article.status === 'PUBLISHED';
-                        document.getElementById('statusDraft').checked = article.status === 'DRAFT';
-
-                        // 设置置顶和评论
-                        document.getElementById('isTop').checked = article.isTop;
-                        document.getElementById('isCommentEnabled').checked = article.isCommentEnabled;
-                    } else {
-                        showError(data.message || '加载文章数据失败');
-                    }
-                });
-        }
-
-        // 上传封面图片
-        function uploadCoverImage() {
-            const fileInput = document.getElementById('coverImageFile');
-            if (!fileInput.files[0]) return;
-
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-
-            fetch('/api/admin/articles/upload-cover', {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.code === 200) {
-                        document.getElementById('coverImage').value = data.data;
-                        document.getElementById('coverImagePreview').src = data.data;
-                        document.getElementById('coverImagePreview').style.display = 'block';
-                        showSuccess('封面图片上传成功');
-                    } else {
-                        showError(data.message || '上传失败');
-                    }
-                });
-        }
-
-        // 自动生成摘要
-        function generateSummary() {
-            const content = easyMDE.value();
-            if (!content) { showError('请先填写文章内容'); return; }
-
-            // 提取前200个字符作为摘要
-            const summary = content.substring(0, 200).replace(/[#*`_\[\]]/g, '').trim();
-            document.getElementById('summary').value = summary;
-            showSuccess('摘要已生成');
-        }
-
-        // 收集表单数据
-        function collectFormData() {
-            const title = document.getElementById('title').value.trim();
-            if (!title) { showError('标题不能为空'); return null; }
-
-            const tagIds = [];
-            document.querySelectorAll('.tag-checkbox:checked').forEach(cb => {
-                tagIds.push(parseInt(cb.value));
-            });
-
-            return {
-                title: title,
-                slug: document.getElementById('slug').value.trim(),
-                summary: document.getElementById('summary').value.trim(),
-                content: easyMDE.value(),
-                coverImage: document.getElementById('coverImage').value,
-                status: document.querySelector('input[name="status"]:checked').value,
-                isTop: document.getElementById('isTop').checked,
-                isCommentEnabled: document.getElementById('isCommentEnabled').checked,
-                categoryId: document.getElementById('categoryId').value ? parseInt(document.getElementById('categoryId').value) : null,
-                tagIds: tagIds
-            };
-        }
-
-        // 保存草稿
-        function saveDraft() {
-            const data = collectFormData();
-            if (!data) return;
-            data.status = 'DRAFT';
-            saveArticle(data);
-        }
-
-        // 发布文章
-        function publishArticle() {
-            const data = collectFormData();
-            if (!data) return;
-            data.status = 'PUBLISHED';
-            saveArticle(data);
-        }
-
-        // 保存文章
-        function saveArticle(data) {
-            const url = articleId ? `/api/admin/articles/${articleId}` : '/api/admin/articles';
-            const method = articleId ? 'PUT' : 'POST';
-
-            fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.code === 200) {
-                        showSuccess(articleId ? '文章已更新' : '文章已创建');
-                        // 标记内容已保存，避免离开提示
-                        lastContentHash = getContentHash();
-                        hasUnsavedChangesFlag = false;
-                        window.location.href = '/admin/articles';
-                    } else {
-                        showError(result.message || '保存失败');
-                    }
-                });
-        }
-
-        function showSuccess(message) { alert(message); }
-        function showError(message) { alert('错误：' + message); }
-
-        // 上传进度提示相关函数
-        function showUploadProgress(status) {
-            const progressDiv = document.getElementById('upload-progress');
-            const statusSpan = document.getElementById('upload-status');
-            statusSpan.textContent = status;
-            progressDiv.style.display = 'block';
-        }
-
-        function hideUploadProgress() {
-            const progressDiv = document.getElementById('upload-progress');
-            progressDiv.style.display = 'none';
-        }
-
-        // 自动保存相关函数
-        function startAutoSave() {
-            autoSaveTimer = setInterval(() => {
-                const currentHash = getContentHash();
-                if (currentHash !== lastContentHash) {
-                    autoSaveDraft();
-                    lastContentHash = currentHash;
-                }
-            }, 30000); // 30秒检查一次
-        }
-
-        function getContentHash() {
-            return JSON.stringify({
-                title: document.getElementById('title').value,
-                content: easyMDE.value(),
-                summary: document.getElementById('summary').value
-            });
-        }
-
-        function autoSaveDraft() {
-            const data = collectFormData();
-            if (!data) return;
-
-            // 传递文章ID给后端（用于判断是更新还是创建）
-            if (articleId) {
-                data.id = parseInt(articleId);
             }
+        })
+        .catch(error => console.error('Error loading categories:', error));
+}
 
-            const url = '/api/admin/articles/auto-save';
-            const method = 'POST';
+function loadTags() {
+    fetch('/api/admin/tags')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('tagCheckboxes');
+            if (data.tags && data.tags.length > 0) {
+                container.innerHTML = data.tags.map(tag => `
+                    <label class="tag-checkbox">
+                        <input type="checkbox" value="${tag.id}" data-name="${tag.name}">
+                        <span>${tag.name}</span>
+                    </label>
+                `).join('');
+            }
+        })
+        .catch(error => console.error('Error loading tags:', error));
+}
 
-            fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.code === 200) {
-                    const savedAt = result.data.savedAt;
-                    const savedId = result.data.id;
+function loadArticle(id) {
+    fetch(`/api/admin/articles/${id}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.code === 200) {
+                const article = result.data;
+                document.getElementById('title').value = article.title || '';
+                document.getElementById('slug').value = article.slug || '';
+                editor.value(article.contentMarkdown || '');
+                document.getElementById('status').value = article.status || 'DRAFT';
 
-                    // 更新文章ID（如果是新创建的）
-                    if (!articleId && savedId) {
-                        articleId = savedId;
-                        document.getElementById('articleId').value = savedId;
-                    }
-
-                    updateAutoSaveStatus('已自动保存 ' + formatTime(savedAt));
-                    hasUnsavedChangesFlag = false;
-                } else {
-                    updateAutoSaveStatus('自动保存失败');
+                // 分类
+                if (article.category) {
+                    document.getElementById('categoryId').value = article.category.id || '';
                 }
-            })
-            .catch(error => {
-                updateAutoSaveStatus('自动保存失败：网络错误');
-            });
-        }
 
-        function updateAutoSaveStatus(status) {
-            const statusSpan = document.getElementById('save-status');
-            statusSpan.textContent = status;
-        }
+                // 置顶
+                document.getElementById('sticky').checked = article.isTop || false;
 
-        function formatTime(dateTime) {
-            // 简单的时间格式化
-            const now = new Date();
-            const hours = now.getHours();
-            const minutes = now.getMinutes();
-            return `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
-        }
+                // 封面图片
+                document.getElementById('coverUrl').value = article.coverImage || '';
+                if (article.coverImage) {
+                    const preview = document.getElementById('coverPreview');
+                    preview.src = article.coverImage;
+                    preview.style.display = 'block';
+                }
 
-        function hasUnsavedChanges() {
-            const currentHash = getContentHash();
-            return currentHash !== lastContentHash && currentHash !== '{}';
+                // 标签
+                if (article.tags && article.tags.length > 0) {
+                    const tagIds = article.tags.map(tag => tag.id);
+                    const tagCheckboxes = document.querySelectorAll('#tagCheckboxes input[type="checkbox"]');
+                    tagCheckboxes.forEach(cb => {
+                        cb.checked = tagIds.includes(parseInt(cb.value));
+                    });
+                }
+            }
+        })
+        .catch(error => console.error('Error loading article:', error));
+}
+
+function autoSave() {
+    if (articleId) {
+        saveArticle('DRAFT', true);
+    }
+}
+
+function saveArticle(status, isAutoSave = false) {
+    const categoryIdValue = document.getElementById('categoryId').value;
+    const data = {
+        title: document.getElementById('title').value,
+        slug: document.getElementById('slug').value,
+        content: editor.value(),
+        status: status,
+        categoryId: categoryIdValue ? parseInt(categoryIdValue) : null,
+        isTop: document.getElementById('sticky').checked,
+        coverImage: document.getElementById('coverUrl').value || null,
+        tagIds: Array.from(document.querySelectorAll('#tagCheckboxes input[type="checkbox"]:checked')).map(cb => parseInt(cb.value))
+    };
+
+    if (!data.title || !data.content) {
+        showToast('请填写标题和内容', 'error');
+        return;
+    }
+
+    const url = articleId ? `/api/admin/articles/${articleId}` : '/api/admin/articles';
+    const method = articleId ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        console.log("Response:", result);
+        if (result.success && result.data) {
+            articleId = result.data.id;
+            if (!isAutoSave) {
+                showToast(status === 'PUBLISHED' ? '文章已发布' : '草稿已保存', 'success');
+            } else {
+                document.getElementById('save-status').textContent = '自动保存于 ' + new Date().toLocaleTimeString('zh-CN');
+            }
+            if (!isAutoSave && status === 'PUBLISHED') {
+                setTimeout(() => window.location.href = '/admin/articles', 1500);
+            }
+        } else {
+            showToast('保存失败，请重试', 'error');
         }
-    </script>
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('保存失败，请重试', 'error');
+    });
+}
+
+function addNewTag() {
+    const name = document.getElementById('newTagInput').value.trim();
+    if (!name) return;
+
+    fetch('/api/admin/tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+    })
+    .then(response => response.json())
+    .then(tag => {
+        const container = document.getElementById('tagCheckboxes');
+        const label = document.createElement('label');
+        label.className = 'tag-checkbox';
+        label.innerHTML = `
+            <input type="checkbox" value="${tag.id}" data-name="${tag.name}" checked>
+            <span>${tag.name}</span>
+        `;
+        container.appendChild(label);
+        document.getElementById('newTagInput').value = '';
+        showToast('标签已添加', 'success');
+    })
+    .catch(error => showToast('添加失败', 'error'));
+}
+
+function uploadCover() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        document.getElementById('upload-progress').style.display = 'flex';
+        
+        fetch('/api/admin/articles/upload-image', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            document.getElementById('upload-progress').style.display = 'none';
+            if (result.url) {
+                document.getElementById('coverUrl').value = result.url;
+                const preview = document.getElementById('coverPreview');
+                preview.src = result.url;
+                preview.style.display = 'block';
+                showToast('封面图上传成功', 'success');
+            } else {
+                showToast('上传失败', 'error');
+            }
+        })
+        .catch(error => {
+            document.getElementById('upload-progress').style.display = 'none';
+            showToast('上传失败', 'error');
+        });
+    };
+    input.click();
+}
+
+function showToast(message, type) {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    const icon = toast.querySelector('i');
+    
+    toastMessage.textContent = message;
+    toast.className = 'toast ' + type + ' show';
+    icon.className = type === 'success' ? 'ph-bold ph-check-circle' : 'ph-bold ph-warning-circle';
+    icon.style.color = type === 'success' ? '#059669' : '#DC2626';
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+</script>
 </body>
 </html>

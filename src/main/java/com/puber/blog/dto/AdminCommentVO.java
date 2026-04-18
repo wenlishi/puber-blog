@@ -6,21 +6,20 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * 评论视图对象（VO）
- * 用于返回给前端展示的评论数据
+ * 后台评论管理视图对象
+ * 包含文章标题等额外信息
  *
  * @author wenlishi
  * @version 1.0.0
- * @since 2026-04-13
+ * @since 2026-04-17
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CommentVO {
+public class AdminCommentVO {
 
     /**
      * 评论ID
@@ -49,26 +48,18 @@ public class CommentVO {
 
     /**
      * 评论状态
-     * APPROVED: 已批准
-     * PENDING: 待审核
-     * REJECTED: 已拒绝
      */
     private String status;
 
     /**
-     * 创建时间
+     * 文章ID
      */
-    private LocalDateTime createdAt;
+    private Long articleId;
 
     /**
-     * 子评论列表（回复）
+     * 文章标题
      */
-    private List<CommentVO> replies;
-
-    /**
-     * 回复目标昵称（用于显示"回复某某"）
-     */
-    private String replyToNickname;
+    private String articleTitle;
 
     /**
      * 管理员回复内容
@@ -79,4 +70,9 @@ public class CommentVO {
      * 管理员回复时间
      */
     private LocalDateTime replyTime;
+
+    /**
+     * 创建时间
+     */
+    private LocalDateTime createdAt;
 }

@@ -3,398 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>仪表盘 - puber-blog后台</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body { background-color: #f8f9fa; }
-        .navbar-brand { font-weight: bold; }
-        .stats-card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
-            border-radius: 0.5rem;
-            transition: transform 0.2s;
-        }
-        .stats-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.15);
-        }
-        .stats-icon {
-            font-size: 2rem;
-            opacity: 0.8;
-        }
-        .stats-number {
-            font-size: 2rem;
-            font-weight: bold;
-        }
-        .stats-label {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-        .alert-pending {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-        }
-        .alert-draft {
-            background-color: #e7f5ff;
-            border-left: 4px solid #0d6efd;
-        }
-        .quick-action {
-            text-align: center;
-            padding: 1.5rem;
-            transition: all 0.2s;
-        }
-        .quick-action:hover {
-            background-color: #f1f3f5;
-            transform: scale(1.05);
-        }
-        .quick-action i {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        .card { box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); }
-        .table tbody tr:hover { background-color: #f1f3f5; }
-    </style>
+    <title>知筑 | 博客后台管理</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/js/phosphor-web-loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
 </head>
 <body>
-    <!-- 导航栏 -->
-    <div th:replace="~{admin/fragments :: navbar('dashboard')}"></div>
 
-    <!-- 主内容 -->
-    <div class="container-fluid mt-4">
-        <!-- 页面标题 -->
-        <div class="row mb-4">
-            <div class="col">
-                <h2><i class="bi bi-speedometer2"></i> 仪表盘</h2>
-                <p class="text-muted">欢迎回来！这里是博客管理中心</p>
-            </div>
+    <aside th:replace="~{admin/layout :: sidebar(activePage='dashboard')}"></aside>
+
+<main class="main-wrapper">
+    <header class="topbar">
+        <div class="topbar-date">
+            <i class="ph-light ph-calendar-blank"></i>
+            <span id="currentDate">2026 年 4 月 17 日 · 星期五</span>
         </div>
 
-        <!-- 统计卡片 -->
-        <div class="row mb-4">
-            <!-- 文章统计 -->
-            <div class="col-md-3">
-                <div class="card stats-card bg-primary text-white">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="stats-label">文章总数</div>
-                                <div class="stats-number" th:text="${dashboard.articleStats.totalCount}">0</div>
-                                <div class="stats-label mt-2">
-                                    <small>已发布: <span th:text="${dashboard.articleStats.publishedCount}">0</span> | 草稿: <span th:text="${dashboard.articleStats.draftCount}">0</span></small>
-                                </div>
-                            </div>
-                            <div class="stats-icon">
-                                <i class="bi bi-file-text-fill"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="topbar-right">
+            <button class="topbar-btn" title="查看站点" onclick="window.open('/')"><i class="ph ph-arrow-up-right"></i></button>
+            <button class="topbar-btn" title="通知"><i class="ph ph-bell"></i><span class="notif-dot"></span></button>
 
-            <!-- 评论统计 -->
-            <div class="col-md-3">
-                <div class="card stats-card bg-success text-white">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="stats-label">评论总数</div>
-                                <div class="stats-number" th:text="${dashboard.commentStats.totalCount}">0</div>
-                                <div class="stats-label mt-2">
-                                    <small>已批准: <span th:text="${dashboard.commentStats.approvedCount}">0</span> | 待审核: <span th:text="${dashboard.commentStats.pendingCount}">0</span></small>
-                                </div>
-                            </div>
-                            <div class="stats-icon">
-                                <i class="bi bi-chat-fill"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 分类统计 -->
-            <div class="col-md-3">
-                <div class="card stats-card bg-info text-white">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="stats-label">分类总数</div>
-                                <div class="stats-number" th:text="${dashboard.categoryStats.totalCount}">0</div>
-                            </div>
-                            <div class="stats-icon">
-                                <i class="bi bi-folder-fill"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 标签统计 -->
-            <div class="col-md-3">
-                <div class="card stats-card bg-warning text-white">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="stats-label">标签总数</div>
-                                <div class="stats-number" th:text="${dashboard.tagStats.totalCount}">0</div>
-                            </div>
-                            <div class="stats-icon">
-                                <i class="bi bi-tags-fill"></i>
-                            </div>
-                        </div>
+            <div class="theme-menu-wrapper">
+                <button class="topbar-btn" id="themeSwitchBtn" title="后台配色">
+                    <i class="ph ph-dots-three"></i>
+                </button>
+                <div class="theme-dropdown" id="themeDropdown">
+                    <div class="theme-dropdown-header">后台专属配色</div>
+                    <div class="theme-options">
+                        <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
+                            <span class="color-dot" style="background: #059669;"></span> 翡翠绿
+                        </button>
+                        <button class="theme-option" data-color="orange" data-hex="#EA580C" data-rgb="234, 88, 12">
+                            <span class="color-dot" style="background: #EA580C;"></span> 破风橙
+                        </button>
+                        <button class="theme-option" data-color="blue" data-hex="#2563EB" data-rgb="37, 99, 235">
+                            <span class="color-dot" style="background: #2563EB;"></span> 探索蓝
+                        </button>
+                        <button class="theme-option" data-color="beige" data-hex="#C89F70" data-rgb="200, 159, 112">
+                            <span class="color-dot" style="background: #C89F70;"></span> 岁月黄
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
+    </header>
 
-        <!-- 总浏览量卡片 -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card stats-card bg-secondary text-white">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="stats-label">总浏览量</div>
-                                <div class="stats-number" th:text="${dashboard.articleStats.totalViewCount}">0</div>
-                                <div class="stats-label mt-2">
-                                    <small>所有文章的累计浏览次数</small>
-                                </div>
-                            </div>
-                            <div class="stats-icon">
-                                <i class="bi bi-eye-fill"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 待办提醒 -->
-        <div class="row mb-4">
-            <!-- 待审核评论 -->
-            <div class="col-md-6">
-                <div class="alert alert-pending" th:if="${dashboard.commentStats.pendingCount > 0}">
-                    <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> 待审核评论提醒</h5>
-                    <p class="mb-2">当前有 <strong th:text="${dashboard.commentStats.pendingCount}">0</strong> 条评论等待审核</p>
-                    <a href="/admin/comments" class="btn btn-warning btn-sm">
-                        <i class="bi bi-arrow-right-circle"></i> 立即审核
-                    </a>
-                </div>
-                <div class="alert alert-success" th:if="${dashboard.commentStats.pendingCount == 0}">
-                    <h5 class="alert-heading"><i class="bi bi-check-circle-fill"></i> 评论审核状态</h5>
-                    <p class="mb-0">所有评论已处理完毕，暂无待审核评论</p>
-                </div>
-            </div>
-
-            <!-- 草稿文章 -->
-            <div class="col-md-6">
-                <div class="alert alert-draft" th:if="${dashboard.articleStats.draftCount > 0}">
-                    <h5 class="alert-heading"><i class="bi bi-file-earmark-text-fill"></i> 草稿文章提醒</h5>
-                    <p class="mb-2">当前有 <strong th:text="${dashboard.articleStats.draftCount}">0</strong> 篇文章未发布</p>
-                    <a href="/admin/articles" class="btn btn-primary btn-sm">
-                        <i class="bi bi-arrow-right-circle"></i> 查看草稿
-                    </a>
-                </div>
-                <div class="alert alert-success" th:if="${dashboard.articleStats.draftCount == 0}">
-                    <h5 class="alert-heading"><i class="bi bi-check-circle-fill"></i> 文章发布状态</h5>
-                    <p class="mb-0">所有文章已发布，暂无未完成草稿</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 快捷操作 -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-lightning-fill"></i> 快捷操作</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-2 col-sm-4">
-                                <a href="/admin/articles/new" class="quick-action card-link">
-                                    <i class="bi bi-plus-circle text-primary"></i>
-                                    <div class="text-muted">发布文章</div>
-                                </a>
-                            </div>
-                            <div class="col-md-2 col-sm-4">
-                                <a href="/admin/articles" class="quick-action card-link">
-                                    <i class="bi bi-file-text text-success"></i>
-                                    <div class="text-muted">文章管理</div>
-                                </a>
-                            </div>
-                            <div class="col-md-2 col-sm-4">
-                                <a href="/admin/comments" class="quick-action card-link">
-                                    <i class="bi bi-chat text-warning"></i>
-                                    <div class="text-muted">评论管理</div>
-                                </a>
-                            </div>
-                            <div class="col-md-2 col-sm-4">
-                                <a href="/admin/categories" class="quick-action card-link">
-                                    <i class="bi bi-folder text-info"></i>
-                                    <div class="text-muted">分类管理</div>
-                                </a>
-                            </div>
-                            <div class="col-md-2 col-sm-4">
-                                <a href="/admin/tags" class="quick-action card-link">
-                                    <i class="bi bi-tags text-secondary"></i>
-                                    <div class="text-muted">标签管理</div>
-                                </a>
-                            </div>
-                            <div class="col-md-2 col-sm-4">
-                                <a href="/" class="quick-action card-link">
-                                    <i class="bi bi-house text-dark"></i>
-                                    <div class="text-muted">前台首页</div>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 最新内容列表 -->
-        <div class="row">
-            <!-- 最新文章 TOP 5 -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-clock-history"></i> 最新文章 TOP 5</h5>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-hover" th:if="${dashboard.latestArticles != null and dashboard.latestArticles.size() > 0}">
-                            <thead>
-                                <tr>
-                                    <th width="40">#</th>
-                                    <th>标题</th>
-                                    <th width="80">状态</th>
-                                    <th width="80">浏览量</th>
-                                    <th width="60">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="article, iterStat : ${dashboard.latestArticles}">
-                                    <td th:text="${iterStat.count}">1</td>
-                                    <td>
-                                        <a th:href="@{/admin/articles/{id}/edit(id=${article.id})}" th:text="${article.title}">文章标题</a>
-                                    </td>
-                                    <td>
-                                        <span th:if="${article.status == 'PUBLISHED'}" class="badge bg-success">已发布</span>
-                                        <span th:if="${article.status == 'DRAFT'}" class="badge bg-secondary">草稿</span>
-                                    </td>
-                                    <td th:text="${article.viewCount}">0</td>
-                                    <td>
-                                        <a th:href="@{/admin/articles/{id}/edit(id=${article.id})}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div th:if="${dashboard.latestArticles == null or dashboard.latestArticles.size() == 0}" class="text-center text-muted py-3">
-                            <i class="bi bi-inbox"></i> 暂无文章
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 最新评论 TOP 5 -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-chat-dots"></i> 最新评论 TOP 5</h5>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-hover" th:if="${dashboard.latestComments != null and dashboard.latestComments.size() > 0}">
-                            <thead>
-                                <tr>
-                                    <th width="40">#</th>
-                                    <th width="100">昵称</th>
-                                    <th>内容</th>
-                                    <th width="80">状态</th>
-                                    <th width="60">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="comment, iterStat : ${dashboard.latestComments}">
-                                    <td th:text="${iterStat.count}">1</td>
-                                    <td th:text="${comment.nickname}">昵称</td>
-                                    <td>
-                                        <small th:text="${comment.content}">评论内容</small>
-                                    </td>
-                                    <td>
-                                        <span th:if="${comment.status == 'APPROVED'}" class="badge bg-success">已批准</span>
-                                        <span th:if="${comment.status == 'PENDING'}" class="badge bg-warning">待审核</span>
-                                        <span th:if="${comment.status == 'REJECTED'}" class="badge bg-danger">已拒绝</span>
-                                    </td>
-                                    <td>
-                                        <a href="/admin/comments" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div th:if="${dashboard.latestComments == null or dashboard.latestComments.size() == 0}" class="text-center text-muted py-3">
-                            <i class="bi bi-inbox"></i> 暂无评论
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 热门文章 TOP 5 -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-fire"></i> 热门文章 TOP 5（按浏览量排序）</h5>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-hover" th:if="${dashboard.hotArticles != null and dashboard.hotArticles.size() > 0}">
-                            <thead>
-                                <tr>
-                                    <th width="60">排名</th>
-                                    <th>标题</th>
-                                    <th width="80">状态</th>
-                                    <th width="100">浏览量</th>
-                                    <th width="60">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="article, iterStat : ${dashboard.hotArticles}">
-                                    <td>
-                                        <span th:if="${iterStat.count == 1}" class="badge bg-danger">🔥 1</span>
-                                        <span th:if="${iterStat.count == 2}" class="badge bg-warning">2</span>
-                                        <span th:if="${iterStat.count == 3}" class="badge bg-info">3</span>
-                                        <span th:if="${iterStat.count > 3}" class="badge bg-secondary" th:text="${iterStat.count}">4</span>
-                                    </td>
-                                    <td>
-                                        <a th:href="@{/admin/articles/{id}/edit(id=${article.id})}" th:text="${article.title}">文章标题</a>
-                                    </td>
-                                    <td>
-                                        <span th:if="${article.status == 'PUBLISHED'}" class="badge bg-success">已发布</span>
-                                        <span th:if="${article.status == 'DRAFT'}" class="badge bg-secondary">草稿</span>
-                                    </td>
-                                    <td>
-                                        <strong th:text="${article.viewCount}">0</strong> 次
-                                    </td>
-                                    <td>
-                                        <a th:href="@{/admin/articles/{id}/edit(id=${article.id})}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div th:if="${dashboard.hotArticles == null or dashboard.hotArticles.size() == 0}" class="text-center text-muted py-3">
-                            <i class="bi bi-inbox"></i> 暂无文章
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="content">
+        <div class="page-header animate-fade-up">
+            <h1>工作台概览。</h1>
+            <p>导航已完整，与articles页面一致</p>
         </div>
     </div>
+</main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+    let myChart;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+        document.getElementById('currentDate').innerText = dateStr.replace(/星期/, '· 星期');
+
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+        const userMenuIcon = document.getElementById('userMenuIcon');
+
+        const themeSwitchBtn = document.getElementById('themeSwitchBtn');
+        const themeDropdown = document.getElementById('themeDropdown');
+        const sidebarAvatar = document.getElementById('sidebarAvatar');
+
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            themeDropdown.classList.remove('show');
+            userDropdown.classList.toggle('show');
+            userMenuIcon.classList.toggle('menu-open-icon');
+        });
+
+        themeSwitchBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.remove('show');
+            userMenuIcon.classList.remove('menu-open-icon');
+            themeDropdown.classList.toggle('show');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('show');
+                userMenuIcon.classList.remove('menu-open-icon');
+            }
+            if (!themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
+                themeDropdown.classList.remove('show');
+            }
+        });
+
+        const themeOptions = document.querySelectorAll('.theme-option');
+        themeOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const targetTheme = this.getAttribute('data-color');
+                const targetHex = this.getAttribute('data-hex');
+                const targetRgb = this.getAttribute('data-rgb');
+
+                document.documentElement.setAttribute('data-theme', targetTheme);
+
+                themeOptions.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+
+                sidebarAvatar.src = `https://ui-avatars.com/api/?name=Li&background=${targetHex.substring(1)}&color=fff&font-size=0.4`;
+
+                if (myChart) {
+                    const ctx = document.getElementById('trafficChart');
+                    if (ctx) {
+                        const chartCtx = ctx.getContext('2d');
+                        const newGradient = chartCtx.createLinearGradient(0, 0, 0, 320);
+                        newGradient.addColorStop(0, `rgba(${targetRgb}, 0.15)`);
+                        newGradient.addColorStop(1, `rgba(${targetRgb}, 0)`);
+                        myChart.data.datasets[0].borderColor = targetHex;
+                        myChart.data.datasets[0].pointBorderColor = targetHex;
+                        myChart.data.datasets[0].backgroundColor = newGradient;
+                        myChart.update();
+                    }
+                }
+
+                themeDropdown.classList.remove('show');
+            });
+        });
+    });
+</script>
+
 </body>
 </html>

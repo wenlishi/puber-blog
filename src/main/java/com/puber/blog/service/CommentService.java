@@ -111,4 +111,13 @@ public interface CommentService {
      * @return Comment 评论实体
      */
     Comment getCommentById(Long id);
+
+    /**
+     * 管理员回复评论
+     * 添加回复内容并设置回复时间
+     *
+     * @param id 评论ID
+     * @param content 回复内容
+     */
+    void replyComment(Long id, String content);
 }

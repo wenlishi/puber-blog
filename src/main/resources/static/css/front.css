@@ -247,6 +247,50 @@ body {
     margin-right: 0.5rem;
 }
 
+/* 管理员回复样式 */
+.admin-reply {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-left: 3px solid #0284c7;
+    border-radius: 0.5rem;
+}
+
+.admin-reply-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.admin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: #0284c7;
+    color: white;
+    border-radius: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.admin-badge .bi {
+    font-size: 0.9rem;
+}
+
+.admin-reply-time {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.admin-reply-content {
+    color: #1e3a5f;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
 .comments-title .badge {
     font-size: 0.9rem;
     padding: 0.3rem 0.6rem;

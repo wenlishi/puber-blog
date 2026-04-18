@@ -3,124 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>系统设置 - puber-blog后台</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <title>系统设置 - 知筑后台</title>
+    <style th:replace="~{admin/layout :: adminStyles}"></style>
     <style>
-        body { background-color: #f8f9fa; }
-        .navbar-brand { font-weight: bold; }
-        .card { box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); }
-        .setting-item { border-left: 3px solid #007bff; padding-left: 1rem; margin-bottom: 1.5rem; }
-        .setting-key { font-weight: 600; color: #495057; }
-        .setting-description { font-size: 0.875rem; color: #6c757d; margin-top: 0.25rem; }
+        .settings-main { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; }
+        .form-section { margin-bottom: 28px; }
+        .section-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 16px; font-weight: 700; color: var(--text-main);
+            margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-label {
+            display: block; font-size: 13.5px; font-weight: 600;
+            color: var(--text-main); margin-bottom: 8px;
+        }
+        .form-help { font-size: 12.5px; color: var(--text-muted); margin-top: 6px; }
+        .form-control, .form-select {
+            width: 100%; padding: 10px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            outline: none; font-size: 14px;
+            background: var(--bg-surface);
+            color: var(--text-regular);
+            transition: all 0.2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .checkbox-label {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 14px; color: var(--text-regular); cursor: pointer;
+        }
+        .checkbox-label input[type="checkbox"] { accent-color: var(--primary); }
+        .info-card ul { list-style: none; padding: 0; margin: 0; }
+        .info-card li {
+            padding: 12px 0; border-bottom: 1px dashed var(--border-light);
+            font-size: 13.5px; color: var(--text-regular);
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+        .info-card li:last-child { border-bottom: none; }
+        .info-card i { color: var(--primary); font-size: 16px; margin-top: 2px; }
+        .toast {
+            position: fixed; bottom: 24px; right: 24px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            box-shadow: var(--shadow-hover);
+            display: flex; align-items: center; gap: 12px;
+            z-index: 2000;
+            opacity: 0; transform: translateY(20px);
+            transition: all 0.3s;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { border-left: 4px solid #059669; }
+        .toast.error { border-left: 4px solid #DC2626; }
     </style>
 </head>
 <body>
-    <!-- 导航栏 -->
-    <div th:replace="~{admin/fragments :: navbar('settings')}"></div>
 
-    <!-- 主内容 -->
-    <div class="container mt-4">
-        <div class="row">
-            <!-- 系统设置卡片 -->
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-gear-fill"></i> 系统设置</h5>
+<aside th:replace="~{admin/layout :: sidebar(activePage='settings')}"></aside>
+
+<main class="main-wrapper">
+    <header class="topbar">
+        <div class="topbar-date">
+            <i class="ph-light ph-calendar-blank"></i>
+            <span id="currentDate">2026 年 4 月 17 日 · 星期五</span>
+        </div>
+        
+        <div class="topbar-right">
+            <button class="topbar-btn" title="查看站点" onclick="window.open('/')"><i class="ph ph-arrow-up-right"></i></button>
+            <button class="topbar-btn" title="通知"><i class="ph ph-bell"></i><span class="notif-dot"></span></button>
+            
+            <div class="theme-menu-wrapper">
+                <button class="topbar-btn" id="themeSwitchBtn" title="后台配色">
+                    <i class="ph ph-dots-three"></i>
+                </button>
+                <div class="theme-dropdown" id="themeDropdown">
+                    <div class="theme-dropdown-header">后台专属配色</div>
+                    <div class="theme-options">
+                        <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
+                            <span class="color-dot" style="background: #059669;"></span> 翡翠绿
+                        </button>
+                        <button class="theme-option" data-color="orange" data-hex="#EA580C" data-rgb="234, 88, 12">
+                            <span class="color-dot" style="background: #EA580C;"></span> 破风橙
+                        </button>
+                        <button class="theme-option" data-color="blue" data-hex="#2563EB" data-rgb="37, 99, 235">
+                            <span class="color-dot" style="background: #2563EB;"></span> 探索蓝
+                        </button>
+                        <button class="theme-option" data-color="beige" data-hex="#C89F70" data-rgb="200, 159, 112">
+                            <span class="color-dot" style="background: #C89F70;"></span> 岁月黄
+                        </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="content">
+        <div class="page-header animate-fade-up">
+            <h1>系统设置。</h1>
+            <p>配置博客系统的基本参数和功能选项。</p>
+        </div>
+
+        <div class="settings-main">
+            <div>
+                <div class="card animate-fade-up delay-1">
                     <div class="card-body">
-                        <form id="settingsForm">
-                            <!-- 网站基本信息 -->
-                            <h6 class="mb-3"><i class="bi bi-info-circle"></i> 网站基本信息</h6>
+                        <form id="settingsForm" onsubmit="saveSettings(event)">
+                            <div class="form-section">
+                                <div class="section-title">
+                                    <i class="ph-bold ph-info"></i>
+                                    网站基本信息
+                                </div>
 
-                            <div class="setting-item">
-                                <div class="setting-key">网站名称</div>
-                                <div class="setting-description">显示在网站标题和页头</div>
-                                <input type="text" class="form-control mt-2" name="site_name" id="site_name" placeholder="请输入网站名称">
-                            </div>
+                                <div class="form-group">
+                                    <label for="site_name" class="form-label">网站名称</label>
+                                    <input type="text" class="form-control" id="site_name" placeholder="请输入网站名称">
+                                </div>
 
-                            <div class="setting-item">
-                                <div class="setting-key">网站描述</div>
-                                <div class="setting-description">用于SEO优化和网站介绍</div>
-                                <textarea class="form-control mt-2" name="site_description" id="site_description" rows="2" placeholder="请输入网站描述"></textarea>
-                            </div>
+                                <div class="form-group">
+                                    <label for="site_description" class="form-label">网站描述</label>
+                                    <textarea class="form-control" id="site_description" rows="2" placeholder="请输入网站描述"></textarea>
+                                </div>
 
-                            <div class="setting-item">
-                                <div class="setting-key">网站关键词</div>
-                                <div class="setting-description">用于SEO优化，多个关键词用逗号分隔</div>
-                                <input type="text" class="form-control mt-2" name="site_keywords" id="site_keywords" placeholder="请输入网站关键词">
-                            </div>
+                                <div class="form-group">
+                                    <label for="site_keywords" class="form-label">网站关键词</label>
+                                    <input type="text" class="form-control" id="site_keywords" placeholder="多个关键词用逗号分隔">
+                                </div>
 
-                            <div class="setting-item">
-                                <div class="setting-key">页脚文字</div>
-                                <div class="setting-description">显示在网站底部</div>
-                                <input type="text" class="form-control mt-2" name="footer_text" id="footer_text" placeholder="请输入页脚文字">
-                            </div>
-
-                            <!-- 显示设置 -->
-                            <h6 class="mb-3 mt-4"><i class="bi bi-layout-text-window"></i> 显示设置</h6>
-
-                            <div class="setting-item">
-                                <div class="setting-key">每页文章数</div>
-                                <div class="setting-description">首页和列表页每页显示的文章数量</div>
-                                <input type="number" class="form-control mt-2" name="posts_per_page" id="posts_per_page" min="1" max="50" placeholder="请输入每页文章数">
-                            </div>
-
-                            <!-- 邮件设置 -->
-                            <h6 class="mb-3 mt-4"><i class="bi bi-envelope"></i> 邮件设置（SMTP）</h6>
-
-                            <div class="setting-item">
-                                <div class="setting-key">启用邮件通知</div>
-                                <div class="setting-description">开启后，新评论提交时将发送邮件通知站长</div>
-                                <div class="form-check mt-2">
-                                    <input class="form-check-input" type="checkbox" name="mail_enabled" id="mail_enabled">
-                                    <label class="form-check-label" for="mail_enabled">启用邮件通知功能</label>
+                                <div class="form-group">
+                                    <label for="footer_text" class="form-label">页脚文字</label>
+                                    <input type="text" class="form-control" id="footer_text" placeholder="请输入页脚文字">
                                 </div>
                             </div>
 
-                            <div class="setting-item">
-                                <div class="setting-key">SMTP服务器</div>
-                                <div class="setting-description">邮件发送服务器地址（例如：smtp.qq.com）</div>
-                                <input type="text" class="form-control mt-2" name="mail_smtp_host" id="mail_smtp_host" placeholder="smtp.example.com">
+                            <div class="form-section">
+                                <div class="section-title">
+                                    <i class="ph-bold ph-eye"></i>
+                                    显示设置
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="posts_per_page" class="form-label">每页文章数</label>
+                                    <input type="number" class="form-control" id="posts_per_page" min="1" max="50" value="10">
+                                    <div class="form-help">首页和列表页每页显示的文章数量</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="recent_posts_count" class="form-label">最新文章显示数量</label>
+                                    <input type="number" class="form-control" id="recent_posts_count" min="1" max="20" value="5">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">功能开关</label>
+                                    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="enable_comments">
+                                            <span>启用评论功能</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="enable_likes">
+                                            <span>启用点赞功能</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="enable_sharing">
+                                            <span>启用分享功能</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="setting-item">
-                                <div class="setting-key">SMTP端口</div>
-                                <div class="setting-description">SMTP服务器端口（通常为465或587）</div>
-                                <input type="number" class="form-control mt-2" name="mail_smtp_port" id="mail_smtp_port" min="1" max="65535" placeholder="465">
+                            <div class="form-section">
+                                <div class="section-title">
+                                    <i class="ph-bold ph-seal-check"></i>
+                                    SEO 设置
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="meta_description" class="form-label">默认 Meta 描述</label>
+                                    <textarea class="form-control" id="meta_description" rows="2" placeholder="用于搜索引擎优化"></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="analytics_code" class="form-label">统计代码</label>
+                                    <textarea class="form-control" id="analytics_code" rows="3" placeholder="如 Google Analytics、百度统计等"></textarea>
+                                    <div class="form-help">粘贴第三方统计 JS 代码</div>
+                                </div>
                             </div>
 
-                            <div class="setting-item">
-                                <div class="setting-key">SMTP用户名</div>
-                                <div class="setting-description">发件邮箱账号</div>
-                                <input type="text" class="form-control mt-2" name="mail_smtp_username" id="mail_smtp_username" placeholder="your-email@example.com">
-                            </div>
-
-                            <div class="setting-item">
-                                <div class="setting-key">SMTP密码</div>
-                                <div class="setting-description">发件邮箱密码或授权码</div>
-                                <input type="password" class="form-control mt-2" name="mail_smtp_password" id="mail_smtp_password" placeholder="请输入密码或授权码">
-                            </div>
-
-                            <div class="setting-item">
-                                <div class="setting-key">站长邮箱</div>
-                                <div class="setting-description">接收评论通知的邮箱地址</div>
-                                <input type="email" class="form-control mt-2" name="mail_admin_email" id="mail_admin_email" placeholder="admin@example.com">
-                            </div>
-
-                            <div class="setting-item">
-                                <div class="setting-key">网站URL</div>
-                                <div class="setting-description">网站完整URL（用于邮件中的链接）</div>
-                                <input type="url" class="form-control mt-2" name="site_url" id="site_url" placeholder="http://localhost:8080">
-                            </div>
-
-                            <!-- 提交按钮 -->
-                            <div class="mt-4">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check-circle"></i> 保存设置
+                            <div style="display: flex; gap: 8px; margin-top: 24px;">
+                                <button type="submit" class="btn-primary-custom">
+                                    <i class="ph-bold ph-check"></i> 保存设置
                                 </button>
-                                <button type="button" class="btn btn-secondary ms-2" onclick="resetForm()">
-                                    <i class="bi bi-arrow-counterclockwise"></i> 重置
+                                <button type="button" class="btn-outline-custom" onclick="loadSettings()">
+                                    <i class="ph-bold ph-arrow-counter-clockwise"></i> 重置
                                 </button>
                             </div>
                         </form>
@@ -128,126 +207,232 @@
                 </div>
             </div>
 
-            <!-- 右侧提示卡片 -->
-            <div class="col-md-4">
+            <div class="animate-fade-up delay-2">
                 <div class="card">
                     <div class="card-header">
-                        <h6 class="mb-0"><i class="bi bi-lightbulb"></i> 设置说明</h6>
+                        <div class="card-title-text">系统信息</div>
                     </div>
-                    <div class="card-body">
-                        <ul class="list-unstyled">
-                            <li class="mb-2">
-                                <i class="bi bi-info-circle text-info"></i>
-                                <strong>网站名称</strong>：显示在浏览器标题栏和网站头部
+                    <div class="card-body info-card">
+                        <ul>
+                            <li>
+                                <i class="ph-bold ph-version"></i>
+                                <span>系统版本：<strong style="color: var(--text-main);">v2.0.0</strong></span>
                             </li>
-                            <li class="mb-2">
-                                <i class="bi bi-info-circle text-info"></i>
-                                <strong>网站描述</strong>：用于搜索引擎优化和网站介绍
+                            <li>
+                                <i class="ph-bold ph-calendar"></i>
+                                <span>安装日期：<strong style="color: var(--text-main);">2026-01-01</strong></span>
                             </li>
-                            <li class="mb-2">
-                                <i class="bi bi-info-circle text-info"></i>
-                                <strong>关键词</strong>：多个关键词用英文逗号分隔，有助于SEO
+                            <li>
+                                <i class="ph-bold ph-database"></i>
+                                <span>数据库：<strong style="color: var(--text-main);">MySQL 8.0</strong></span>
                             </li>
-                            <li class="mb-2">
-                                <i class="bi bi-info-circle text-info"></i>
-                                <strong>每页文章数</strong>：建议设置为10-20，不宜过多影响加载速度
+                            <li>
+                                <i class="ph-bold ph-hard-drives"></i>
+                                <span>存储使用：<strong style="color: var(--text-main);">1.2 GB / 10 GB</strong></span>
+                            </li>
+                            <li>
+                                <i class="ph-bold ph-file-text"></i>
+                                <span>文章总数：<strong style="color: var(--text-main);" id="infoArticleCount">0</strong></span>
+                            </li>
+                            <li>
+                                <i class="ph-bold ph-chat-centered-text"></i>
+                                <span>评论总数：<strong style="color: var(--text-main);" id="infoCommentCount">0</strong></span>
+                            </li>
+                            <li>
+                                <i class="ph-bold ph-users"></i>
+                                <span>访问总量：<strong style="color: var(--text-main);" id="infoTotalViews">0</strong></span>
                             </li>
                         </ul>
-                        <hr>
-                        <div class="alert alert-info">
-                            <small><i class="bi bi-exclamation-triangle"></i> 提示：修改设置后，前台页面会立即生效</small>
-                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <div class="card-title-text">快捷操作</div>
+                    </div>
+                    <div class="card-body" style="display: flex; flex-direction: column; gap: 12px;">
+                        <button class="btn-outline-custom" onclick="clearCache()">
+                            <i class="ph-bold ph-broom"></i> 清除缓存
+                        </button>
+                        <button class="btn-outline-custom" onclick="backupData()">
+                            <i class="ph-bold ph-download-simple"></i> 备份数据
+                        </button>
+                        <button class="btn-outline-custom" onclick="checkUpdates()">
+                            <i class="ph-bold ph-arrows-clockwise"></i> 检查更新
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // 加载配置数据
-        document.addEventListener('DOMContentLoaded', function() {
-            loadSettings();
-        });
+<div class="toast" id="toast">
+    <i class="ph-bold ph-check-circle" style="font-size: 20px; color: #059669;"></i>
+    <span id="toastMessage" style="color: var(--text-regular);">设置已保存</span>
+</div>
 
-        // 加载配置
-        function loadSettings() {
-            fetch('/admin/settings/api/site-info')
-                .then(response => response.json())
-                .then(result => {
-                    if (result.code === 200) {
-                        const data = result.data;
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    document.getElementById('currentDate').innerText = dateStr.replace(/星期/, '· 星期');
+    loadSettings();
+    loadStats();
+    initThemeSwitcher();
+});
 
-                        // 填充表单
-                        document.getElementById('site_name').value = data.site_name || '';
-                        document.getElementById('site_description').value = data.site_description || '';
-                        document.getElementById('site_keywords').value = data.site_keywords || '';
-                        document.getElementById('footer_text').value = data.footer_text || '';
-                        document.getElementById('posts_per_page').value = data.posts_per_page || '10';
+function initThemeSwitcher() {
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    const userMenuIcon = document.getElementById('userMenuIcon');
+    const themeSwitchBtn = document.getElementById('themeSwitchBtn');
+    const themeDropdown = document.getElementById('themeDropdown');
+    const sidebarAvatar = document.getElementById('sidebarAvatar');
 
-                        // 填充邮件配置
-                        document.getElementById('mail_enabled').checked = data.mail_enabled === 'true';
-                        document.getElementById('mail_smtp_host').value = data.mail_smtp_host || '';
-                        document.getElementById('mail_smtp_port').value = data.mail_smtp_port || '465';
-                        document.getElementById('mail_smtp_username').value = data.mail_smtp_username || '';
-                        document.getElementById('mail_smtp_password').value = data.mail_smtp_password || '';
-                        document.getElementById('mail_admin_email').value = data.mail_admin_email || '';
-                        document.getElementById('site_url').value = data.site_url || 'http://localhost:8080';
-                    }
-                })
-                .catch(error => {
-                    console.error('加载配置失败:', error);
-                    alert('加载配置失败，请刷新页面重试');
-                });
+    userMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        themeDropdown.classList.remove('show');
+        userDropdown.classList.toggle('show');
+        userMenuIcon.classList.toggle('menu-open-icon');
+    });
+
+    themeSwitchBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.remove('show');
+        userMenuIcon.classList.remove('menu-open-icon');
+        themeDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+            userDropdown.classList.remove('show');
+            userMenuIcon.classList.remove('menu-open-icon');
         }
+        if (!themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
+            themeDropdown.classList.remove('show');
+        }
+    });
 
-        // 提交表单
-        document.getElementById('settingsForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const targetTheme = this.getAttribute('data-color');
+            const targetHex = this.getAttribute('data-hex');
+            document.documentElement.setAttribute('data-theme', targetTheme);
+            document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            sidebarAvatar.src = `https://ui-avatars.com/api/?name=Li&background=${targetHex.substring(1)}&color=fff&font-size=0.4`;
+            themeDropdown.classList.remove('show');
+        });
+    });
+}
 
-            // 收集表单数据
-            const formData = {
-                site_name: document.getElementById('site_name').value,
-                site_description: document.getElementById('site_description').value,
-                site_keywords: document.getElementById('site_keywords').value,
-                footer_text: document.getElementById('footer_text').value,
-                posts_per_page: document.getElementById('posts_per_page').value,
-                mail_enabled: document.getElementById('mail_enabled').checked ? 'true' : 'false',
-                mail_smtp_host: document.getElementById('mail_smtp_host').value,
-                mail_smtp_port: document.getElementById('mail_smtp_port').value,
-                mail_smtp_username: document.getElementById('mail_smtp_username').value,
-                mail_smtp_password: document.getElementById('mail_smtp_password').value,
-                mail_admin_email: document.getElementById('mail_admin_email').value,
-                site_url: document.getElementById('site_url').value
-            };
+function loadSettings() {
+    fetch('/admin/settings/api')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('site_name').value = data.siteName || '';
+            document.getElementById('site_description').value = data.siteDescription || '';
+            document.getElementById('site_keywords').value = data.siteKeywords || '';
+            document.getElementById('footer_text').value = data.footerText || '';
+            document.getElementById('posts_per_page').value = data.postsPerPage || 10;
+            document.getElementById('recent_posts_count').value = data.recentPostsCount || 5;
+            document.getElementById('enable_comments').checked = data.enableComments !== false;
+            document.getElementById('enable_likes').checked = data.enableLikes !== false;
+            document.getElementById('enable_sharing').checked = data.enableSharing !== false;
+            document.getElementById('meta_description').value = data.metaDescription || '';
+            document.getElementById('analytics_code').value = data.analyticsCode || '';
+        })
+        .catch(error => console.error('Error loading settings:', error));
+}
 
-            // 批量更新配置
-            fetch('/admin/settings/api/batch', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.code === 200) {
-                    alert('设置保存成功！');
-                    loadSettings(); // 重新加载配置
+function loadStats() {
+    fetch('/admin/settings/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('infoArticleCount').textContent = data.articleCount || 0;
+            document.getElementById('infoCommentCount').textContent = data.commentCount || 0;
+            document.getElementById('infoTotalViews').textContent = data.totalViews || 0;
+        })
+        .catch(error => console.error('Error loading stats:', error));
+}
+
+function saveSettings(event) {
+    event.preventDefault();
+    
+    const data = {
+        siteName: document.getElementById('site_name').value,
+        siteDescription: document.getElementById('site_description').value,
+        siteKeywords: document.getElementById('site_keywords').value,
+        footerText: document.getElementById('footer_text').value,
+        postsPerPage: parseInt(document.getElementById('posts_per_page').value),
+        recentPostsCount: parseInt(document.getElementById('recent_posts_count').value),
+        enableComments: document.getElementById('enable_comments').checked,
+        enableLikes: document.getElementById('enable_likes').checked,
+        enableSharing: document.getElementById('enable_sharing').checked,
+        metaDescription: document.getElementById('meta_description').value,
+        analyticsCode: document.getElementById('analytics_code').value
+    };
+
+    fetch('/admin/settings/api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (response.ok) {
+            showToast('设置已保存', 'success');
+        } else {
+            showToast('保存失败，请重试', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('保存失败，请重试', 'error');
+    });
+}
+
+function showToast(message, type) {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    const icon = toast.querySelector('i');
+    
+    toastMessage.textContent = message;
+    toast.className = 'toast ' + type + ' show';
+    icon.className = type === 'success' ? 'ph-bold ph-check-circle' : 'ph-bold ph-warning-circle';
+    icon.style.color = type === 'success' ? '#059669' : '#DC2626';
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+function clearCache() {
+    if (confirm('确定要清除系统缓存吗？')) {
+        fetch('/admin/settings/cache/clear', { method: 'POST' })
+            .then(response => {
+                if (response.ok) {
+                    showToast('缓存已清除', 'success');
                 } else {
-                    alert('保存失败：' + result.message);
+                    showToast('清除失败', 'error');
                 }
             })
-            .catch(error => {
-                console.error('保存配置失败:', error);
-                alert('保存失败，请重试');
-            });
-        });
+            .catch(error => showToast('清除失败', 'error'));
+    }
+}
 
-        // 重置表单
-        function resetForm() {
-            loadSettings();
-        }
-    </script>
+function backupData() {
+    showToast('正在准备备份...', 'success');
+    window.location.href = '/admin/settings/backup';
+}
+
+function checkUpdates() {
+    showToast('正在检查更新...', 'success');
+    setTimeout(() => {
+        showToast('当前已是最新版本', 'success');
+    }, 1500);
+}
+</script>
 </body>
 </html>

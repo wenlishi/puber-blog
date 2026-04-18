@@ -2,79 +2,241 @@
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>演示管理 - puber-blog后台</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>演示管理 - 知筑后台</title>
+    <th:block th:replace="~{admin/layout :: adminStyles}"/>
     <style>
-        body { background-color: #f8f9fa; }
+        .btn-outline-custom {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-regular);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline-custom:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+        .btn-sm-custom {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-success { background: #F3F4F6; color: #6B7280; }
+        .badge-secondary { background: var(--primary-light); color: var(--primary); }
+        .action-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        .action-btn:hover { background: var(--primary-light); color: var(--primary); }
+        .action-btn.delete:hover { background: #FEF2F2; color: #DC2626; }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: white; border-radius: var(--radius-lg);
+            padding: 24px; max-width: 500px; width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
-    <div th:replace="~{admin/fragments :: navbar('demos')}"></div>
+    <!-- 侧边栏 -->
+    <aside th:replace="~{admin/layout :: sidebar(activePage='demos')}"></aside>
 
-    <div class="container mt-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-code-square"></i> 演示管理</h5>
+    <!-- 主内容区 -->
+    <main class="main-wrapper">
+        <header class="topbar">
+            <div class="topbar-date">
+                <i class="ph-light ph-calendar-blank"></i>
+                <span id="currentDate">2026 年 4 月 17 日 · 星期五</span>
             </div>
-            <div class="card-body">
-                <!-- 操作按钮 -->
-                <div class="mb-3">
-                    <a href="/admin/demos/new" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> 新增演示
-                    </a>
-                </div>
-
-                <!-- 状态筛选 -->
-                <div class="mb-3">
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-outline-primary active" onclick="loadDemos('ALL')">全部</button>
-                        <button type="button" class="btn btn-outline-success" onclick="loadDemos('PUBLISHED')">已发布</button>
-                        <button type="button" class="btn btn-outline-secondary" onclick="loadDemos('DRAFT')">草稿</button>
+            <div class="topbar-right">
+                <button class="topbar-btn" title="查看站点" onclick="window.open('/')"><i class="ph ph-arrow-up-right"></i></button>
+                <button class="topbar-btn" title="通知"><i class="ph ph-bell"></i><span class="notif-dot"></span></button>
+                <div class="theme-menu-wrapper">
+                    <button class="topbar-btn" id="themeSwitchBtn" title="后台配色">
+                        <i class="ph ph-dots-three"></i>
+                    </button>
+                    <div class="theme-dropdown" id="themeDropdown">
+                        <div class="theme-dropdown-header">后台专属配色</div>
+                        <div class="theme-options">
+                            <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
+                                <span class="color-dot" style="background: #059669;"></span> 翡翠绿
+                            </button>
+                            <button class="theme-option" data-color="orange" data-hex="#EA580C" data-rgb="234, 88, 12">
+                                <span class="color-dot" style="background: #EA580C;"></span> 破风橙
+                            </button>
+                            <button class="theme-option" data-color="blue" data-hex="#2563EB" data-rgb="37, 99, 235">
+                                <span class="color-dot" style="background: #2563EB;"></span> 探索蓝
+                            </button>
+                            <button class="theme-option" data-color="beige" data-hex="#C89F70" data-rgb="200, 159, 112">
+                                <span class="color-dot" style="background: #C89F70;"></span> 岁月黄
+                            </button>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </header>
 
-                <!-- 演示列表表格 -->
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>演示名称</th>
-                                <th>别名</th>
-                                <th>状态</th>
-                                <th>浏览量</th>
-                                <th>发布时间</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="demoList">
-                            <tr>
-                                <td colspan="7" class="text-center">加载中...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+        <!-- 页面内容 -->
+        <div class="content">
+            <div class="page-header">
+                <h1>演示管理。</h1>
+                <p>管理和展示技术演示项目，分享代码成果。</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-text">演示列表</div>
+                    <a href="/admin/demos/new" class="btn-primary-custom">
+                        <i class="ph-bold ph-plus"></i> 新增演示
+                    </a>
                 </div>
+                <div class="card-body">
+                    <!-- 状态筛选 -->
+                    <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: center;">
+                        <div class="btn-group" role="group" style="display: flex; gap: 8px;">
+                            <button type="button" id="btnAll" class="btn-primary-custom" onclick="loadDemos('ALL')">全部</button>
+                            <button type="button" id="btnPublished" class="btn-outline-custom btn-sm-custom" onclick="loadDemos('PUBLISHED')">已发布</button>
+                            <button type="button" id="btnDraft" class="btn-outline-custom btn-sm-custom" onclick="loadDemos('DRAFT')">草稿</button>
+                        </div>
+                    </div>
 
-                <!-- 分页 -->
-                <nav id="pagination"></nav>
+                    <!-- 演示列表表格 -->
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th width="50">ID</th>
+                                    <th>演示名称</th>
+                                    <th width="150">别名</th>
+                                    <th width="80">状态</th>
+                                    <th width="80">浏览量</th>
+                                    <th width="120">发布时间</th>
+                                    <th width="180">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="demoList">
+                                <tr>
+                                    <td colspan="7" class="text-center" style="text-align: center; padding: 40px; color: var(--text-muted);">加载中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页 -->
+                    <nav id="pagination" style="margin-top: 20px;"></nav>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 删除确认模态框 -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);">
+                <h5 style="color: var(--text-main); font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                    <i class="ph-bold ph-warning" style="color: var(--primary);"></i> 删除确认
+                </h5>
+                <button type="button" onclick="closeDeleteModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <p style="color: var(--text-regular); margin-bottom: 8px;">确定要删除演示 <strong id="deleteDemoName" style="color: var(--primary);"></strong> 吗？</p>
+                <p style="color: var(--text-muted); font-size: 13px; margin: 0;">删除后无法恢复</p>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-outline-custom btn-sm-custom" onclick="closeDeleteModal()">取消</button>
+                <button type="button" class="btn-primary-custom" onclick="confirmDelete()" style="background: #DC2626;">
+                    <i class="ph-bold ph-trash"></i> 确认删除
+                </button>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+            document.getElementById('currentDate').innerText = dateStr.replace(/星期/, '· 星期');
+
+            const themeSwitchBtn = document.getElementById('themeSwitchBtn');
+            const themeDropdown = document.getElementById('themeDropdown');
+            const sidebarAvatar = document.getElementById('sidebarAvatar');
+
+            themeSwitchBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                themeDropdown.classList.toggle('show');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
+                    themeDropdown.classList.remove('show');
+                }
+            });
+
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const targetTheme = this.getAttribute('data-color');
+                    const targetHex = this.getAttribute('data-hex');
+                    document.documentElement.setAttribute('data-theme', targetTheme);
+                    document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    sidebarAvatar.src = `https://ui-avatars.com/api/?name=Li&background=${targetHex.substring(1)}&color=fff&font-size=0.4`;
+                    themeDropdown.classList.remove('show');
+                });
+            });
+        });
+    </script>
     <script>
         let currentPage = 0;
         let currentStatus = 'ALL';
+        let demoToDelete = null;
 
-        // 加载演示列表
         function loadDemos(status = currentStatus, page = currentPage) {
             currentStatus = status;
             currentPage = page;
 
-            // 更新按钮状态
-            document.querySelectorAll('.btn-group .btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            // 显示加载状态
+            document.getElementById('demoList').innerHTML = '<tr><td colspan="7" class="text-center" style="text-align: center; padding: 40px; color: var(--text-muted);">加载中...</td></tr>';
+
+            // 更新按钮样式
+            const btnAll = document.getElementById('btnAll');
+            const btnPublished = document.getElementById('btnPublished');
+            const btnDraft = document.getElementById('btnDraft');
+
+            btnAll.className = 'btn-outline-custom btn-sm-custom';
+            btnPublished.className = 'btn-outline-custom btn-sm-custom';
+            btnDraft.className = 'btn-outline-custom btn-sm-custom';
+
+            if (status === 'ALL') {
+                btnAll.className = 'btn-primary-custom';
+            } else if (status === 'PUBLISHED') {
+                btnPublished.className = 'btn-primary-custom';
+            } else if (status === 'DRAFT') {
+                btnDraft.className = 'btn-primary-custom';
+            }
 
             fetch(`/api/admin/demos?status=${status}&page=${page}&size=10`)
                 .then(response => response.json())
@@ -82,43 +244,56 @@
                     if (result.code === 200) {
                         renderDemoList(result.data.content);
                         renderPagination(result.data.totalPages);
+                    } else {
+                        document.getElementById('demoList').innerHTML = '<tr><td colspan="7" class="text-center" style="text-align: center; padding: 40px; color: var(--text-muted);">加载失败</td></tr>';
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('demoList').innerHTML = '<tr><td colspan="7" class="text-center" style="text-align: center; padding: 40px; color: var(--text-muted);">加载失败</td></tr>';
                 });
         }
 
-        // 渲染演示列表
         function renderDemoList(demos) {
             const tbody = document.getElementById('demoList');
             if (demos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">暂无数据</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="text-align: center; padding: 40px; color: var(--text-muted);">暂无数据</td></tr>';
                 return;
             }
 
             tbody.innerHTML = demos.map(demo => `
                 <tr>
-                    <td>${demo.id}</td>
-                    <td><a href="/demo/${demo.slug}" target="_blank">${demo.name}</a></td>
-                    <td>${demo.slug}</td>
+                    <td style="color: var(--text-muted);">${demo.id}</td>
                     <td>
-                        <span class="badge ${demo.status === 'PUBLISHED' ? 'bg-success' : 'bg-secondary'}">
-                            ${demo.status === 'PUBLISHED' ? '已发布' : '草稿'}
-                        </span>
+                        <a href="/demo/${demo.slug}" target="_blank"
+                           style="color: var(--text-regular); text-decoration: none; font-weight: 500;">${demo.name}</a>
                     </td>
-                    <td>${demo.viewCount}</td>
-                    <td>${demo.publishedAt ? formatDate(demo.publishedAt) : '-'}</td>
+                    <td style="color: var(--text-muted); font-size: 13.5px;">${demo.slug}</td>
+                    <td style="white-space: nowrap;">
+                        ${demo.status === 'PUBLISHED'
+                            ? '<span class="badge badge-success">已发布</span>'
+                            : '<span class="badge badge-secondary">草稿</span>'
+                        }
+                    </td>
+                    <td style="color: var(--text-muted);">${demo.viewCount || 0}</td>
+                    <td style="color: var(--text-muted); font-size: 13.5px;">${demo.publishedAt ? new Date(demo.publishedAt).toLocaleDateString('zh-CN') : '-'}</td>
                     <td>
-                        <a href="/admin/demos/${demo.id}/edit" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <button onclick="deleteDemo(${demo.id})" class="btn btn-sm btn-outline-danger">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                        <div style="display: flex; gap: 4px;">
+                            <button class="action-btn" title="查看" onclick="window.open('/demo/${demo.slug}', '_blank')">
+                                <i class="ph-bold ph-eye"></i>
+                            </button>
+                            <button class="action-btn" title="编辑" onclick="window.location.href='/admin/demos/${demo.id}/edit'">
+                                <i class="ph-bold ph-pencil"></i>
+                            </button>
+                            <button class="action-btn delete" title="删除" onclick="showDeleteModal(${demo.id}, '${(demo.name || '未知演示').replace(/'/g, "\\'")}')">
+                                <i class="ph-bold ph-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // 渲染分页
         function renderPagination(totalPages) {
             const nav = document.getElementById('pagination');
             if (totalPages <= 1) {
@@ -126,38 +301,53 @@
                 return;
             }
 
-            let html = '<ul class="pagination justify-content-center">';
+            let html = '<ul style="display: flex; list-style: none; gap: 8px; justify-content: center; padding: 0; margin: 0;">';
             for (let i = 0; i < totalPages; i++) {
-                html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
-                    <a class="page-link" onclick="loadDemos('${currentStatus}', ${i})">${i + 1}</a>
-                </li>`;
+                html += `<li><button class="btn-sm-custom ${i === currentPage ? 'btn-primary-custom' : 'btn-outline-custom'}" onclick="loadDemos('${currentStatus}', ${i})">${i + 1}</button></li>`;
             }
             html += '</ul>';
             nav.innerHTML = html;
         }
 
-        // 删除演示
-        function deleteDemo(id) {
-            if (confirm('确定要删除这个演示吗？')) {
-                fetch(`/api/admin/demos/${id}`, { method: 'DELETE' })
+        function showDeleteModal(id, name) {
+            demoToDelete = id;
+            document.getElementById('deleteDemoName').textContent = name;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('show');
+            demoToDelete = null;
+        }
+
+        function confirmDelete() {
+            if (demoToDelete) {
+                fetch(`/api/admin/demos/${demoToDelete}`, { method: 'DELETE' })
                     .then(response => response.json())
                     .then(result => {
                         if (result.code === 200) {
-                            alert('删除成功！');
+                            closeDeleteModal();
                             loadDemos(currentStatus, currentPage);
+                        } else {
+                            alert('删除失败，请重试');
                         }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('删除失败，请重试');
                     });
             }
         }
 
-        // 格式化日期
-        function formatDate(dateStr) {
-            const date = new Date(dateStr);
-            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
         }
 
-        // 页面加载时获取演示列表
-        document.addEventListener('DOMContentLoaded', () => loadDemos('ALL'));
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDemos();
+        });
     </script>
 </body>
 </html>

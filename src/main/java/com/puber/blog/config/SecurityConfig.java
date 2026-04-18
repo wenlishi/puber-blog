@@ -92,7 +92,7 @@ public class SecurityConfig {
             // 配置 CSRF 防护
             // 对所有API接口禁用 CSRF（前后端分离架构，使用token认证）
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**")
+                .ignoringRequestMatchers("/api/**", "/admin/**")
             )
             // 配置 Session 管理
             .sessionManagement(session -> session
