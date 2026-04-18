@@ -69,4 +69,14 @@ public class CommentVO {
      * 回复目标昵称（用于显示"回复某某"）
      */
     private String replyToNickname;
+
+    /**
+     * 管理员回复内容
+     */
+    private String replyContent;
+
+    /**
+     * 管理员回复时间
+     */
+    private LocalDateTime replyTime;
 }

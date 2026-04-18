@@ -76,7 +76,9 @@ public class FriendLinkServiceImpl implements FriendLinkService {
 
         // 设置默认值
         if (friendLink.getSortOrder() == null) {
-            friendLink.setSortOrder(0);
+            // 自动设置为当前最大排序值+1，新友链排在最后
+            Integer maxSortOrder = friendLinkRepository.findMaxSortOrder();
+            friendLink.setSortOrder(maxSortOrder != null ? maxSortOrder + 1 : 0);
         }
         if (friendLink.getStatus() == null) {
             friendLink.setStatus("ACTIVE");

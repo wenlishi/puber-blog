@@ -125,7 +125,7 @@
             font-size: 12px;
             font-weight: 600;
         }
-        .badge-success { background: #ECFDF5; color: #059669; }
+        .badge-success { background: var(--primary-light); color: var(--primary); }
         .badge-secondary { background: #F3F4F6; color: #6B7280; }
     </style>
 </head>
@@ -226,8 +226,8 @@
             </div>
             <div class="form-group">
                 <label class="form-label">排序</label>
-                <input type="number" class="form-control" id="linkSort" value="0" min="0">
-                <div class="form-help">数字越小越靠前</div>
+                <input type="number" class="form-control" id="linkSort" placeholder="留空则自动排在最后" min="0">
+                <div class="form-help">数字越小越靠前，留空则自动添加到末尾</div>
             </div>
             <div class="form-group">
                 <label class="form-label">状态</label>
@@ -338,13 +338,20 @@ function loadLinks() {
 
     fetch('/admin/friend-links/api')
         .then(response => response.json())
-        .then(data => {
+        .then(result => {
+            console.log('API返回数据:', result);
+            console.log('result.data:', result.data);
+            console.log('数据类型:', typeof result.data);
+            console.log('是否为数组:', Array.isArray(result.data));
+            console.log('数据长度:', result.data ? result.data.length : 0);
+
             document.getElementById('loadingSpinner').style.display = 'none';
-            
-            if (data.links && data.links.length > 0) {
-                renderLinks(data.links);
+
+            if (result.success && result.data && result.data.length > 0) {
+                renderLinks(result.data);
                 document.getElementById('friendLinksList').style.display = 'flex';
             } else {
+                console.log('没有数据或success为false');
                 document.getElementById('emptyMessage').style.display = 'block';
             }
         })
@@ -356,33 +363,52 @@ function loadLinks() {
 }
 
 function renderLinks(links) {
+    console.log('renderLinks开始渲染，数据:', links);
     const list = document.getElementById('friendLinksList');
-    list.innerHTML = links.map(link => `
-        <div class="link-card">
-            <img class="link-logo" 
-                 src="${link.logo || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(link.name || 'Link') + '&background=random&color=fff'}" 
-                 alt="${link.name || '友链'}">
-            <div class="link-info">
-                <div class="link-name">${link.name || '未命名'}</div>
-                <a class="link-url" href="${link.url}" target="_blank">${link.url}</a>
-                ${link.description ? `<div class="link-description">${link.description}</div>` : ''}
-            </div>
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <span style="font-size: 13px; color: var(--text-muted);">排序：${link.sortOrder || 0}</span>
-                <span class="badge ${link.status === 'ACTIVE' ? 'badge-success' : 'badge-secondary'}">
-                    ${link.status === 'ACTIVE' ? '启用' : '禁用'}
-                </span>
-                <div style="display: flex; gap: 4px;">
-                    <button class="action-btn" title="编辑" onclick="editLink(${link.id})">
-                        <i class="ph-bold ph-pencil"></i>
-                    </button>
-                    <button class="action-btn delete" title="删除" onclick="showDeleteModal(${link.id})">
-                        <i class="ph-bold ph-trash"></i>
-                    </button>
+    console.log('friendLinksList元素:', list);
+
+    if (!list) {
+        console.error('找不到friendLinksList元素！');
+        return;
+    }
+
+    try {
+        const html = links.map(link => {
+            console.log('渲染单个link:', link);
+            return `
+            <div class="link-card">
+                <img class="link-logo"
+                     src="${link.logo || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(link.name || 'Link') + '&background=random&color=fff'}"
+                     alt="${link.name || '友链'}">
+                <div class="link-info">
+                    <div class="link-name">${link.name || '未命名'}</div>
+                    <a class="link-url" href="${link.url}" target="_blank">${link.url}</a>
+                    ${link.description ? `<div class="link-description">${link.description}</div>` : ''}
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <span style="font-size: 13px; color: var(--text-muted);">排序：${link.sortOrder || 0}</span>
+                    <span class="badge ${link.status === 'ACTIVE' ? 'badge-success' : 'badge-secondary'}">
+                        ${link.status === 'ACTIVE' ? '启用' : '禁用'}
+                    </span>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="action-btn" title="编辑" onclick="editLink(${link.id})">
+                            <i class="ph-bold ph-pencil"></i>
+                        </button>
+                        <button class="action-btn delete" title="删除" onclick="showDeleteModal(${link.id})">
+                            <i class="ph-bold ph-trash"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    `).join('');
+            `;
+        }).join('');
+
+        console.log('生成的HTML长度:', html.length);
+        list.innerHTML = html;
+        console.log('渲染完成');
+    } catch (error) {
+        console.error('渲染出错:', error);
+    }
 }
 
 function showAddModal() {
@@ -394,20 +420,23 @@ function showAddModal() {
 
 function editLink(id) {
     editingLinkId = id;
-    fetch(`/admin/friend-links/${id}`)
+    fetch(`/admin/friend-links/api/${id}`)
         .then(response => response.json())
-        .then(link => {
-            document.getElementById('modalTitle').textContent = '编辑友链';
-            document.getElementById('linkId').value = link.id;
-            document.getElementById('linkName').value = link.name || '';
-            document.getElementById('linkUrl').value = link.url || '';
-            document.getElementById('linkLogo').value = link.logo || '';
-            document.getElementById('linkDescription').value = link.description || '';
-            document.getElementById('linkSort').value = link.sortOrder || 0;
-            document.querySelectorAll('input[name="linkStatus"]').forEach(radio => {
-                radio.checked = radio.value === link.status;
-            });
-            document.getElementById('linkModal').classList.add('show');
+        .then(result => {
+            if (result.data) {
+                const link = result.data;
+                document.getElementById('modalTitle').textContent = '编辑友链';
+                document.getElementById('linkId').value = link.id;
+                document.getElementById('linkName').value = link.name || '';
+                document.getElementById('linkUrl').value = link.url || '';
+                document.getElementById('linkLogo').value = link.logo || '';
+                document.getElementById('linkDescription').value = link.description || '';
+                document.getElementById('linkSort').value = link.sortOrder != null ? link.sortOrder : '';
+                document.querySelectorAll('input[name="linkStatus"]').forEach(radio => {
+                    radio.checked = radio.value === link.status;
+                });
+                document.getElementById('linkModal').classList.add('show');
+            }
         })
         .catch(error => {
             console.error('Error:', error);
@@ -422,18 +451,19 @@ function closeModal() {
 
 function saveLink(event) {
     event.preventDefault();
-    
+
+    const sortInput = document.getElementById('linkSort').value.trim();
     const data = {
         name: document.getElementById('linkName').value,
         url: document.getElementById('linkUrl').value,
         logo: document.getElementById('linkLogo').value,
         description: document.getElementById('linkDescription').value,
-        sortOrder: parseInt(document.getElementById('linkSort').value),
+        sortOrder: sortInput ? parseInt(sortInput) : null,
         status: document.querySelector('input[name="linkStatus"]:checked').value
     };
 
     const id = document.getElementById('linkId').value;
-    const url = id ? `/admin/friend-links/${id}` : '/admin/friend-links';
+    const url = id ? `/admin/friend-links/api/${id}` : '/admin/friend-links/api';
     const method = id ? 'PUT' : 'POST';
 
     fetch(url, {
@@ -441,12 +471,13 @@ function saveLink(event) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     })
-    .then(response => {
-        if (response.ok) {
+    .then(response => response.json())
+    .then(result => {
+        if (result.code === 200) {
             closeModal();
             loadLinks();
         } else {
-            alert('保存失败，请重试');
+            alert('保存失败：' + (result.message || '请重试'));
         }
     })
     .catch(error => {
@@ -467,13 +498,14 @@ function closeDeleteModal() {
 
 function confirmDelete() {
     if (linkToDelete) {
-        fetch(`/admin/friend-links/${linkToDelete}`, { method: 'DELETE' })
-            .then(response => {
-                if (response.ok) {
+        fetch(`/admin/friend-links/api/${linkToDelete}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(result => {
+                if (result.code === 200) {
                     closeDeleteModal();
                     loadLinks();
                 } else {
-                    alert('删除失败，请重试');
+                    alert('删除失败：' + (result.message || '请重试'));
                 }
             })
             .catch(error => {
