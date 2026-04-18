@@ -2,6 +2,7 @@ package com.puber.blog.repository;
 
 import com.puber.blog.entity.FriendLink;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -30,4 +31,12 @@ public interface FriendLinkRepository extends JpaRepository<FriendLink, Long> {
      * @return List<FriendLink> 友链列表
      */
     List<FriendLink> findAllByOrderBySortOrderAsc();
+
+    /**
+     * 查询最大排序值
+     *
+     * @return Integer 最大排序值，如果没有友链则返回null
+     */
+    @Query("SELECT MAX(f.sortOrder) FROM FriendLink f")
+    Integer findMaxSortOrder();
 }

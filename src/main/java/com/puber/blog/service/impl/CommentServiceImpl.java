@@ -353,7 +353,9 @@ public class CommentServiceImpl implements CommentService {
                 .content(comment.getContent())
                 .status(comment.getStatus())
                 .createdAt(comment.getCreatedAt())
-                .replies(new ArrayList<>())  // 默认空列表
+                .replyContent(comment.getReplyContent())
+                .replyTime(comment.getReplyTime())
+                .replies(new ArrayList<>())
                 .build();
     }
 }

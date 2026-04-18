@@ -112,6 +112,21 @@
             `;
         }
 
+        // 管理员回复部分
+        let adminReplyHtml = '';
+        if (comment.replyContent) {
+            const replyTime = formatDate(comment.replyTime);
+            adminReplyHtml = `
+                <div class="admin-reply">
+                    <div class="admin-reply-header">
+                        <span class="admin-badge"><i class="bi bi-person-badge-fill"></i> 管理员</span>
+                        <span class="admin-reply-time">${replyTime}</span>
+                    </div>
+                    <div class="admin-reply-content">${comment.replyContent}</div>
+                </div>
+            `;
+        }
+
         let repliesHtml = '';
         if (comment.replies && comment.replies.length > 0) {
             repliesHtml = '<div class="comment-replies">';
@@ -135,6 +150,7 @@
                 <div class="comment-content">
                     ${replyToHtml}${content}
                 </div>
+                ${adminReplyHtml}
                 <div class="comment-actions">
                     <button class="btn comment-reply-btn" onclick="handleReply(${comment.id}, '${nickname}')">
                         <i class="bi bi-reply-fill"></i>回复

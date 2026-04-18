@@ -8,8 +8,12 @@
     <link href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" rel="stylesheet">
     <style>
-        .editor-main { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; }
+        .editor-main { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+        .editor-left { display: flex; flex-direction: column; }
+        .editor-right { display: flex; flex-direction: column; }
+        .editor-right-cards { flex: 1; display: flex; flex-direction: column; gap: 20px; }
         .form-label { display: block; font-size: 13.5px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
+        .card-body { padding: 18px; }
         .form-control, .form-select {
             width: 100%; padding: 10px 14px;
             border: 1px solid var(--border-light);
@@ -57,6 +61,27 @@
             font-size: 13.5px; color: var(--text-regular);
         }
         .auto-save-status { font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+
+        /* 按钮样式 - 来自仪表37.html */
+        .btn {
+            padding: 10px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary {
+            background: var(--primary); color: #FFFFFF;
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover); transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--bg-sidebar-active);
+        }
+        .btn-secondary {
+            background: var(--bg-body); color: var(--text-main);
+            border: 1px solid var(--border-strong);
+        }
+        .btn-secondary:hover {
+            background: var(--border-light);
+        }
+
         .toast {
             position: fixed; bottom: 24px; right: 24px;
             background: var(--bg-surface);
@@ -115,23 +140,14 @@
     </header>
 
     <div class="content">
-        <div class="page-header animate-fade-up">
-            <h1>写文章。</h1>
-            <p>使用 Markdown 编辑器创作内容，支持实时预览。</p>
-        </div>
-
         <div id="upload-progress" class="upload-status">
             <i class="ph-bold ph-upload-simple" style="color: var(--primary);"></i>
             <span id="upload-status">上传中...</span>
         </div>
 
-        <div class="auto-save-status animate-fade-up">
-            <i class="ph-bold ph-cloud-check" style="color: var(--primary);"></i>
-            <span id="save-status">自动保存已开启</span>
-        </div>
-
         <div class="editor-main">
-            <div class="animate-fade-up delay-1">
+            <!-- 左侧：编辑器 -->
+            <div class="editor-left animate-fade-up delay-1">
                 <div class="card">
                     <div class="card-body">
                         <div class="mb-3" style="margin-bottom: 20px;">
@@ -147,83 +163,91 @@
 
                         <div class="mb-3">
                             <label for="content" class="form-label">文章内容（Markdown） <span style="color: var(--primary);">*</span></label>
+                            <div class="auto-save-status" style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                <i class="ph-bold ph-cloud-check" style="color: var(--primary);"></i>
+                                <span id="save-status">自动保存已开启</span>
+                            </div>
                             <textarea id="content"></textarea>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="animate-fade-up delay-2" style="display: flex; flex-direction: column; gap: 24px;">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title-text">发布设置</div>
-                    </div>
-                    <div class="card-body" style="display: flex; flex-direction: column; gap: 16px;">
-                        <div>
-                            <label for="categoryId" class="form-label">分类</label>
-                            <select class="form-select" id="categoryId">
-                                <option value="">无分类</option>
-                            </select>
+            <!-- 右侧：设置 -->
+            <div class="editor-right animate-fade-up delay-2">
+                <div class="editor-right-cards">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-text">发布设置</div>
                         </div>
-                        <div>
-                            <label class="form-label">标签</label>
-                            <div id="tagCheckboxes" style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                <div class="form-text">暂无标签</div>
+                        <div class="card-body" style="display: flex; flex-direction: column; gap: 16px;">
+                            <div>
+                                <label for="categoryId" class="form-label">分类</label>
+                                <select class="form-select" id="categoryId">
+                                    <option value="">无分类</option>
+                                </select>
                             </div>
-                            <div style="margin-top: 12px; display: flex; gap: 8px;">
-                                <input type="text" class="form-control" id="newTagInput" placeholder="输入新标签" style="flex: 1;">
-                                <button type="button" class="btn-primary-custom" onclick="addNewTag()">
-                                    <i class="ph-bold ph-plus"></i>
+                            <div>
+                                <label class="form-label">标签</label>
+                                <div id="tagCheckboxes" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                    <div class="form-text">暂无标签</div>
+                                </div>
+                                <div style="margin-top: 12px; display: flex; gap: 8px;">
+                                    <input type="text" class="form-control" id="newTagInput" placeholder="输入新标签" style="flex: 1;">
+                                    <button type="button" class="btn-primary-custom" onclick="addNewTag()">
+                                        <i class="ph-bold ph-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="sticky" class="form-label">置顶</label>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="sticky" style="accent-color: var(--primary);">
+                                    <span style="color: var(--text-regular); font-size: 14px;">将此文章置顶显示</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-text">封面图</div>
+                        </div>
+                        <div class="card-body" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: flex; gap: 8px;">
+                                <input type="url" class="form-control" id="coverUrl" placeholder="封面图 URL" style="flex: 1;">
+                                <button type="button" class="btn-outline-custom" onclick="uploadCover()">
+                                    <i class="ph-bold ph-upload-simple"></i> 上传
                                 </button>
                             </div>
+                            <img id="coverPreview" class="cover-preview" style="display: none;" alt="封面预览">
                         </div>
-                        <div>
-                            <label for="sticky" class="form-label">置顶</label>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <input type="checkbox" id="sticky" style="accent-color: var(--primary);">
-                                <span style="color: var(--text-regular); font-size: 14px;">将此文章置顶显示</span>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-text">SEO 设置</div>
+                        </div>
+                        <div class="card-body" style="display: flex; flex-direction: column; gap: 16px;">
+                            <div>
+                                <label for="metaDescription" class="form-label">Meta 描述</label>
+                                <textarea class="form-control" id="metaDescription" rows="2" placeholder="用于搜索引擎优化"></textarea>
+                            </div>
+                            <div>
+                                <label for="metaKeywords" class="form-label">Meta 关键词</label>
+                                <input type="text" class="form-control" id="metaKeywords" placeholder="多个关键词用逗号分隔">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title-text">封面图</div>
-                    </div>
-                    <div class="card-body" style="display: flex; flex-direction: column; gap: 12px;">
-                        <div style="display: flex; gap: 8px;">
-                            <input type="url" class="form-control" id="coverUrl" placeholder="封面图 URL" style="flex: 1;">
-                            <button type="button" class="btn-outline-custom" onclick="uploadCover()">
-                                <i class="ph-bold ph-upload-simple"></i> 上传
-                            </button>
-                        </div>
-                        <img id="coverPreview" class="cover-preview" style="display: none;" alt="封面预览">
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title-text">SEO 设置</div>
-                    </div>
-                    <div class="card-body" style="display: flex; flex-direction: column; gap: 16px;">
-                        <div>
-                            <label for="metaDescription" class="form-label">Meta 描述</label>
-                            <textarea class="form-control" id="metaDescription" rows="2" placeholder="用于搜索引擎优化"></textarea>
-                        </div>
-                        <div>
-                            <label for="metaKeywords" class="form-label">Meta 关键词</label>
-                            <input type="text" class="form-control" id="metaKeywords" placeholder="多个关键词用逗号分隔">
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button type="button" class="btn-primary-custom" onclick="saveArticle('PUBLISHED')" style="justify-content: center; padding: 12px;">
-                        <i class="ph-bold ph-check"></i> 发布文章
+                <!-- 操作按钮 -->
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="saveArticle('DRAFT')">
+                        <i class="ph ph-floppy-disk"></i> 保存草稿
                     </button>
-                    <button type="button" class="btn-outline-custom" onclick="saveArticle('DRAFT')" style="justify-content: center; padding: 12px;">
-                        <i class="ph-bold ph-floppy-disk"></i> 保存草稿
+                    <button type="button" class="btn btn-primary" onclick="saveArticle('PUBLISHED')">
+                        <i class="ph ph-paper-plane-tilt"></i> 发布文章
                     </button>
                 </div>
             </div>

@@ -85,12 +85,7 @@ public class FriendLink {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (sortOrder == null) {
-            sortOrder = 0;
-        }
-        if (status == null) {
-            status = "ACTIVE";
-        }
+        // sortOrder和status的默认值由Service层设置
     }
 
     /**
