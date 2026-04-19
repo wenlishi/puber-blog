@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'留言板 - ' + ${siteName}">留言板</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- 自定义样式 -->
+    <link href="/css/front.css" rel="stylesheet">
+
+    <!-- SEO Meta -->
+    <meta name="description" th:content="'欢迎在留言板留下您的想法和建议 - ' + ${siteName}">
+</head>
+<body>
+
+<!-- 导航栏 -->
+<div th:replace="~{front/fragments :: navbar}"></div>
+
+<!-- 主内容区 -->
+<div class="container mt-4">
+    <div class="row">
+        <!-- 留言板内容 -->
+        <div class="col-lg-8">
+            <!-- 页面标题 -->
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-chat-square-text"></i> 留言板</h4>
+                    <p class="text-muted small mb-0">欢迎留下您的想法和建议</p>
+                </div>
+                <div class="card-body">
+                    <!-- 留言表单 -->
+                    <div class="message-form-container">
+                        <form id="message-form">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="nickname">昵称 *</label>
+                                        <input type="text" class="form-control" id="nickname" name="nickname" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="email">邮箱 *</label>
+                                        <input type="email" class="form-control" id="email" name="email" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="website">网站（可选）</label>
+                                        <input type="url" class="form-control" id="website" name="website">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 回复信息提示 -->
+                            <div id="reply-info" class="alert alert-info d-none">
+                                <i class="bi bi-reply-fill"></i> 回复 <span id="reply-target-nickname"></span>
+                                <button type="button" id="cancel-reply-btn" class="btn btn-sm btn-outline-secondary ms-2">取消</button>
+                                <input type="hidden" id="parent-id" name="parentId">
+                                <input type="hidden" id="reply-to-id" name="replyToId">
+                            </div>
+
+                            <!-- 留言内容 -->
+                            <div class="form-group mb-3">
+                                <label for="content">留言内容 *</label>
+                                <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+                            </div>
+
+                            <!-- 提交按钮 -->
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i> 提交留言
+                            </button>
+
+                            <!-- 提示信息 -->
+                            <p class="text-muted mt-2">
+                                <small><i class="bi bi-info-circle"></i> 留言将在审核后公开显示</small>
+                            </p>
+                        </form>
+                    </div>
+
+                    <!-- 留言列表 -->
+                    <div class="messages-container mt-4">
+                        <h5><i class="bi bi-comments"></i> 留言列表</h5>
+                        <div id="messages-list-container">
+                            <!-- 加载中提示 -->
+                            <div class="text-center py-4">
+                                <i class="bi bi-spinner-border spinner-border"></i> 加载中...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="col-lg-4">
+            <!-- 分类列表 -->
+            <div class="card sidebar-card" th:if="${categories != null and !#lists.isEmpty(categories)}">
+                <div class="card-header">
+                    <i class="bi bi-folder"></i> 分类
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled sidebar-article-list">
+                        <li th:each="category : ${categories}">
+                            <a th:href="@{/category/{slug}(slug=${category.slug})}">
+                                <span th:text="${category.name}">分类名</span>
+                                <span class="badge bg-primary float-end" th:text="${category.articleCount}">0</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 标签云 -->
+            <div class="card sidebar-card" th:if="${tags != null and !#lists.isEmpty(tags)}">
+                <div class="card-header">
+                    <i class="bi bi-tags"></i> 标签
+                </div>
+                <div class="card-body">
+                    <div class="tag-cloud">
+                        <a th:each="tag : ${tags}"
+                           class="tag-cloud-item"
+                           th:href="@{/tag/{slug}(slug=${tag.slug})}"
+                           th:text="${tag.name}">标签名</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 友情链接 -->
+            <div class="card sidebar-card" th:if="${friendLinks != null and !#lists.isEmpty(friendLinks)}">
+                <div class="card-header">
+                    <i class="bi bi-link-45deg"></i> 友链
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li th:each="link : ${friendLinks}" class="mb-2">
+                            <a th:href="${link.url}" target="_blank" rel="noopener noreferrer">
+                                <img th:if="${link.logo != null and link.logo != ''}"
+                                     th:src="${link.logo}"
+                                     alt="Logo"
+                                     style="width: 16px; height: 16px; border-radius: 2px; margin-right: 8px; vertical-align: middle;">
+                                <span th:text="${link.name}">友链名称</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页脚 -->
+<div th:replace="~{front/fragments :: footer}"></div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 留言板交互 JS -->
+<script src="/js/message-board.js"></script>
+
+</body>
+</html>

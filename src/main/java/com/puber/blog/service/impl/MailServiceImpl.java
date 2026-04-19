@@ -3,6 +3,7 @@ package com.puber.blog.service.impl;
 import com.puber.blog.annotation.LogRecord;
 import com.puber.blog.annotation.LogRecord.LogLevel;
 import com.puber.blog.dto.CommentDTO;
+import com.puber.blog.dto.MessageDTO;
 import com.puber.blog.service.MailService;
 import com.puber.blog.service.SiteSettingService;
 import lombok.RequiredArgsConstructor;
@@ -76,6 +77,54 @@ public class MailServiceImpl implements MailService {
             log.info("新评论通知邮件发送成功：to={}", adminEmail);
         } catch (Exception e) {
             log.error("发送新评论通知邮件失败", e);
+        }
+    }
+
+    /**
+     * 发送新留言通知邮件给站长（异步方式）
+     * 使用独立线程池执行，不阻塞留言提交流程
+     *
+     * @param messageDTO 留言DTO
+     */
+    @Override
+    @Async("mailTaskExecutor")
+    @LogRecord(operation = "发送新留言通知邮件", level = LogLevel.DEBUG, recordParams = false, recordTime = true)
+    public void sendNewMessageNotification(MessageDTO messageDTO) {
+        log.info("异步发送新留言通知邮件：nickname={}", messageDTO.getNickname());
+
+        if (!isMailConfigured()) {
+            log.warn("邮件配置不完整，跳过发送");
+            return;
+        }
+
+        try {
+            // 创建邮件发送器
+            JavaMailSender mailSender = createMailSender();
+
+            // 获取站长邮箱
+            String adminEmail = siteSettingService.getSettingValue("mail_admin_email");
+            if (adminEmail == null || adminEmail.isEmpty()) {
+                log.warn("未配置站长邮箱，跳过发送");
+                return;
+            }
+
+            // 创建邮件消息
+            SimpleMailMessage message = new SimpleMailMessage();
+
+            // QQ邮箱要求：发件人地址必须和授权用户一致
+            String smtpUsername = siteSettingService.getSettingValue("mail_smtp_username");
+            message.setFrom(smtpUsername);  // 设置发件人地址
+
+            message.setTo(adminEmail);
+            message.setSubject("【博客系统】新留言待审核");
+            message.setText(buildMessageNotificationText(messageDTO));
+
+            // 发送邮件
+            mailSender.send(message);
+
+            log.info("新留言通知邮件发送成功：to={}", adminEmail);
+        } catch (Exception e) {
+            log.error("发送新留言通知邮件失败", e);
         }
     }
 
@@ -213,6 +262,31 @@ public class MailServiceImpl implements MailService {
         content.append("━━━━━━━━━━━━━━━━━━━━━━━━\n\n");
         content.append("请登录后台管理系统审核该评论。\n");
         content.append("后台地址：").append(siteSettingService.getSettingValue("site_url")).append("/admin/comments\n\n");
+        content.append("此邮件由系统自动发送，请勿回复。\n");
+
+        return content.toString();
+    }
+
+    /**
+     * 构建留言通知邮件内容
+     *
+     * @param messageDTO 留言DTO
+     * @return String 邮件内容
+     */
+    private String buildMessageNotificationText(MessageDTO messageDTO) {
+        StringBuilder content = new StringBuilder();
+        content.append("您的博客收到一条新留言，需要审核。\n\n");
+        content.append("留言详情：\n");
+        content.append("━━━━━━━━━━━━━━━━━━━━━━━━\n");
+        content.append("留言者：").append(messageDTO.getNickname()).append("\n");
+        content.append("邮箱：").append(messageDTO.getEmail()).append("\n");
+        if (messageDTO.getWebsite() != null && !messageDTO.getWebsite().isEmpty()) {
+            content.append("网站：").append(messageDTO.getWebsite()).append("\n");
+        }
+        content.append("内容：").append(messageDTO.getContent()).append("\n");
+        content.append("━━━━━━━━━━━━━━━━━━━━━━━━\n\n");
+        content.append("请登录后台管理系统审核该留言。\n");
+        content.append("后台地址：").append(siteSettingService.getSettingValue("site_url")).append("/admin/messages\n\n");
         content.append("此邮件由系统自动发送，请勿回复。\n");
 
         return content.toString();

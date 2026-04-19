@@ -3,6 +3,7 @@ package com.puber.blog.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
@@ -10,6 +11,7 @@ import java.util.concurrent.Executor;
 /**
  * 异步任务配置类
  * 用于配置异步邮件发送等任务的线程池
+ * 同时启用定时任务功能
  *
  * @author wenlishi
  * @version 1.0.0
@@ -17,6 +19,7 @@ import java.util.concurrent.Executor;
  */
 @Configuration
 @EnableAsync
+@EnableScheduling  // 启用定时任务
 public class AsyncConfig {
 
     /**
@@ -35,7 +38,7 @@ public class AsyncConfig {
         // 最大线程数：5个（突发情况下可以增加）
         executor.setMaxPoolSize(5);
 
-        // 队列容量：10个（等待发送的邮件队列）
+        // 阵列容量：10个（等待发送的邮件队列）
         executor.setQueueCapacity(10);
 
         // 线程名称前缀（方便日志识别）

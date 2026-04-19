@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script>
+        // 立即应用保存的主题颜色（在 CSS 加载前执行，避免闪烁）
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('admin_theme_color') || 'emerald';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } catch(e) {}
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>留言管理 - 知筑后台</title>
+    <style th:replace="~{admin/layout :: adminStyles}"></style>
+    <style>
+        .btn-outline-custom {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-regular);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline-custom:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+        .btn-sm-custom {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-success { background: #F3F4F6; color: #6B7280; }
+        .badge-warning { background: var(--primary-light); color: var(--primary); }
+        .action-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        .action-btn:hover { background: var(--primary-light); color: var(--primary); }
+        .action-btn.delete:hover { background: #FEF2F2; color: #DC2626; }
+        .action-btn.approve:hover { background: #ECFDF5; color: #059669; }
+        .message-content {
+            max-width: 600px;
+            color: var(--text-regular);
+            line-height: 1.6;
+        }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: white; border-radius: var(--radius-lg);
+            padding: 24px; max-width: 500px; width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .reply-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            outline: none;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+        .reply-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .toast {
+            position: fixed; bottom: 24px; right: 24px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            box-shadow: var(--shadow-hover);
+            display: flex; align-items: center; gap: 12px;
+            z-index: 2000;
+            opacity: 0; transform: translateY(20px);
+            transition: all 0.3s;
+            max-width: 400px;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { border-left: 4px solid #059669; }
+        .toast.error { border-left: 4px solid #DC2626; }
+    </style>
+</head>
+<body>
+
+<aside th:replace="~{admin/layout :: sidebar(activePage='messages')}"></aside>
+
+<main class="main-wrapper">
+    <header class="topbar">
+        <div class="topbar-date">
+            <i class="ph-light ph-calendar-blank"></i>
+            <span id="currentDate">2026 年 4 月 19 日 · 星期六</span>
+        </div>
+
+        <div class="topbar-right">
+            <button class="topbar-btn" title="查看站点" onclick="window.open('/')"><i class="ph ph-arrow-up-right"></i></button>
+            <button class="topbar-btn" title="通知"><i class="ph ph-bell"></i><span class="notif-dot"></span></button>
+
+            <div class="theme-menu-wrapper">
+                <button class="topbar-btn" id="themeSwitchBtn" title="后台配色">
+                    <i class="ph ph-dots-three"></i>
+                </button>
+                <div class="theme-dropdown" id="themeDropdown">
+                    <div class="theme-dropdown-header">后台配色</div>
+                    <div class="theme-options">
+                        <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
+                            <span class="color-dot" style="background: #059669;"></span> 翡翠绿
+                        </button>
+                        <button class="theme-option" data-color="orange" data-hex="#EA580C" data-rgb="234, 88, 12">
+                            <span class="color-dot" style="background: #EA580C;"></span> 破风橙
+                        </button>
+                        <button class="theme-option" data-color="blue" data-hex="#2563EB" data-rgb="37, 99, 235">
+                            <span class="color-dot" style="background: #2563EB;"></span> 探索蓝
+                        </button>
+                        <button class="theme-option" data-color="beige" data-hex="#C89F70" data-rgb="200, 159, 112">
+                            <span class="color-dot" style="background: #C89F70;"></span> 岁月黄
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="content">
+        <div class="page-header animate-fade-up">
+            <h1>留言管理。</h1>
+            <p>审核和管理留言板留言，维护良好的互动环境。</p>
+        </div>
+
+        <div class="card animate-fade-up delay-1">
+            <div class="card-header">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div class="card-title-text">留言列表</div>
+                    <div style="display: flex; gap: 12px; font-size: 13px; color: var(--text-muted);">
+                        <span><i class="ph-bold ph-clock" style="color: var(--primary);"></i> 待审核 <strong id="pendingCount" style="color: var(--primary);">0</strong></span>
+                        <span><i class="ph-bold ph-chat-centered-text"></i> 总计 <strong id="totalCount">0</strong></span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button id="btnAll" class="btn-outline-custom btn-sm-custom" onclick="filterByStatus('ALL')">
+                        <i class="ph-bold ph-list"></i> 全部
+                    </button>
+                    <button id="btnPending" class="btn-primary-custom" onclick="filterByStatus('PENDING')">
+                        <i class="ph-bold ph-clock"></i> 待审核
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="loadingSpinner" style="text-align: center; padding: 40px;">
+                    <i class="ph-bold ph-spinner" style="font-size: 40px; color: var(--primary); animation: spin 1s linear infinite;"></i>
+                    <p style="margin-top: 16px; color: var(--text-muted);">加载中...</p>
+                </div>
+
+                <div id="messageList" style="display: flex; flex-direction: column; gap: 16px;"></div>
+
+                <div id="emptyMessage" style="display:none; text-align: center; padding: 40px;">
+                    <i class="ph ph-inbox" style="font-size:48px;color:#ccc;"></i>
+                    <p style="margin-top: 16px; color: var(--text-muted);">暂无留言数据</p>
+                </div>
+
+                <!-- 分页 -->
+                <div id="pagination" style="display:none; justify-content: center; align-items: center; gap: 12px; padding: 20px 0;"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="modal-overlay" id="replyModal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);">
+            <h5 style="color: var(--text-main); font-size: 16px; font-weight: 600;">回复留言</h5>
+            <button type="button" onclick="closeReplyModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <div style="margin-bottom: 20px;">
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 8px;">原留言：</p>
+            <div style="background: var(--bg-body); padding: 12px; border-radius: var(--radius-md); margin-bottom: 16px; color: var(--text-regular);">
+                <p id="replyOriginalMessage" style="margin: 0;"></p>
+            </div>
+            <textarea class="reply-input" id="replyContent" placeholder="输入回复内容..."></textarea>
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button type="button" class="btn-outline-custom btn-sm-custom" onclick="closeReplyModal()">取消</button>
+            <button type="button" class="btn-primary-custom" onclick="submitReply()">提交回复</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/js/admin-messages.js"></script>
+</body>
+</html>

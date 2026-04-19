@@ -71,6 +71,13 @@
                     </a>
                 </li>
 
+                <!-- 留言板 -->
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/message-board}">
+                        <i class="bi bi-chat-square-text"></i> 留言板
+                    </a>
+                </li>
+
                 <!-- 友情链接下拉菜单 -->
                 <li class="nav-item dropdown" th:if="${friendLinks != null and !#lists.isEmpty(friendLinks)}">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">

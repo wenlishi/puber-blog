@@ -4,21 +4,138 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>知筑 | 博客后台管理</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="/js/phosphor-web-loader.js"></script>
+    <script>
+        // 立即应用保存的主题颜色（在 CSS 加载前执行，避免闪烁）
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('admin_theme_color') || 'emerald';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } catch(e) {}
+        })();
+    </script>
+    <style th:replace="~{admin/layout :: adminStyles}"></style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .btn-primary-custom {
+            background: var(--primary);
+            color: white;
+            border: 1px solid var(--primary);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary-custom:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+            color: white;
+        }
+        .btn-outline-custom {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-regular);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline-custom:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+        .btn-outline-custom:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-sm-custom {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        .btn-icon-custom {
+            padding: 6px 10px;
+            min-width: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-loading {
+            position: relative;
+        }
+        .btn-loading i {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 滑钮切换器样式 */
+        .toggle-switch-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            width: 140px;
+        }
+        .toggle-switch-container:hover {
+            border-color: var(--primary);
+        }
+        .toggle-label {
+            flex: 1;
+            padding: 6px 0;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+            z-index: 1;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .toggle-label.active {
+            color: white;
+        }
+        .toggle-slider {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 66px;
+            height: calc(100% - 8px);
+            background: var(--primary);
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 0;
+        }
+        .toggle-switch-container[data-value="visitors"] .toggle-slider {
+            left: 70px;
+        }
+        .toggle-switch-container[data-value="views"] .toggle-label.views,
+        .toggle-switch-container[data-value="visitors"] .toggle-label.visitors {
+            color: white;
+        }
+    </style>
 </head>
 <body>
 
-    <aside th:replace="~{admin/layout :: sidebar(activePage='dashboard')}"></aside>
+<aside th:replace="~{admin/layout :: sidebar(activePage='dashboard')}"></aside>
 
 <main class="main-wrapper">
     <header class="topbar">
         <div class="topbar-date">
             <i class="ph-light ph-calendar-blank"></i>
-            <span id="currentDate">2026 年 4 月 17 日 · 星期五</span>
+            <span id="currentDate">2026 年 4 月 19 日 · 星期六</span>
         </div>
 
         <div class="topbar-right">
@@ -30,7 +147,7 @@
                     <i class="ph ph-dots-three"></i>
                 </button>
                 <div class="theme-dropdown" id="themeDropdown">
-                    <div class="theme-dropdown-header">后台专属配色</div>
+                    <div class="theme-dropdown-header">后台配色</div>
                     <div class="theme-options">
                         <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
                             <span class="color-dot" style="background: #059669;"></span> 翡翠绿
@@ -53,18 +170,212 @@
     <div class="content">
         <div class="page-header animate-fade-up">
             <h1>工作台概览。</h1>
-            <p>导航已完整，与articles页面一致</p>
+            <p>静心沉淀，文字自有力量。今日已记录 <strong style="color: var(--primary); font-weight: 600; transition: color 0.3s;" th:text="${dashboard.articleStats.totalViewCount}">0</strong> 次来自远方的访问。</p>
+        </div>
+
+        <div class="stats-grid animate-fade-up delay-1">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-info">
+                        <span class="stat-title">总浏览量</span>
+                        <span class="stat-value" th:text="${dashboard.articleStats.totalViewCount}">0</span>
+                    </div>
+                    <div class="icon-box"><i class="ph-light ph-chart-line-up"></i></div>
+                </div>
+                <div class="stat-footer">
+                    <span class="trend-badge trend-neutral"><i class="ph-bold ph-users"></i> 持续增长</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-info">
+                        <span class="stat-title">已发布文章</span>
+                        <span class="stat-value" th:text="${dashboard.articleStats.publishedCount}">0</span>
+                    </div>
+                    <div class="icon-box"><i class="ph-light ph-book-open-text"></i></div>
+                </div>
+                <div class="stat-footer">
+                    <span class="trend-badge trend-neutral">持续输出</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-info">
+                        <span class="stat-title">累计评论</span>
+                        <span class="stat-value" th:text="${dashboard.commentStats.totalCount}">0</span>
+                    </div>
+                    <div class="icon-box"><i class="ph-light ph-chat-centered-text"></i></div>
+                </div>
+                <div class="stat-footer">
+                    <span class="trend-badge" th:classappend="${dashboard.commentStats.pendingCount > 0} ? 'trend-primary' : 'trend-neutral'">
+                        <i class="ph-bold ph-warning-circle"></i>
+                        <span th:text="|${dashboard.commentStats.pendingCount} 条待审核|">0 条待审核</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-info">
+                        <span class="stat-title">累计留言</span>
+                        <span class="stat-value" th:text="${dashboard.messageStats.totalCount}">0</span>
+                    </div>
+                    <div class="icon-box"><i class="ph-light ph-chats-circle"></i></div>
+                </div>
+                <div class="stat-footer">
+                    <span class="trend-badge" th:classappend="${dashboard.messageStats.pendingCount > 0} ? 'trend-primary' : 'trend-neutral'">
+                        <i class="ph-bold ph-check-circle"></i>
+                        <span th:text="|${dashboard.messageStats.pendingCount} 条待审核|">0 条待审核</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bento-layout">
+            <div class="left-panel animate-fade-up delay-2">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title-text">访问趋势</div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <div class="toggle-switch-container" id="chartTypeToggle" data-value="views">
+                                <div class="toggle-slider"></div>
+                                <span class="toggle-label views" onclick="switchChartType('views')">浏览量</span>
+                                <span class="toggle-label visitors" onclick="switchChartType('visitors')">访客数</span>
+                            </div>
+                            <select class="select-sm" id="chartRange" onchange="updateChart()">
+                                <option value="7">最近 7 天</option>
+                                <option value="30">最近 30 天</option>
+                            </select>
+                            <button class="btn-outline-custom btn-sm-custom btn-icon-custom" id="refreshBtn" onclick="updateChart()" title="刷新数据">
+                                <i class="ph-bold ph-arrow-clockwise" id="refreshIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-header-data">
+                        <span class="chart-big-num" id="chartBigNum" th:text="${dashboard.articleStats.totalViewCount}">0</span>
+                        <span class="chart-sub-num" id="chartSubNum">总浏览量</span>
+                    </div>
+                    <div class="chart-area">
+                        <div style="position: absolute; top: 12px; bottom: 24px; left: 24px; right: 24px;">
+                            <canvas id="trafficChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel animate-fade-up delay-3">
+                <div class="card">
+                    <div class="card-header"><div class="card-title-text">最多阅读</div></div>
+                    <div class="card-body">
+                        <div class="feed-list">
+                            <div class="feed-item" th:each="article, stat : ${dashboard.hotArticles}">
+                                <span class="rank-num" th:classappend="${stat.count < 3} ? 'rank-' + ${stat.count + 1} : 'rank-other'" th:text="${stat.count + 1}">01</span>
+                                <div class="feed-content">
+                                    <a href="#" class="feed-title" th:text="${article.title}" th:href="@{/admin/articles/{id}/edit(id=${article.id})}">文章标题</a>
+                                    <div class="feed-meta" th:text="|${article.viewCount} 次翻阅|">0 次翻阅</div>
+                                </div>
+                            </div>
+                            <div class="feed-item" th:if="${#lists.isEmpty(dashboard.hotArticles)}" style="border-bottom: none;">
+                                <div style="text-align: center; color: var(--text-muted); padding: 20px;">
+                                    <i class="ph ph-inbox" style="font-size: 24px; margin-bottom: 8px;"></i>
+                                    <p>暂无热门文章数据</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </main>
 
 <script th:inline="javascript">
     let myChart;
+    let currentChartType = 'views'; // 当前图表类型：views 或 visitors
+
+    // 切换图表类型
+    function switchChartType(type) {
+        currentChartType = type;
+
+        // 更新滑钮状态
+        const toggle = document.getElementById('chartTypeToggle');
+        toggle.setAttribute('data-value', type);
+
+        // 更新图表数据
+        updateChartData();
+    }
+
+    // 更新图表数据（使用当前缓存的数据）
+    function updateChartData() {
+        if (!myChart) return;
+
+        const cachedData = myChart._cachedData;
+        if (!cachedData) return;
+
+        const labels = cachedData.map(item => item.dateLabel);
+        let data, totalValue, labelText;
+
+        if (currentChartType === 'views') {
+            data = cachedData.map(item => item.viewCount);
+            totalValue = data.reduce((a, b) => a + b, 0);
+            labelText = '总浏览量';
+        } else {
+            data = cachedData.map(item => item.visitorCount || 0);
+            totalValue = data.reduce((a, b) => a + b, 0);
+            labelText = '总访问人数';
+        }
+
+        myChart.data.labels = labels;
+        myChart.data.datasets[0].data = data;
+        myChart.update('active');
+
+        // 更新顶部显示的数字
+        document.getElementById('chartBigNum').textContent = totalValue;
+        document.getElementById('chartSubNum').textContent = labelText;
+    }
+
+    // 更新图表数据的函数（从服务器获取最新数据）
+    function updateChart() {
+        const days = document.getElementById('chartRange').value;
+        const refreshBtn = document.getElementById('refreshBtn');
+        const refreshIcon = document.getElementById('refreshIcon');
+
+        // 添加加载状态
+        refreshBtn.disabled = true;
+        refreshBtn.classList.add('btn-loading');
+
+        fetch(`/api/admin/dashboard/view-trend?days=${days}`)
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    const viewTrend = result.data;
+
+                    // 缓存数据供切换使用
+                    myChart._cachedData = viewTrend;
+
+                    // 更新图表显示
+                    updateChartData();
+                }
+            })
+            .catch(error => {
+                console.error('获取趋势数据失败:', error);
+                alert('刷新失败，请稍后重试');
+            })
+            .finally(() => {
+                // 移除加载状态
+                refreshBtn.disabled = false;
+                refreshBtn.classList.remove('btn-loading');
+            });
+    }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // 时间格式化
         const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
         document.getElementById('currentDate').innerText = dateStr.replace(/星期/, '· 星期');
 
+        // 悬浮菜单逻辑
         const userMenuBtn = document.getElementById('userMenuBtn');
         const userDropdown = document.getElementById('userDropdown');
         const userMenuIcon = document.getElementById('userMenuIcon');
@@ -73,62 +384,134 @@
         const themeDropdown = document.getElementById('themeDropdown');
         const sidebarAvatar = document.getElementById('sidebarAvatar');
 
-        userMenuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            themeDropdown.classList.remove('show');
-            userDropdown.classList.toggle('show');
-            userMenuIcon.classList.toggle('menu-open-icon');
-        });
+        if (userMenuBtn) {
+            userMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                themeDropdown.classList.remove('show');
+                userDropdown.classList.toggle('show');
+                userMenuIcon.classList.toggle('menu-open-icon');
+            });
+        }
 
-        themeSwitchBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            userDropdown.classList.remove('show');
-            userMenuIcon.classList.remove('menu-open-icon');
-            themeDropdown.classList.toggle('show');
-        });
+        if (themeSwitchBtn) {
+            themeSwitchBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.remove('show');
+                userMenuIcon.classList.remove('menu-open-icon');
+                themeDropdown.classList.toggle('show');
+            });
+        }
 
         document.addEventListener('click', (e) => {
-            if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+            if (userMenuBtn && !userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
                 userDropdown.classList.remove('show');
                 userMenuIcon.classList.remove('menu-open-icon');
             }
-            if (!themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
+            if (themeSwitchBtn && !themeSwitchBtn.contains(e.target) && !themeDropdown.contains(e.target)) {
                 themeDropdown.classList.remove('show');
             }
         });
 
+        // 主题切换动态逻辑
         const themeOptions = document.querySelectorAll('.theme-option');
         themeOptions.forEach(option => {
             option.addEventListener('click', function(e) {
                 e.stopPropagation();
                 const targetTheme = this.getAttribute('data-color');
-                const targetHex = this.getAttribute('data-hex');
-                const targetRgb = this.getAttribute('data-rgb');
 
-                document.documentElement.setAttribute('data-theme', targetTheme);
-
-                themeOptions.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-
-                sidebarAvatar.src = `https://ui-avatars.com/api/?name=Li&background=${targetHex.substring(1)}&color=fff&font-size=0.4`;
-
-                if (myChart) {
-                    const ctx = document.getElementById('trafficChart');
-                    if (ctx) {
-                        const chartCtx = ctx.getContext('2d');
-                        const newGradient = chartCtx.createLinearGradient(0, 0, 0, 320);
-                        newGradient.addColorStop(0, `rgba(${targetRgb}, 0.15)`);
-                        newGradient.addColorStop(1, `rgba(${targetRgb}, 0)`);
-                        myChart.data.datasets[0].borderColor = targetHex;
-                        myChart.data.datasets[0].pointBorderColor = targetHex;
-                        myChart.data.datasets[0].backgroundColor = newGradient;
-                        myChart.update();
-                    }
-                }
+                // 调用公共的主题切换函数（会自动保存和应用）
+                switchThemeColor(targetTheme);
 
                 themeDropdown.classList.remove('show');
             });
         });
+
+        // 图表初始化逻辑 - 使用真实数据
+        Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif";
+        Chart.defaults.color = '#6B7280';
+
+        const ctx = document.getElementById('trafficChart');
+        if (ctx) {
+            const chartCtx = ctx.getContext('2d');
+
+            // 从 localStorage 读取当前主题颜色
+            const savedTheme = localStorage.getItem('admin_theme_color') || 'emerald';
+            const themeConfig = {
+                emerald: { hex: '#059669', rgb: '5, 150, 105' },
+                orange: { hex: '#EA580C', rgb: '234, 88, 12' },
+                blue: { hex: '#2563EB', rgb: '37, 99, 235' },
+                beige: { hex: '#C89F70', rgb: '200, 159, 112' }
+            };
+            const currentTheme = themeConfig[savedTheme];
+
+            const initialGradient = chartCtx.createLinearGradient(0, 0, 0, 320);
+            initialGradient.addColorStop(0, `rgba(${currentTheme.rgb}, 0.15)`);
+            initialGradient.addColorStop(1, `rgba(${currentTheme.rgb}, 0)`);
+
+            // 从后端获取真实数据
+            const viewTrend = /*[[${dashboard.viewTrend}]]*/ [];
+
+            const labels = viewTrend.map(item => item.dateLabel);
+            const data = viewTrend.map(item => item.viewCount);
+
+            myChart = new Chart(chartCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        borderColor: currentTheme.hex,
+                        borderWidth: 2.5,
+                        backgroundColor: initialGradient,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: currentTheme.hex,
+                        pointBorderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.35
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1F2937',
+                            titleColor: '#F9FAFB',
+                            bodyColor: '#F9FAFB',
+                            borderColor: '#374151',
+                            borderWidth: 1,
+                            padding: 14,
+                            cornerRadius: 8,
+                            displayColors: false,
+                            titleFont: { size: 12, weight: '500' },
+                            bodyFont: { size: 15, weight: '700' },
+                            callbacks: {
+                                label: function (ctx) {
+                                    const value = ctx.parsed.y;
+                                    const type = currentChartType;
+                                    if (type === 'views') {
+                                        return value + ' 次浏览';
+                                    } else {
+                                        return value + ' 位访客';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.04)', drawBorder: false }, ticks: { maxTicksLimit: 6, padding: 16 } },
+                        x: { grid: { display: false }, ticks: { padding: 16 } }
+                    }
+                }
+            });
+
+            // 缓存初始数据（在 myChart 创建后）
+            myChart._cachedData = viewTrend;
+        }
     });
 </script>
 

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -144,4 +145,13 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
      */
     @Query("SELECT SUM(a.viewCount) FROM Article a")
     Long sumViewCount();
+
+    /**
+     * 根据创建时间范围查询文章列表（按创建时间倒序）
+     *
+     * @param startDate 开始时间
+     * @param endDate 结束时间
+     * @return List<Article> 文章列表
+     */
+    List<Article> findByCreatedAtBetweenOrderByCreatedAtDesc(LocalDateTime startDate, LocalDateTime endDate);
 }

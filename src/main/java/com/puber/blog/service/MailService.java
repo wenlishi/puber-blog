@@ -1,6 +1,7 @@
 package com.puber.blog.service;
 
 import com.puber.blog.dto.CommentDTO;
+import com.puber.blog.dto.MessageDTO;
 
 /**
  * 邮件业务服务接口
@@ -18,6 +19,13 @@ public interface MailService {
      * @param articleTitle 文章标题
      */
     void sendNewCommentNotification(CommentDTO commentDTO, String articleTitle);
+
+    /**
+     * 发送新留言通知邮件给站长（异步方式）
+     *
+     * @param messageDTO 留言DTO
+     */
+    void sendNewMessageNotification(MessageDTO messageDTO);
 
     /**
      * 发送测试邮件（用于验证配置）

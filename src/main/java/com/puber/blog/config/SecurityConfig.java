@@ -46,7 +46,7 @@ public class SecurityConfig {
             // 配置授权规则
             .authorizeHttpRequests(auth -> auth
                 // 公开访问的路径（前台页面、静态资源）
-                .requestMatchers("/", "/index", "/article/**", "/category/**", "/tag/**", "/archive", "/about", "/search", "/demo/**")
+                .requestMatchers("/", "/index", "/article/**", "/category/**", "/tag/**", "/archive", "/about", "/search", "/message-board", "/demo/**")
                 .permitAll()
                 // 静态资源
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/uploads/**")

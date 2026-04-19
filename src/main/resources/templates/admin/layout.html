@@ -20,6 +20,16 @@
     <script src="/js/phosphor-web-loader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/css/admin-styles.css">
+    <script src="/js/admin-theme.js"></script>
+    <script>
+        // 立即应用保存的主题颜色（避免页面渲染时闪烁）
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('admin_theme_color') || 'emerald';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } catch(e) {}
+        })();
+    </script>
 </th:block>
 
 <!-- 后台侧边栏 Fragment -->
@@ -53,7 +63,7 @@
         <a href="/admin/demos" class="nav-item" th:classappend="${activePage == 'demos'} ? 'active'">
             <i class="ph ph-rocket-launch nav-icon"></i> 演示管理
         </a>
-        <a href="#" class="nav-item">
+        <a href="/admin/messages" class="nav-item" th:classappend="${activePage == 'messages'} ? 'active'">
             <i class="ph ph-chats-circle nav-icon"></i> 留言板
         </a>
         <a href="/admin/comments" class="nav-item" th:classappend="${activePage == 'comments'} ? 'active'">
@@ -177,7 +187,7 @@
                         <i class="ph ph-dots-three"></i>
                     </button>
                     <div class="theme-dropdown" id="themeDropdown">
-                        <div class="theme-dropdown-header">后台专属配色</div>
+                        <div class="theme-dropdown-header">后台配色</div>
                         <div class="theme-options">
                             <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
                                 <span class="color-dot" style="background: #059669;"></span> 翡翠绿
@@ -218,7 +228,6 @@
 
             const themeSwitchBtn = document.getElementById('themeSwitchBtn');
             const themeDropdown = document.getElementById('themeDropdown');
-            const sidebarAvatar = document.getElementById('sidebarAvatar');
 
             userMenuBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -250,30 +259,9 @@
                 option.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const targetTheme = this.getAttribute('data-color');
-                    const targetHex = this.getAttribute('data-hex');
-                    const targetRgb = this.getAttribute('data-rgb');
 
-                    document.documentElement.setAttribute('data-theme', targetTheme);
-
-                    themeOptions.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-
-                    sidebarAvatar.src = `https://ui-avatars.com/api/?name=Li&background=${targetHex.substring(1)}&color=fff&font-size=0.4`;
-
-                    if (myChart) {
-                        const ctx = document.getElementById('trafficChart');
-                        if (ctx) {
-                            const chartCtx = ctx.getContext('2d');
-                            const newGradient = chartCtx.createLinearGradient(0, 0, 0, 320);
-                            newGradient.addColorStop(0, `rgba(${targetRgb}, 0.15)`);
-                            newGradient.addColorStop(1, `rgba(${targetRgb}, 0)`);
-
-                            myChart.data.datasets[0].borderColor = targetHex;
-                            myChart.data.datasets[0].pointBorderColor = targetHex;
-                            myChart.data.datasets[0].backgroundColor = newGradient;
-                            myChart.update();
-                        }
-                    }
+                    // 调用公共的主题切换函数（会自动保存和应用）
+                    switchThemeColor(targetTheme);
 
                     themeDropdown.classList.remove('show');
                 });

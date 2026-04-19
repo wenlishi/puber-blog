@@ -12,6 +12,7 @@ import com.puber.blog.exception.BusinessException;
 import com.puber.blog.repository.*;
 import com.puber.blog.service.ArticleService;
 import com.puber.blog.service.CommentService;
+import com.puber.blog.service.ViewLogService;
 import com.puber.blog.utils.MarkdownUtils;
 import com.puber.blog.utils.SlugUtils;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,7 +31,7 @@ import java.util.stream.Collectors;
  * 文章业务服务实现类
  * 实现文章的业务逻辑处理
  *
- * @author puber
+ * @author wenlishi
  * @version 1.0.0
  * @since 2026-04-13
  */
@@ -44,6 +46,7 @@ public class ArticleServiceImpl implements ArticleService {
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
     private final CommentService commentService;
+    private final ViewLogService viewLogService;
 
     /**
      * 获取已发布文章列表（分页）
@@ -127,12 +130,14 @@ public class ArticleServiceImpl implements ArticleService {
 
     /**
      * 根据slug获取文章详情（前台）
+     * 同时记录浏览日志
      *
      * @param slug 文章别名
+     * @param request HTTP请求对象（用于记录浏览日志）
      * @return ArticleVO 文章详情
      */
     @Override
-    public ArticleVO getArticleBySlug(String slug) {
+    public ArticleVO getArticleBySlug(String slug, HttpServletRequest request) {
         log.debug("根据slug获取文章详情：{}", slug);
 
         Article article = articleRepository.findBySlug(slug)
@@ -140,6 +145,13 @@ public class ArticleServiceImpl implements ArticleService {
 
         // 增加浏览量
         incrementViewCount(article.getId());
+
+        // 记录浏览日志（异步，不阻塞主流程）
+        try {
+            viewLogService.logArticleView(article.getId(), request);
+        } catch (Exception e) {
+            log.warn("记录浏览日志失败：{}", e.getMessage());
+        }
 
         // 查询评论数量
         Long commentCount = commentService.countByArticleId(article.getId());

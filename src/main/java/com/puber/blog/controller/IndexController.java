@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 
@@ -104,15 +105,16 @@ public class IndexController {
      *
      * @param slug 文章别名
      * @param model Spring MVC 模型
+     * @param request HTTP请求对象
      * @return String 视图名称
      */
     @GetMapping("/article/{slug}")
-    public String article(@PathVariable String slug, Model model) {
+    public String article(@PathVariable String slug, Model model, HttpServletRequest request) {
         log.info("访问文章详情：slug={}", slug);
 
         try {
-            // 获取文章详情（自动触发浏览量+1）
-            ArticleVO article = articleService.getArticleBySlug(slug);
+            // 获取文章详情（自动触发浏览量+1并记录浏览日志）
+            ArticleVO article = articleService.getArticleBySlug(slug, request);
             model.addAttribute("article", article);
             return "front/article";
         } catch (BusinessException e) {
@@ -265,6 +267,17 @@ public class IndexController {
         model.addAttribute("totalArticles", totalArticles);
 
         return "front/archive";
+    }
+
+    /**
+     * 留言板页面
+     *
+     * @return String 视图名称
+     */
+    @GetMapping("/message-board")
+    public String messageBoard() {
+        log.info("访问留言板页面");
+        return "front/message-board";
     }
 
     /**

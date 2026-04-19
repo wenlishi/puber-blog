@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
+    <script>
+        // 立即应用保存的主题颜色（在 CSS 加载前执行，避免闪烁）
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('admin_theme_color') || 'emerald';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } catch(e) {}
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文章管理 - 知筑后台</title>
@@ -97,7 +106,7 @@
                     <i class="ph ph-dots-three"></i>
                 </button>
                 <div class="theme-dropdown" id="themeDropdown">
-                    <div class="theme-dropdown-header">后台专属配色</div>
+                    <div class="theme-dropdown-header">后台配色</div>
                     <div class="theme-options">
                         <button class="theme-option active" data-color="emerald" data-hex="#059669" data-rgb="5, 150, 105">
                             <span class="color-dot" style="background: #059669;"></span> 翡翠绿

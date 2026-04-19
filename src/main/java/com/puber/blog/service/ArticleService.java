@@ -7,13 +7,14 @@ import com.puber.blog.entity.Article;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
  * 文章业务服务接口
  * 提供文章的业务逻辑处理
  *
- * @author puber
+ * @author wenlishi
  * @version 1.0.0
  * @since 2026-04-13
  */
@@ -57,12 +58,13 @@ public interface ArticleService {
 
     /**
      * 根据slug获取文章详情（前台）
-     * 包含Markdown转HTML、浏览量+1
+     * 包含Markdown转HTML、浏览量+1、记录浏览日志
      *
      * @param slug 文章别名
+     * @param request HTTP请求对象（用于记录浏览日志）
      * @return ArticleVO 文章详情
      */
-    ArticleVO getArticleBySlug(String slug);
+    ArticleVO getArticleBySlug(String slug, HttpServletRequest request);
 
     /**
      * 根据ID获取文章详情（后台）

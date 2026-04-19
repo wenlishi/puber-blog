@@ -29,8 +29,8 @@
         }
 
         /* 🟢 主题一：翡翠绿 (默认) */
-        :root[data-theme="emerald"], :root {
-            --primary: #059669; 
+        :root[data-theme="emerald"] {
+            --primary: #059669;
             --primary-hover: #047857;
             --primary-light: #ECFDF5;
             --bg-sidebar-active: rgba(5, 150, 105, 0.12);

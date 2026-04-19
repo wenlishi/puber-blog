@@ -42,6 +42,16 @@ public class DashboardVO {
     private TagStats tagStats;
 
     /**
+     * 留言统计
+     */
+    private MessageStats messageStats;
+
+    /**
+     * 访问趋势数据
+     */
+    private List<DailyViewStats> viewTrend;
+
+    /**
      * 最新文章列表（TOP 5）
      */
     private List<ArticleItemVO> latestArticles;
@@ -143,6 +153,35 @@ public class DashboardVO {
     }
 
     /**
+     * 留言统计信息
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class MessageStats {
+        /**
+         * 留言总数
+         */
+        private Long totalCount;
+
+        /**
+         * 待审核留言数
+         */
+        private Long pendingCount;
+
+        /**
+         * 已批准留言数
+         */
+        private Long approvedCount;
+
+        /**
+         * 已拒绝留言数
+         */
+        private Long rejectedCount;
+    }
+
+    /**
      * 文章简要信息
      */
     @Data
@@ -174,6 +213,30 @@ public class DashboardVO {
          * 创建时间
          */
         private String createdAt;
+    }
+
+    /**
+     * 每日浏览统计
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class DailyViewStats {
+        /**
+         * 日期标签（如：04-13）
+         */
+        private String dateLabel;
+
+        /**
+         * 浏览量
+         */
+        private Long viewCount;
+
+        /**
+         * 访问人数（独立访客数）
+         */
+        private Long visitorCount;
     }
 
     /**

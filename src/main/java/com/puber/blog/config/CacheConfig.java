@@ -81,4 +81,16 @@ public class CacheConfig {
                 .expireAfterWrite(300, TimeUnit.SECONDS)
                 .recordStats();
     }
+
+    /**
+     * 浏览趋势缓存（定时任务每天更新，1小时过期）
+     * 用于Dashboard访问趋势图表数据
+     */
+    @Bean
+    public Caffeine<Object, Object> viewTrendCaffeine() {
+        return Caffeine.newBuilder()
+                .maximumSize(10)
+                .expireAfterWrite(3600, TimeUnit.SECONDS)
+                .recordStats();
+    }
 }

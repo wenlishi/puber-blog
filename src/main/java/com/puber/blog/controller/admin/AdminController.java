@@ -108,6 +108,16 @@ public class AdminController {
     public String comments() {
         return "admin/comments";
     }
+
+    /**
+     * 留言管理页面
+     *
+     * @return String 视图名称
+     */
+    @GetMapping("/admin/messages")
+    public String messages() {
+        return "admin/messages";
+    }
 }
 
 /**
